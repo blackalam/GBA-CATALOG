@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBA Furniture - Full Master Portfolio 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #111111;
+            --accent: #2563EB;
+            --bg: #F8FAFC;
+            --white: #FFFFFF;
+            --slate-border: #E2E8F0;
+            --slate-text: #64748B;
+            --tag-bg: #F1F5F9;
+            --tag-text: #475569;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #CBD5E1;
+            margin: 0;
+            padding: 40px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+        }
+
+        /* A5 PORTRAIT CANVAS */
+        .page {
+            background-color: var(--white);
+            width: 148mm;
+            min-height: 210mm;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 40px 80px -12px rgba(0,0,0,0.25);
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .page-header {
+            padding: 25px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--slate-border);
+        }
+
+        .brand-logo { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 20px; color: var(--primary); }
+        .page-content { padding: 35px; flex-grow: 1; display: flex; flex-direction: column; }
+
+        /* PRODUCT CARD */
+        .product-card { display: grid; grid-template-columns: 180px 1fr; gap: 30px; padding-bottom: 35px; border-bottom: 1px solid var(--slate-border); align-items: start; margin-bottom: 35px; }
+        .product-card:last-child { border-bottom: none; margin-bottom: 0; }
+        .main-img { width: 180px; height: 180px; background-color: var(--bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--slate-border); }
+        .main-img img { width: 100%; height: 100%; object-fit: cover; }
+        .thumb-row { display: flex; gap: 8px; margin-top: 10px; }
+        .thumb { width: 54px; height: 54px; background: var(--bg); border: 1px solid var(--slate-border); border-radius: 6px; }
+
+        /* TEXT STYLES */
+        .product-title { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin: 0 0 6px 0; }
+        .tag-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .tag { font-size: 8px; padding: 4px 8px; background: var(--tag-bg); color: var(--tag-text); border: 1px solid var(--slate-border); border-radius: 4px; font-weight: 800; text-transform: uppercase; }
+        .product-desc { font-size: 11px; color: var(--slate-text); line-height: 1.5; margin: 0 0 15px 0; }
+
+        /* PRICING */
+        .pricing-grid { display: flex; flex-direction: column; gap: 6px; }
+        .price-row { display: grid; grid-template-columns: 80px 1fr 1fr; align-items: center; padding: 8px 12px; background: var(--bg); border-radius: 6px; }
+        .label { font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; }
+        .price-val { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: var(--accent); }
+        .mat-only { font-size: 9px; color: var(--slate-text); text-align: right; font-weight: 600; }
+
+        /* COVER SPECIFIC */
+        .cover-main { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: var(--primary); color: white; }
+        .cover-title { font-family: 'Outfit', sans-serif; font-size: 48px; font-weight: 800; margin: 0; letter-spacing: -2px; }
+        .cover-sub { font-size: 14px; letter-spacing: 4px; text-transform: uppercase; margin-top: 10px; opacity: 0.7; }
+
+        /* FOOTER */
+        .footer-status { background: var(--primary); color: white; padding: 15px 35px; display: flex; justify-content: space-between; font-size: 9px; font-weight: 800; }
+
+        /* PRINT STYLES */
+        @media print {
+            body { background: white !important; padding: 0 !important; gap: 0 !important; }
+            .page { box-shadow: none !important; margin: 0 !important; page-break-after: always; width: 148mm !important; }
+            .no-print { display: none !important; }
+        }
+        
+        /* FLOATING ACTION BUTTONS */
+        .action-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 999;
+        }
+        .action-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(37,99,235,0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(37,99,235,0.5);
+        }
+        .action-btn.secondary { background: var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .action-btn.secondary:hover { box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+    <div class="action-container no-print">
+        <a href="/admin.html" style="text-decoration:none;"><button class="action-btn secondary">Back to Admin</button></a>
+        <button class="action-btn" onclick="window.print()">Download / Print PDF</button>
+    </div>
+
+    <div id="catalog-container"></div>
+
+    <script>
+        async function loadCatalog() {
+            try {
+                const response = await fetch('/api/catalog');
+                if (!response.ok) {
+                    throw new Error('Could not fetch catalog data. Ensure the Node server is running.');
+                }
+                const data = await response.json();
+                renderCatalog(data);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('catalog-container').innerHTML = `<p style="text-align:center; padding:50px; color:var(--primary); font-family:'Outfit';">Failed to load catalog. Is the server running?</p>`;
+            }
+        }
+
+        function renderCatalog(data) {
+            const container = document.getElementById('catalog-container');
+            container.innerHTML = '';
+
+            data.pages.forEach(page => {
+                const pageEl = document.createElement('div');
+                pageEl.className = 'page';
+
+                if (page.type === 'cover') {
+                    pageEl.innerHTML = `
+                        <div class="cover-main">
+                            <h1 class="cover-title">${page.title}</h1>
+                            <div class="cover-sub">${page.subtitle}</div>
+                        </div>
+                        <div class="footer-status">
+                            <span>${page.footerLeft}</span>
+                            <span>${page.footerRight}</span>
+                        </div>
+                    `;
+                } else if (page.type === 'products') {
+                    const productsHtml = page.products.map(prod => {
+                        const tagsHtml = prod.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+                        const pricesHtml = prod.prices.map(price => `
+                            <div class="price-row">
+                                <span class="label">${price.label}</span>
+                                <span class="price-val">${price.value}</span>
+                                <span class="mat-only">${price.extra}</span>
+                            </div>
+                        `).join('');
+
+                        let imagesHtml = '';
+                        if (prod.images && prod.images.length > 0) {
+                            imagesHtml = `<div class="main-img"><img src="${prod.images[0]}"></div>`;
+                            if (prod.images.length > 1) {
+                                let thumbsHtml = '';
+                                for (let i = 1; i < prod.images.length; i++) {
+                                    if (prod.images[i]) {
+                                        thumbsHtml += `<div class="thumb"><img src="${prod.images[i]}" style="width:100%; height:100%; object-fit:cover; border-radius:6px;"></div>`;
+                                    } else {
+                                        thumbsHtml += `<div class="thumb"></div>`;
+                                    }
+                                }
+                                imagesHtml += `<div class="thumb-row">${thumbsHtml}</div>`;
+                            }
+                        } else {
+                             imagesHtml = `<div class="main-img" style="display:flex; align-items:center; justify-content:center; color:var(--slate-border);">No Image</div>`;
+                        }
+
+                        return `
+                        <section class="product-card">
+                            <div class="image-side">
+                                ${imagesHtml}
+                            </div>
+                            <div class="info-side">
+                                <h2 class="product-title">${prod.title}</h2>
+                                <div class="tag-row">${tagsHtml}</div>
+                                <p class="product-desc">${prod.description}</p>
+                                <div class="pricing-grid">
+                                    ${pricesHtml}
+                                </div>
+                            </div>
+                        </section>`;
+                    }).join('');
+
+                    pageEl.innerHTML = `
+                        <header class="page-header">
+                            <div class="brand-logo">GBA<span style="color:var(--accent)">.</span></div>
+                            <div style="font-size: 9px; font-weight: 800; color: var(--slate-text);">${page.seriesTitle}</div>
+                        </header>
+                        <main class="page-content">
+                            ${productsHtml}
+                        </main>
+                    `;
+                } else if (page.type === 'contact') {
+                    pageEl.style.textAlign = 'center';
+                    pageEl.style.justifyContent = 'center';
+                    pageEl.style.background = 'var(--bg)';
+                    
+                    pageEl.innerHTML = `
+                        <main class="page-content" style="justify-content:center;">
+                            <h1 style="font-family:'Outfit'; font-size:32px; color:var(--primary); margin-bottom:10px;">${page.title}</h1>
+                            <p style="color:var(--slate-text); font-size:14px; margin-bottom:40px;">${page.subtitle}</p>
+                            <div style="background:white; padding:30px; border-radius:12px; border:1px solid var(--slate-border);">
+                                <div style="font-family:'Outfit'; font-size:24px; color:var(--accent); margin-bottom:5px;">${page.phone}</div>
+                                <div style="font-size:12px; color:var(--slate-text); text-transform:uppercase; letter-spacing:1px;">${page.phoneLabel}</div>
+                            </div>
+                            <div style="margin-top:40px; font-size:11px; color:var(--slate-text); line-height:1.8;">
+                                ${page.addressText}
+                            </div>
+                        </main>
+                        <footer class="footer-status">
+                            <span>${page.footerLeft}</span>
+                            <span>${page.footerRight}</span>
+                        </footer>
+                    `;
+                }
+
+                container.appendChild(pageEl);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadCatalog);
+    </script>
+</body>
+</html>

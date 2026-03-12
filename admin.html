@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBA Catalog CMS</title>
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- SortableJS for Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <style>
+        :root {
+            --bg-base: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-surface-hover: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger: #ef4444;
+            --success: #10b981;
+            --border: #334155;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .brand {
+            padding: 24px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .brand span { color: var(--accent); }
+
+        .nav-list {
+            padding: 16px;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .nav-item:hover { background-color: var(--bg-surface-hover); color: var(--text-primary); }
+        .nav-item.active { background-color: rgba(59, 130, 246, 0.1); color: var(--accent); border-left: 3px solid var(--accent); }
+        .nav-item.sortable-ghost { opacity: 0.4; }
+
+        .nav-label { display: flex; align-items: center; gap: 10px; flex-grow: 1; }
+        
+        .drag-handle { cursor: grab; color: var(--text-secondary); padding: 4px; display: flex; align-items: center; justify-content: center; }
+        .drag-handle:active { cursor: grabbing; }
+
+        .action-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            margin: 16px;
+        }
+        .action-btn:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow); }
+        .action-btn.secondary { background: var(--bg-surface-hover); color: var(--text-primary); }
+        .action-btn.secondary:hover { background: #475569; }
+        .action-btn.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .action-btn.danger:hover { background: rgba(239, 68, 68, 0.2); }
+
+        /* MAIN CONTENT */
+        .main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .header {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            z-index: 10;
+        }
+
+        .header h1 { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 700; }
+
+        .content {
+            padding: 32px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--success);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error { background: var(--danger); }
+
+        /* CARDS & GRIDS */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+        
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--accent); }
+        
+        .card-img { width: 100%; height: 160px; background: var(--bg-base); border-radius: var(--radius-md); margin-bottom: 16px; object-fit: cover; }
+        .card-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+        .card-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .card-actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .icon-btn { background: var(--bg-base); border: 1px solid var(--border); color: var(--text-secondary); width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .icon-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+        .icon-btn.danger:hover { background: var(--danger); border-color: var(--danger); }
+
+        /* FORMS */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-control { width: 100%; padding: 12px 16px; background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 15px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        textarea.form-control { resize: vertical; min-height: 100px; }
+
+        /* DYNAMIC LISTS */
+        .list-item { background: var(--bg-base); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-md); display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+        .list-item .form-control { margin-bottom: 0; }
+
+        /* IMAGE UPLOAD GRID */
+        .img-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+        .img-upload-box { width: 100px; height: 100px; border: 2px dashed var(--border); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        .img-upload-box:hover { border-color: var(--accent); color: var(--accent); background: rgba(59, 130, 246, 0.05); }
+        .img-upload-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
+        .img-upload-box input[type="file"] { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .remove-img { position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; z-index: 2; }
+
+        /* OVERLAY / MODAL */
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+        .modal { background: var(--bg-surface); width: 100%; max-width: 600px; max-height: 90vh; border-radius: var(--radius-lg); border: 1px solid var(--border); display: flex; flex-direction: column; transform: translateY(20px); transition: 0.3s; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .overlay.active .modal { transform: translateY(0); }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; }
+        .modal-close { background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 24px; transition: 0.2s; }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-body { padding: 24px; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="brand"><i class="ri-vip-crown-line"></i> Ali<span>.</span>CMS</div>
+        <button class="action-btn" onclick="saveToDisk()" id="saveBtn">
+            <i class="ri-save-3-line"></i> Save Changes
+        </button>
+        <div style="padding: 0 16px;">
+            <button class="action-btn secondary" style="width: 100%; margin: 0; margin-bottom: 8px;" onclick="openPageModal()">
+                <i class="ri-add-box-line"></i> Add New Page
+            </button>
+            <a href="/v5.html" target="_blank" style="text-decoration:none; display:block; width:100%;">
+                <button class="action-btn" style="width: 100%; margin: 0; background: #64748b; color: white;">
+                    <i class="ri-external-link-line"></i> View HTML Catalog
+                </button>
+            </a>
+        </div>
+        <div class="nav-list" id="navList">
+            <!-- Nav items inserted here -->
+        </div>
+        
+        <!-- Sidebar Footer -->
+        <div style="padding: 16px 24px; font-size: 11px; color: var(--text-secondary); border-top: 1px solid var(--border); text-align: center; background: rgba(0,0,0,0.2);">
+            <div style="margin-bottom: 4px;"><i class="ri-lock-2-line" style="font-size: 14px; vertical-align: middle;"></i> Secure System</div>
+            <div>Software made and Owned by <strong>Ali</strong> <i class="ri-verified-badge-fill" style="color:var(--accent); vertical-align: middle;"></i></div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <header class="header">
+            <h1 id="pageTitle">Select a Page</h1>
+            <div style="display:flex; gap:12px;" id="headerActions">
+                <!-- Actions inserted here -->
+            </div>
+        </header>
+        <div class="content" id="mainContent">
+            <!-- Content here -->
+        </div>
+    </main>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"><i class="ri-check-line"></i> <span id="toastMsg">Saved successfully</span></div>
+
+    <!-- MODAL (Add Page) -->
+    <div class="overlay" id="pageModalOverlay">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Series</h2>
+                <button class="modal-close" onclick="closePageModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Series Title (e.g. BEDROOM SERIES 03)</label>
+                    <input type="text" class="form-control" id="newPageTitle" placeholder="Enter series title...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn secondary" style="margin:0;" onclick="closePageModal()">Cancel</button>
+                <button class="action-btn" style="margin:0;" onclick="saveNewPage()">Create Page</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL (Product Editor) -->
+    <div class="overlay" id="productModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="pmTitle">Edit Product</h2>
+                <button class="modal-close" onclick="closeProductModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="modal-body" id="pmBody">
+                <div class="form-group">
+                    <label class="form-label">Product Title</label>
+                    <input type="text" class="form-control" id="pmTitleInput" placeholder="e.g. Memory Foam Matrix">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="pmDescInput" placeholder="Product details..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Tags (Comma Separated)</label>
+                    <input type="text" class="form-control" id="pmTagsInput" placeholder="e.g. Best Seller, Next Day">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Images <span style="text-transform:none;font-weight:400;">(First is main, others are thumbnails)</span></label>
+                    <div class="img-grid" id="pmImgGrid">
+                        <!-- Imgs here -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Pricing Tiers</label>
+                    <div id="pmPriceList"></div>
+                    <button class="action-btn secondary" style="margin: 10px 0 0 0; width:100%;" onclick="addPriceRow()">
+                        <i class="ri-add-line"></i> Add Price Row
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn secondary" style="margin:0;" onclick="closeProductModal()">Cancel</button>
+                <button class="action-btn" style="margin:0;" onclick="saveProductModal()">Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        let catalogData = { pages: [] };
+        let currentPageIndex = -1;
+        
+        // Modal State
+        let editingProductIndex = -1; // -1 means new product
+        let currentModalPrices = [];
+        let currentModalImages = [];
+        
+        let sortableSidebar = null;
+
+        // INIT
+        async function fetchCatalog() {
+            try {
+                const res = await fetch('/api/catalog');
+                if(!res.ok) throw new Error("Server error");
+                catalogData = await res.json();
+                renderSidebar();
+                if(catalogData.pages.length > 0) selectPage(0);
+            } catch(e) {
+                showToast("Failed to connect to server.", true);
+            }
+        }
+
+        async function saveToDisk() {
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Saving...';
+            try {
+                const res = await fetch('/api/catalog', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(catalogData)
+                });
+                if(res.ok) showToast("Database saved securely");
+                else showToast("Failed to save", true);
+            } catch(e) {
+                showToast("Network error", true);
+            }
+            btn.innerHTML = '<i class="ri-save-3-line"></i> Save Changes';
+        }
+
+        // UI HELPERS
+        function showToast(msg, isError=false) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            if(isError) t.classList.add('error'); else t.classList.remove('error');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // RENDER SIDEBAR
+        function renderSidebar() {
+            const list = document.getElementById('navList');
+            list.innerHTML = '';
+            
+            catalogData.pages.forEach((page, idx) => {
+                const item = document.createElement('div');
+                item.className = `nav-item ${idx === currentPageIndex ? 'active' : ''}`;
+                item.dataset.index = idx;
+                
+                let icon = 'ri-file-text-line';
+                let label = page.seriesTitle || page.title || `Page ${idx+1}`;
+                if(page.type === 'cover') icon = 'ri-book-open-line';
+                else if(page.type === 'contact') icon = 'ri-contacts-line';
+
+                item.innerHTML = `
+                    <div class="nav-label" onclick="selectPage(${idx})"><i class="${icon}"></i> ${label}</div>
+                    <div class="drag-handle"><i class="ri-draggable"></i></div>
+                `;
+                list.appendChild(item);
+            });
+
+            // Re-initialize SortableJS
+            if (sortableSidebar) {
+                sortableSidebar.destroy();
+            }
+            sortableSidebar = Sortable.create(list, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: function (evt) {
+                    const oldIndex = evt.oldIndex;
+                    const newIndex = evt.newIndex;
+                    
+                    if (oldIndex === newIndex) return;
+                    
+                    // Reorder the array
+                    const movedPage = catalogData.pages.splice(oldIndex, 1)[0];
+                    catalogData.pages.splice(newIndex, 0, movedPage);
+                    
+                    // Update currentPageIndex if the active page moved
+                    if (currentPageIndex === oldIndex) {
+                        currentPageIndex = newIndex;
+                    } else if (currentPageIndex > oldIndex && currentPageIndex <= newIndex) {
+                        currentPageIndex--;
+                    } else if (currentPageIndex < oldIndex && currentPageIndex >= newIndex) {
+                        currentPageIndex++;
+                    }
+
+                    // Re-render and save
+                    renderSidebar();
+                    saveToDisk();
+                }
+            });
+        }
+
+        // SELECT PAGE
+        function selectPage(idx) {
+            currentPageIndex = idx;
+            renderSidebar();
+            
+            const page = catalogData.pages[idx];
+            const titleEl = document.getElementById('pageTitle');
+            const headerActions = document.getElementById('headerActions');
+            const content = document.getElementById('mainContent');
+            
+            if(page.type === 'products') {
+                titleEl.textContent = page.seriesTitle || 'Product Series';
+                headerActions.innerHTML = `
+                    <button class="action-btn danger" style="margin:0" onclick="deletePage(${idx})"><i class="ri-delete-bin-line"></i> Delete Page</button>
+                    <button class="action-btn" style="margin:0" onclick="openProductModal(-1)"><i class="ri-add-line"></i> Add Item</button>
+                `;
+                
+                // Render products grid
+                if(!page.products || page.products.length === 0) {
+                    content.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-secondary);">No products yet. Click Add Item.</div>`;
+                    return;
+                }
+
+                let html = `<div class="grid">`;
+                page.products.forEach((prod, pIdx) => {
+                    const img = (prod.images && prod.images.length > 0 && prod.images[0] !== "") ? prod.images[0] : 'https://placehold.co/400x300/1e293b/94a3b8?text=No+Image';
+                    html += `
+                        <div class="card">
+                            <img src="${img}" class="card-img" alt="${prod.title}">
+                            <h3 class="card-title">${prod.title || 'Untitled'}</h3>
+                            <p class="card-desc">${prod.description || 'No description'}</p>
+                            <div class="card-actions">
+                                <button class="icon-btn" onclick="openProductModal(${pIdx})" title="Edit"><i class="ri-pencil-line"></i></button>
+                                <button class="icon-btn danger" onclick="deleteProduct(${pIdx})" title="Delete"><i class="ri-delete-bin-line"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+                content.innerHTML = html;
+
+            } else if (page.type === 'cover') {
+                titleEl.textContent = "Cover Settings";
+                headerActions.innerHTML = '';
+                content.innerHTML = `
+                    <div style="background:var(--bg-surface); padding:32px; border-radius:var(--radius-lg); border:1px solid var(--border); max-width: 600px;">
+                        <div class="form-group">
+                            <label class="form-label">Brand Title (HTML allowed)</label>
+                            <input type="text" class="form-control" id="coverTitle" value='${page.title || ""}' onchange="updateStaticPage('title', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Subtitle</label>
+                            <input type="text" class="form-control" id="coverSubtitle" value="${page.subtitle || ""}" onchange="updateStaticPage('subtitle', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Footer Left Text</label>
+                            <input type="text" class="form-control" id="coverFooterL" value="${page.footerLeft || ""}" onchange="updateStaticPage('footerLeft', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Footer Right Text</label>
+                            <input type="text" class="form-control" id="coverFooterR" value="${page.footerRight || ""}" onchange="updateStaticPage('footerRight', this.value)">
+                        </div>
+                    </div>
+                `;
+            } else if (page.type === 'contact') {
+                titleEl.textContent = "Contact Page Settings";
+                headerActions.innerHTML = '';
+                content.innerHTML = `
+                    <div style="background:var(--bg-surface); padding:32px; border-radius:var(--radius-lg); border:1px solid var(--border); max-width: 600px;">
+                        <div class="form-group">
+                            <label class="form-label">Main Heading</label>
+                            <input type="text" class="form-control" id="contactTitle" value='${page.title || ""}' onchange="updateStaticPage('title', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Subtitle</label>
+                            <input type="text" class="form-control" id="contactSubtitle" value="${page.subtitle || ""}" onchange="updateStaticPage('subtitle', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Contact Number</label>
+                            <input type="text" class="form-control" id="contactPhone" value="${page.phone || ""}" onchange="updateStaticPage('phone', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Number Label (e.g. WhatsApp Orders)</label>
+                            <input type="text" class="form-control" id="contactPhoneLabel" value="${page.phoneLabel || ""}" onchange="updateStaticPage('phoneLabel', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Address Text (HTML allowed)</label>
+                            <textarea class="form-control" id="contactAddress" onchange="updateStaticPage('addressText', this.value)">${page.addressText || ""}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Footer Left Text</label>
+                            <input type="text" class="form-control" id="contactFooterL" value="${page.footerLeft || ""}" onchange="updateStaticPage('footerLeft', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Footer Right Text</label>
+                            <input type="text" class="form-control" id="contactFooterR" value="${page.footerRight || ""}" onchange="updateStaticPage('footerRight', this.value)">
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // STATIC PAGE UPDATE LOGIC
+        function updateStaticPage(field, value) {
+            catalogData.pages[currentPageIndex][field] = value;
+            // Optionally auto-save
+            saveToDisk();
+        }
+
+        // ==========================================
+        // PAGE MODAL LOGIC
+        // ==========================================
+        function openPageModal() {
+            document.getElementById('newPageTitle').value = '';
+            document.getElementById('pageModalOverlay').classList.add('active');
+        }
+
+        function closePageModal() {
+            document.getElementById('pageModalOverlay').classList.remove('active');
+        }
+
+        function saveNewPage() {
+            const title = document.getElementById('newPageTitle').value.trim();
+            if(!title) {
+                showToast("Please enter a title", true);
+                return;
+            }
+            catalogData.pages.push({
+                id: 'page-' + Date.now(),
+                type: 'products',
+                seriesTitle: title,
+                products: []
+            });
+            closePageModal();
+            selectPage(catalogData.pages.length - 1);
+            saveToDisk();
+        }
+
+        function deletePage(idx) {
+            if(confirm("Are you sure you want to delete this ENTIRE page and all its products?")) {
+                catalogData.pages.splice(idx, 1);
+                if(catalogData.pages.length > 0) {
+                    selectPage(0);
+                } else {
+                    document.getElementById('mainContent').innerHTML = '<div style="padding:40px; color:var(--text-secondary); text-align:center;">No pages exist. Add a new page.</div>';
+                    document.getElementById('pageTitle').textContent = 'No Pages';
+                    document.getElementById('headerActions').innerHTML = '';
+                    renderSidebar();
+                }
+                saveToDisk();
+            }
+        }
+
+        // ==========================================
+        // PRODUCT MODAL LOGIC
+        // ==========================================
+        function openProductModal(pIdx) {
+            editingProductIndex = pIdx;
+            const page = catalogData.pages[currentPageIndex];
+            
+            if(pIdx === -1) {
+                // New Product
+                document.getElementById('pmTitle').innerText = "Add New Item";
+                document.getElementById('pmTitleInput').value = "";
+                document.getElementById('pmDescInput').value = "";
+                document.getElementById('pmTagsInput').value = "";
+                currentModalPrices = [ {label:"", value:"", extra:""} ];
+                currentModalImages = [];
+            } else {
+                // Edit Product
+                const prod = page.products[pIdx];
+                document.getElementById('pmTitle').innerText = "Edit Product";
+                document.getElementById('pmTitleInput').value = prod.title || "";
+                document.getElementById('pmDescInput').value = prod.description || "";
+                document.getElementById('pmTagsInput').value = (prod.tags || []).join(', ');
+                currentModalPrices = JSON.parse(JSON.stringify(prod.prices || []));
+                currentModalImages = [...(prod.images || [])];
+                
+                // Clean up empty images to make array tight
+                currentModalImages = currentModalImages.filter(i => i && i.trim() !== "");
+            }
+
+            renderModalPrices();
+            renderModalImages();
+            document.getElementById('productModalOverlay').classList.add('active');
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModalOverlay').classList.remove('active');
+        }
+
+        // PRICES
+        function renderModalPrices() {
+            const list = document.getElementById('pmPriceList');
+            list.innerHTML = "";
+            currentModalPrices.forEach((price, idx) => {
+                const el = document.createElement('div');
+                el.className = "list-item";
+                el.innerHTML = `
+                    <input type="text" class="form-control" placeholder="Size (e.g. Single)" value="${price.label}" onchange="updatePrice(${idx}, 'label', this.value)">
+                    <input type="text" class="form-control" placeholder="Price (£150)" value="${price.value}" onchange="updatePrice(${idx}, 'value', this.value)">
+                    <input type="text" class="form-control" placeholder="Notes" value="${price.extra}" onchange="updatePrice(${idx}, 'extra', this.value)">
+                    <button class="icon-btn danger" onclick="removePriceRow(${idx})"><i class="ri-delete-bin-line"></i></button>
+                `;
+                list.appendChild(el);
+            });
+        }
+        function updatePrice(idx, field, val) { currentModalPrices[idx][field] = val; }
+        function addPriceRow() { currentModalPrices.push({label:"", value:"", extra:""}); renderModalPrices(); }
+        function removePriceRow(idx) { currentModalPrices.splice(idx, 1); renderModalPrices(); }
+
+        // IMAGES
+        function renderModalImages() {
+            const grid = document.getElementById('pmImgGrid');
+            grid.innerHTML = "";
+            
+            // Existing Images
+            currentModalImages.forEach((img, idx) => {
+                grid.innerHTML += `
+                <div class="img-upload-box" style="border-color:transparent;">
+                    <img src="${img}" alt="prod">
+                    <button class="remove-img" onclick="removeImage(${idx})"><i class="ri-close-line"></i></button>
+                </div>`;
+            });
+
+            // Upload Button (Limit to 4 max as per aesthetics)
+            if(currentModalImages.length < 4) {
+                grid.innerHTML += `
+                <div class="img-upload-box">
+                    <i class="ri-upload-cloud-2-line" style="font-size:24px; margin-bottom:4px;"></i>
+                    <span style="font-size:11px; font-weight:600;">Upload</span>
+                    <input type="file" accept="image/*" onchange="uploadImage(event)">
+                </div>`;
+            }
+        }
+
+        function removeImage(idx) {
+            currentModalImages.splice(idx, 1);
+            renderModalImages();
+        }
+
+        async function uploadImage(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            // Show uploading state
+            const grid = document.getElementById('pmImgGrid');
+            const uploader = grid.lastElementChild;
+            uploader.innerHTML = `<i class="ri-loader-4-line ri-spin" style="font-size:24px;"></i>`;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    currentModalImages.push(data.imageUrl);
+                    renderModalImages();
+                } else {
+                    showToast("Upload failed", true);
+                    renderModalImages();
+                }
+            } catch(err) {
+                showToast("Upload error", true);
+                renderModalImages();
+            }
+        }
+
+        // SAVE PRODUCT
+        function saveProductModal() {
+            const page = catalogData.pages[currentPageIndex];
+            
+            const title = document.getElementById('pmTitleInput').value.trim();
+            const desc = document.getElementById('pmDescInput').value.trim();
+            const tagsRaw = document.getElementById('pmTagsInput').value;
+            const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
+
+            // Pad images to 4 (as original v5 template expects sometimes)
+            const images = [...currentModalImages];
+            while(images.length < 4) images.push("");
+
+            const newProd = {
+                id: (title.toLowerCase().replace(/\s+/g, '-')) || 'new-item',
+                title: title,
+                description: desc,
+                tags: tags,
+                prices: currentModalPrices.filter(p => p.label || p.value),
+                images: images
+            };
+
+            if(editingProductIndex === -1) {
+                if(!page.products) page.products = [];
+                page.products.push(newProd);
+            } else {
+                page.products[editingProductIndex] = newProd;
+            }
+
+            closeProductModal();
+            selectPage(currentPageIndex); // re-render list
+            // Optionally auto-save
+            saveToDisk();
+        }
+
+        function deleteProduct(idx) {
+            if(confirm("Are you sure you want to delete this item?")) {
+                catalogData.pages[currentPageIndex].products.splice(idx, 1);
+                selectPage(currentPageIndex);
+                saveToDisk();
+            }
+        }
+
+        // BOOTSTRAP
+        window.onload = fetchCatalog;
+
+    </script>
+</body>
+</html>

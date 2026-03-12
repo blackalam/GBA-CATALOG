@@ -1,0 +1,247 @@
+{
+  "pages": [
+    {
+      "id": "page-cover",
+      "type": "cover",
+      "title": "GBA<span style=\"color:var(--accent)\">.</span>",
+      "subtitle": "Furniture Portfolio 2026",
+      "footerLeft": "FOR AGENTS & LANDLORDS",
+      "footerRight": "NEXT-DAY LONDON DELIVERY"
+    },
+    {
+      "id": "page-bed-01",
+      "type": "products",
+      "seriesTitle": "BEDROOM SERIES 01",
+      "products": [
+        {
+          "id": "ortho-memory",
+          "title": "Ortho Memory",
+          "description": "High-yield essential frame. Versatile aesthetic for rapid property turnarounds.",
+          "tags": [
+            "Next-Day",
+            "Assembly Incl."
+          ],
+          "prices": [
+            {
+              "label": "Single",
+              "value": "£155",
+              "extra": "£120 mat"
+            },
+            {
+              "label": "Double / Small Double",
+              "value": "£200",
+              "extra": "£150 mat"
+            },
+            {
+              "label": "Kingsize",
+              "value": "£240",
+              "extra": "£195 mat"
+            }
+          ],
+          "images": [
+            "/uploads/1773324245341-493383870.jpeg",
+            "",
+            "",
+            ""
+          ]
+        },
+        {
+          "id": "prod-deep-quilted",
+          "title": "Deep Quilted",
+          "tags": [
+            "Best Seller",
+            "Durable"
+          ],
+          "description": "Our top-tier landlord choice. Engineered for consistent comfort and longevity.",
+          "images": [
+            "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=400"
+          ],
+          "prices": [
+            {
+              "label": "Single",
+              "value": "£120",
+              "extra": "£85 mat"
+            },
+            {
+              "label": "4ft/Dbl",
+              "value": "£155",
+              "extra": "£110 mat"
+            },
+            {
+              "label": "5ft",
+              "value": "£185",
+              "extra": "£140 mat"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page-bed-02",
+      "type": "products",
+      "seriesTitle": "BEDROOM SERIES 02",
+      "products": [
+        {
+          "id": "prod-luxury-ortho",
+          "title": "Luxury Ortho",
+          "tags": [
+            "Extra Firm",
+            "Premium"
+          ],
+          "description": "The most economical choice in our orthopedic collection. Support without compromise.",
+          "images": [
+            "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400"
+          ],
+          "prices": [
+            {
+              "label": "Single",
+              "value": "£145",
+              "extra": "£110 mat"
+            },
+            {
+              "label": "Double",
+              "value": "£185",
+              "extra": "£140 mat"
+            },
+            {
+              "label": "Kingsize",
+              "value": "£220",
+              "extra": "£160 mat"
+            }
+          ]
+        },
+        {
+          "id": "prod-luxury-foam",
+          "title": "Luxury Foam",
+          "tags": [
+            "Memory Foam",
+            "Cooling"
+          ],
+          "description": "Ultimate sleeping choice. Engineered for high-end executive accommodation.",
+          "images": [
+            "https://images.unsplash.com/photo-1541123437800-141315fc38c0?w=400"
+          ],
+          "prices": [
+            {
+              "label": "Single",
+              "value": "£150",
+              "extra": "£110 mat"
+            },
+            {
+              "label": "Double",
+              "value": "£190",
+              "extra": "£150 mat"
+            },
+            {
+              "label": "Kingsize",
+              "value": "£260",
+              "extra": "£180 mat"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page-storage-01",
+      "type": "products",
+      "seriesTitle": "STORAGE SERIES 01",
+      "products": [
+        {
+          "id": "prod-budget-range",
+          "title": "Budget Range",
+          "tags": [
+            "Chipboard",
+            "Economy"
+          ],
+          "description": "Amazing value for money. Ideal for the landlord and student market.",
+          "images": [
+            "https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=400"
+          ],
+          "prices": [
+            {
+              "label": "Wardrobe",
+              "value": "£95",
+              "extra": "Add Mirror £30"
+            },
+            {
+              "label": "Chest",
+              "value": "£70",
+              "extra": "4 Drawer"
+            },
+            {
+              "label": "Bedside",
+              "value": "£40",
+              "extra": "1 Drawer"
+            }
+          ]
+        },
+        {
+          "id": "prod-ab-range",
+          "title": "AB Range",
+          "tags": [
+            "Medium Range",
+            "Sturdy"
+          ],
+          "description": "Higher quality finish. Built to withstand long-term rental wear and tear.",
+          "images": [
+            "https://images.unsplash.com/photo-1558997519-83ea9252edf8?w=400"
+          ],
+          "prices": [
+            {
+              "label": "Wardrobe",
+              "value": "£150",
+              "extra": "Add Mirror £30"
+            },
+            {
+              "label": "Chest",
+              "value": "£120",
+              "extra": "5 Drawer"
+            },
+            {
+              "label": "Bedside",
+              "value": "£65",
+              "extra": "2 Drawer"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page-1773324336165",
+      "type": "products",
+      "seriesTitle": "Wardrobe",
+      "products": [
+        {
+          "id": "wardrobe",
+          "title": "Wardrobe",
+          "description": "2 door",
+          "tags": [],
+          "prices": [
+            {
+              "label": "2 Door",
+              "value": "150",
+              "extra": ""
+            }
+          ],
+          "images": [
+            "",
+            "",
+            "",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page-contact",
+      "type": "contact",
+      "title": "READY TO LET?",
+      "subtitle": "Screenshot your items and send them to our team.",
+      "phone": "07719 509114",
+      "phoneLabel": "WhatsApp Orders",
+      "addressText": "GBA FURNITURE LTD<br>401 LORDSHIP LANE, TOTTENHAM, N17 6AE<br>WE COVER EAST, NORTH & CENTRAL LONDON",
+      "footerLeft": "© 2026 GBA FURNITURE",
+      "footerRight": "NEXT-DAY ASSEMBLY GUARANTEED"
+    }
+  ]
+}
