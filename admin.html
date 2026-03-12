@@ -446,6 +446,7 @@
             if(page.type === 'products') {
                 titleEl.textContent = page.seriesTitle || 'Product Series';
                 headerActions.innerHTML = `
+                    <button class="action-btn secondary" style="margin:0" onclick="renamePage(${idx})"><i class="ri-edit-line"></i> Rename Page</button>
                     <button class="action-btn danger" style="margin:0" onclick="deletePage(${idx})"><i class="ri-delete-bin-line"></i> Delete Page</button>
                     <button class="action-btn" style="margin:0" onclick="openProductModal(-1)"><i class="ri-add-line"></i> Add Item</button>
                 `;
@@ -583,6 +584,23 @@
                     renderSidebar();
                 }
                 saveToDisk();
+            }
+        }
+
+        function renamePage(idx) {
+            const page = catalogData.pages[idx];
+            const currentTitle = page.seriesTitle || page.title || '';
+            const newTitle = prompt("Enter new title for this page:", currentTitle);
+            
+            if (newTitle !== null && newTitle.trim() !== "") {
+                if (page.type === 'products') {
+                    page.seriesTitle = newTitle.trim();
+                } else {
+                    page.title = newTitle.trim();
+                }
+                saveToDisk();
+                renderSidebar();
+                selectPage(idx);
             }
         }
 
