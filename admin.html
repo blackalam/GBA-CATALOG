@@ -514,10 +514,19 @@
     <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="brand"><i class="ri-vip-crown-line"></i> Ali<span>.</span>CMS</div>
+        
+        <!-- MODE TOGGLE -->
+        <div style="padding: 0 16px 16px 16px; display:flex; gap:8px;">
+            <button class="action-btn" id="modeBtnCatalog" style="flex:1; padding:8px 0; font-size:12px;" onclick="switchMode('catalog')">📚 Catalog</button>
+            <button class="action-btn secondary" id="modeBtnLabels" style="flex:1; padding:8px 0; font-size:12px;" onclick="switchMode('labels')">🏷️ Labels</button>
+        </div>
+
         <button class="action-btn" onclick="saveToDisk()" id="saveBtn">
             <i class="ri-save-3-line"></i> Save Changes
         </button>
-        <div style="padding: 0 16px;">
+        
+        <!-- CATALOG ACTIONS -->
+        <div id="catalogActions" style="padding: 0 16px;">
             <button class="action-btn secondary" style="width: 100%; margin: 0; margin-bottom: 8px;"
                 onclick="openPageModal()">
                 <i class="ri-add-box-line"></i> Add New Page
@@ -528,6 +537,15 @@
                 </button>
             </a>
         </div>
+
+        <!-- LABELS ACTIONS -->
+        <div id="labelsActions" style="padding: 0 16px; display:none;">
+            <button class="action-btn secondary" style="width: 100%; margin: 0;"
+                onclick="createNewLabel()">
+                <i class="ri-add-box-line"></i> Add New Label
+            </button>
+        </div>
+
         <div class="nav-list" id="navList">
             <!-- Nav items inserted here -->
         </div>
@@ -626,9 +644,10 @@
 
     <!-- SCRIPTS -->
     <script>
-        let catalogData = { pages: [] };
-        let currentPageIndex = -1;
-
+        let catalogData = { pages: [], labels: [] };
+        let activeMode = 'catalog'; // 'catalog' or 'labels'
+        let currentPageIndex = -1; // Also used for currentLabelIndex
+        
         // Modal State
         let editingProductIndex = -1; // -1 means new product
         let currentModalPrices = [];
@@ -675,20 +694,55 @@
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
+        // MODE SWITCHING
+        function switchMode(mode) {
+            activeMode = mode;
+            currentPageIndex = -1;
+            
+            // Buttons
+            document.getElementById('modeBtnCatalog').className = `action-btn ${mode === 'catalog' ? '' : 'secondary'}`;
+            document.getElementById('modeBtnLabels').className = `action-btn ${mode === 'labels' ? '' : 'secondary'}`;
+            
+            // Action areas
+            document.getElementById('catalogActions').style.display = mode === 'catalog' ? 'block' : 'none';
+            document.getElementById('labelsActions').style.display = mode === 'labels' ? 'block' : 'none';
+            
+            renderSidebar();
+            
+            // Auto select first item if exists
+            const sourceArray = mode === 'catalog' ? catalogData.pages : catalogData.labels;
+            if(sourceArray && sourceArray.length > 0) {
+                selectPage(0);
+            } else {
+                document.getElementById('mainContent').innerHTML = `<div style="padding:40px; color:var(--text-secondary); text-align:center;">No ${mode} found.</div>`;
+                document.getElementById('pageTitle').textContent = `No ${mode === 'catalog' ? 'Pages' : 'Labels'}`;
+                document.getElementById('headerActions').innerHTML = '';
+            }
+        }
+
         // RENDER SIDEBAR
         function renderSidebar() {
             const list = document.getElementById('navList');
             list.innerHTML = '';
+            
+            const sourceArray = activeMode === 'catalog' ? catalogData.pages : (catalogData.labels || []);
 
-            catalogData.pages.forEach((page, idx) => {
+            sourceArray.forEach((itemObj, idx) => {
                 const item = document.createElement('div');
                 item.className = `nav-item ${idx === currentPageIndex ? 'active' : ''}`;
                 item.dataset.index = idx;
-
+                
                 let icon = 'ri-file-text-line';
-                let label = page.seriesTitle || page.title || `Page ${idx + 1}`;
-                if (page.type === 'cover') icon = 'ri-book-open-line';
-                else if (page.type === 'contact') icon = 'ri-contacts-line';
+                let label = `Item ${idx+1}`;
+
+                if (activeMode === 'catalog') {
+                    label = itemObj.seriesTitle || itemObj.title || label;
+                    if (itemObj.type === 'cover') icon = 'ri-book-open-line';
+                    else if (itemObj.type === 'contact') icon = 'ri-contacts-line';
+                } else {
+                    icon = 'ri-price-tag-3-line';
+                    label = itemObj.name || itemObj.model || itemObj.id || label;
+                }
 
                 item.innerHTML = `
                     <div class="nav-label" onclick="selectPage(${idx})"><i class="${icon}"></i> ${label}</div>
@@ -698,23 +752,21 @@
             });
 
             // Re-initialize SortableJS
-            if (sortableSidebar) {
-                sortableSidebar.destroy();
-            }
+            if (sortableSidebar) sortableSidebar.destroy();
+            
             sortableSidebar = Sortable.create(list, {
                 handle: '.drag-handle',
                 animation: 150,
                 onEnd: function (evt) {
                     const oldIndex = evt.oldIndex;
                     const newIndex = evt.newIndex;
-
                     if (oldIndex === newIndex) return;
-
-                    // Reorder the array
-                    const movedPage = catalogData.pages.splice(oldIndex, 1)[0];
-                    catalogData.pages.splice(newIndex, 0, movedPage);
-
-                    // Update currentPageIndex if the active page moved
+                    
+                    const tArray = activeMode === 'catalog' ? catalogData.pages : catalogData.labels;
+                    
+                    const movedItem = tArray.splice(oldIndex, 1)[0];
+                    tArray.splice(newIndex, 0, movedItem);
+                    
                     if (currentPageIndex === oldIndex) {
                         currentPageIndex = newIndex;
                     } else if (currentPageIndex > oldIndex && currentPageIndex <= newIndex) {
@@ -723,121 +775,269 @@
                         currentPageIndex++;
                     }
 
-                    // Re-render and save
                     renderSidebar();
                     saveToDisk();
                 }
             });
         }
 
-        // SELECT PAGE
+        // SELECT PAGE OR LABEL
         function selectPage(idx) {
             currentPageIndex = idx;
             renderSidebar();
 
-            const page = catalogData.pages[idx];
             const titleEl = document.getElementById('pageTitle');
             const headerActions = document.getElementById('headerActions');
             const content = document.getElementById('mainContent');
 
-            if (page.type === 'products') {
-                titleEl.textContent = page.seriesTitle || 'Product Series';
-                headerActions.innerHTML = `
-                    <button class="action-btn secondary" style="margin:0" onclick="renamePage(${idx})"><i class="ri-edit-line"></i> Rename Page</button>
-                    <button class="action-btn danger" style="margin:0" onclick="deletePage(${idx})"><i class="ri-delete-bin-line"></i> Delete Page</button>
-                    <button class="action-btn" style="margin:0" onclick="openProductModal(-1)"><i class="ri-add-line"></i> Add Item</button>
-                `;
+            if (activeMode === 'catalog') {
+                const page = catalogData.pages[idx];
+                
+                if (page.type === 'products') {
+                    titleEl.textContent = page.seriesTitle || 'Product Series';
+                    headerActions.innerHTML = `
+                        <button class="action-btn secondary" style="margin:0" onclick="renamePage(${idx})"><i class="ri-edit-line"></i> Rename Page</button>
+                        <button class="action-btn danger" style="margin:0" onclick="deletePage(${idx})"><i class="ri-delete-bin-line"></i> Delete Page</button>
+                        <button class="action-btn" style="margin:0" onclick="openProductModal(-1)"><i class="ri-add-line"></i> Add Item</button>
+                    `;
 
-                // Render products grid
-                if (!page.products || page.products.length === 0) {
-                    content.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-secondary);">No products yet. Click Add Item.</div>`;
-                    return;
-                }
+                    // Render products grid
+                    if (!page.products || page.products.length === 0) {
+                        content.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-secondary);">No products yet. Click Add Item.</div>`;
+                        return;
+                    }
 
-                let html = `<div class="grid">`;
-                page.products.forEach((prod, pIdx) => {
-                    const img = (prod.images && prod.images.length > 0 && prod.images[0] !== "") ? prod.images[0] : 'https://placehold.co/400x300/1e293b/94a3b8?text=No+Image';
-                    html += `
-                        <div class="card">
-                            <img src="${img}" class="card-img" alt="${prod.title}">
-                            <h3 class="card-title">${prod.title || 'Untitled'}</h3>
-                            <p class="card-desc">${prod.description || 'No description'}</p>
-                            <div class="card-actions">
-                                <button class="icon-btn" onclick="openProductModal(${pIdx})" title="Edit"><i class="ri-pencil-line"></i></button>
-                                <button class="icon-btn danger" onclick="deleteProduct(${pIdx})" title="Delete"><i class="ri-delete-bin-line"></i></button>
+                    let html = `<div class="grid">`;
+                    page.products.forEach((prod, pIdx) => {
+                        const img = (prod.images && prod.images.length > 0 && prod.images[0] !== "") ? prod.images[0] : 'https://placehold.co/400x300/1e293b/94a3b8?text=No+Image';
+                        html += `
+                            <div class="card">
+                                <img src="${img}" class="card-img" alt="${prod.title}">
+                                <h3 class="card-title">${prod.title || 'Untitled'}</h3>
+                                <p class="card-desc">${prod.description || 'No description'}</p>
+                                <div class="card-actions">
+                                    <button class="icon-btn" onclick="openProductModal(${pIdx})" title="Edit"><i class="ri-pencil-line"></i></button>
+                                    <button class="icon-btn danger" onclick="deleteProduct(${pIdx})" title="Delete"><i class="ri-delete-bin-line"></i></button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                    content.innerHTML = html;
+
+                } else if (page.type === 'cover') {
+                    titleEl.textContent = "Cover Settings";
+                    headerActions.innerHTML = '';
+                    content.innerHTML = `
+                        <div style="background:var(--bg-surface); padding:32px; border-radius:var(--radius-lg); border:1px solid var(--border); max-width: 600px;">
+                            <div class="form-group">
+                                <label class="form-label">Brand Title (HTML allowed)</label>
+                                <input type="text" class="form-control" id="coverTitle" value='${page.title || ""}' onchange="updateStaticPage('title', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Subtitle</label>
+                                <input type="text" class="form-control" id="coverSubtitle" value="${page.subtitle || ""}" onchange="updateStaticPage('subtitle', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Footer Left Text</label>
+                                <input type="text" class="form-control" id="coverFooterL" value="${page.footerLeft || ""}" onchange="updateStaticPage('footerLeft', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Footer Right Text</label>
+                                <input type="text" class="form-control" id="coverFooterR" value="${page.footerRight || ""}" onchange="updateStaticPage('footerRight', this.value)">
                             </div>
                         </div>
                     `;
-                });
-                html += `</div>`;
-                content.innerHTML = html;
-
-            } else if (page.type === 'cover') {
-                titleEl.textContent = "Cover Settings";
-                headerActions.innerHTML = '';
-                content.innerHTML = `
-                    <div style="background:var(--bg-surface); padding:32px; border-radius:var(--radius-lg); border:1px solid var(--border); max-width: 600px;">
-                        <div class="form-group">
-                            <label class="form-label">Brand Title (HTML allowed)</label>
-                            <input type="text" class="form-control" id="coverTitle" value='${page.title || ""}' onchange="updateStaticPage('title', this.value)">
+                } else if (page.type === 'contact') {
+                    titleEl.textContent = "Contact Page Settings";
+                    headerActions.innerHTML = '';
+                    content.innerHTML = `
+                        <div style="background:var(--bg-surface); padding:32px; border-radius:var(--radius-lg); border:1px solid var(--border); max-width: 600px;">
+                            <div class="form-group">
+                                <label class="form-label">Main Heading</label>
+                                <input type="text" class="form-control" id="contactTitle" value='${page.title || ""}' onchange="updateStaticPage('title', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Subtitle</label>
+                                <input type="text" class="form-control" id="contactSubtitle" value="${page.subtitle || ""}" onchange="updateStaticPage('subtitle', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contact Number</label>
+                                <input type="text" class="form-control" id="contactPhone" value="${page.phone || ""}" onchange="updateStaticPage('phone', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Number Label (e.g. WhatsApp Orders)</label>
+                                <input type="text" class="form-control" id="contactPhoneLabel" value="${page.phoneLabel || ""}" onchange="updateStaticPage('phoneLabel', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Address Text (HTML allowed)</label>
+                                <textarea class="form-control" id="contactAddress" onchange="updateStaticPage('addressText', this.value)">${page.addressText || ""}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Footer Left Text</label>
+                                <input type="text" class="form-control" id="contactFooterL" value="${page.footerLeft || ""}" onchange="updateStaticPage('footerLeft', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Footer Right Text</label>
+                                <input type="text" class="form-control" id="contactFooterR" value="${page.footerRight || ""}" onchange="updateStaticPage('footerRight', this.value)">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Subtitle</label>
-                            <input type="text" class="form-control" id="coverSubtitle" value="${page.subtitle || ""}" onchange="updateStaticPage('subtitle', this.value)">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Footer Left Text</label>
-                            <input type="text" class="form-control" id="coverFooterL" value="${page.footerLeft || ""}" onchange="updateStaticPage('footerLeft', this.value)">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Footer Right Text</label>
-                            <input type="text" class="form-control" id="coverFooterR" value="${page.footerRight || ""}" onchange="updateStaticPage('footerRight', this.value)">
-                        </div>
-                    </div>
+                    `;
+                }
+            } else if (activeMode === 'labels') {
+                // ==============================
+                // LABELS MODE
+                // ==============================
+                const labelObj = catalogData.labels[idx];
+                titleEl.textContent = `Label: ${labelObj.model || labelObj.id}`;
+                
+                headerActions.innerHTML = `
+                    <button class="action-btn danger" style="margin:0" onclick="deleteLabel(${idx})"><i class="ri-delete-bin-line"></i> Delete Label</button>
+                    <a href="/label-viewer.html?id=${labelObj.id}" target="_blank" style="text-decoration:none;">
+                        <button class="action-btn" style="margin:0"><i class="ri-printer-line"></i> View & Print</button>
+                    </a>
                 `;
-            } else if (page.type === 'contact') {
-                titleEl.textContent = "Contact Page Settings";
-                headerActions.innerHTML = '';
+
+                // Safe fallback for specs
+                const specs = labelObj.specs || Array(5).fill({icon:'', text:''});
+
                 content.innerHTML = `
-                    <div style="background:var(--bg-surface); padding:32px; border-radius:var(--radius-lg); border:1px solid var(--border); max-width: 600px;">
-                        <div class="form-group">
-                            <label class="form-label">Main Heading</label>
-                            <input type="text" class="form-control" id="contactTitle" value='${page.title || ""}' onchange="updateStaticPage('title', this.value)">
+                    <div style="background:var(--bg-surface); padding:32px; border-radius:var(--radius-lg); border:1px solid var(--border); max-width: 800px; display:flex; flex-direction:column; gap:20px;">
+                        
+                        <div class="form-group" style="margin:0; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+                            <label class="form-label" style="color:var(--accent);">Internal Label Name (For sidebar reference)</label>
+                            <input type="text" class="form-control" style="font-weight:bold; font-size:16px;" value="${labelObj.name || labelObj.model || ''}" onchange="updateLabelData('name', this.value)">
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Subtitle</label>
-                            <input type="text" class="form-control" id="contactSubtitle" value="${page.subtitle || ""}" onchange="updateStaticPage('subtitle', this.value)">
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                            <div class="form-group" style="margin:0;">
+                                <label class="form-label">Brand Name</label>
+                                <input type="text" class="form-control" id="lBrand" value='${labelObj.brand || ""}' onchange="updateLabelData('brand', this.value)">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label class="form-label">Tagline (under brand)</label>
+                                <input type="text" class="form-control" id="lTagline" value="${labelObj.tagline || ""}" onchange="updateLabelData('tagline', this.value)">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Contact Number</label>
-                            <input type="text" class="form-control" id="contactPhone" value="${page.phone || ""}" onchange="updateStaticPage('phone', this.value)">
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                            <div class="form-group" style="margin:0;">
+                                <label class="form-label">Main Model Name</label>
+                                <input type="text" class="form-control" id="lModel" value='${labelObj.model || ""}' onchange="updateLabelData('model', this.value)">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label class="form-label">Comfort Grade</label>
+                                <input type="text" class="form-control" id="lComfort" value="${labelObj.comfort || ""}" onchange="updateLabelData('comfort', this.value)">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Number Label (e.g. WhatsApp Orders)</label>
-                            <input type="text" class="form-control" id="contactPhoneLabel" value="${page.phoneLabel || ""}" onchange="updateStaticPage('phoneLabel', this.value)">
+
+                        <div class="form-group" style="margin:0;">
+                            <label class="form-label">Subtitle (under model)</label>
+                            <input type="text" class="form-control" id="lSubtitle" value="${labelObj.subtitle || ""}" onchange="updateLabelData('subtitle', this.value)">
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Address Text (HTML allowed)</label>
-                            <textarea class="form-control" id="contactAddress" onchange="updateStaticPage('addressText', this.value)">${page.addressText || ""}</textarea>
+
+                        <h4 style="color:var(--text-secondary); border-bottom:1px solid var(--border); padding-bottom:8px; margin-top:16px;">5 Specifications (Icon & Text)</h4>
+                        
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            ${[0,1,2,3,4].map(i => {
+                                const s = specs[i] || {icon:'', text:''};
+                                return `
+                                <div style="display:flex; gap:10px;">
+                                    <input type="text" class="form-control" style="width:100px; text-align:center;" placeholder="Emoji/Icon" value="${s.icon}" onchange="updateSpec(${i}, 'icon', this.value)">
+                                    <input type="text" class="form-control" placeholder="Spec Text (e.g. Memory Foam)" value="${s.text}" onchange="updateSpec(${i}, 'text', this.value)">
+                                </div>`;
+                            }).join('')}
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Footer Left Text</label>
-                            <input type="text" class="form-control" id="contactFooterL" value="${page.footerLeft || ""}" onchange="updateStaticPage('footerLeft', this.value)">
+
+                        <h4 style="color:var(--text-secondary); border-bottom:1px solid var(--border); padding-bottom:8px; margin-top:16px;">Footer Details</h4>
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+                            <div class="form-group" style="margin:0;">
+                                <label class="form-label">Footer Left 1</label>
+                                <input type="text" class="form-control" value='${labelObj.footerL1 || ""}' onchange="updateLabelData('footerL1', this.value)">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label class="form-label">Footer Left 2</label>
+                                <input type="text" class="form-control" value='${labelObj.footerL2 || ""}' onchange="updateLabelData('footerL2', this.value)">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label class="form-label">Footer Right</label>
+                                <input type="text" class="form-control" value='${labelObj.footerRight || ""}' onchange="updateLabelData('footerRight', this.value)">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Footer Right Text</label>
-                            <input type="text" class="form-control" id="contactFooterR" value="${page.footerRight || ""}" onchange="updateStaticPage('footerRight', this.value)">
-                        </div>
+
                     </div>
                 `;
             }
         }
 
-        // STATIC PAGE UPDATE LOGIC
+        // STATIC PAGE OR LABEL UPDATE LOGIC
         function updateStaticPage(field, value) {
             catalogData.pages[currentPageIndex][field] = value;
-            // Optionally auto-save
             saveToDisk();
+        }
+        
+        function updateLabelData(field, value) {
+            catalogData.labels[currentPageIndex][field] = value;
+            saveToDisk();
+            
+            // Re-render sidebar if changing name or model name so it updates the title
+            if(field === 'model' || field === 'name') renderSidebar();
+        }
+
+        function updateSpec(idx, field, value) {
+            if(!catalogData.labels[currentPageIndex].specs) {
+                catalogData.labels[currentPageIndex].specs = Array(5).fill({icon:'', text:''});
+            }
+            // Need to clone to avoid reference issues if they were filled with the same empty object
+            const currentSpecs = JSON.parse(JSON.stringify(catalogData.labels[currentPageIndex].specs));
+            if(!currentSpecs[idx]) currentSpecs[idx] = {icon:'', text:''};
+            
+            currentSpecs[idx][field] = value;
+            catalogData.labels[currentPageIndex].specs = currentSpecs;
+            saveToDisk();
+        }
+
+        // ==========================================
+        // LABEL MODAL / CRUD LOGIC
+        // ==========================================
+        function createNewLabel() {
+            if(!catalogData.labels) catalogData.labels = [];
+            catalogData.labels.push({
+                id: 'label-' + Date.now(),
+                name: 'New Mattress Label',
+                model: 'New Mattress Model',
+                brand: 'Giltedge',
+                tagline: 'Luxury in Sleep',
+                comfort: 'Comfort Grade: Medium',
+                subtitle: 'New Series',
+                specs: [
+                    {icon:"◎", text:"1000 Pocket Sprung"},
+                    {icon:"🌿", text:"Aloe Vera Fabric"},
+                    {icon:"☁", text:"Memory Foam"},
+                    {icon:"▦", text:"4-Way Stretch"},
+                    {icon:"↺", text:"Non-Turn Mattress"}
+                ],
+                footerL1: '10 Year Warranty',
+                footerL2: 'BS7177 Compliant',
+                footerRight: 'Handcrafted in the UK 🇬🇧'
+            });
+            selectPage(catalogData.labels.length - 1);
+            saveToDisk();
+        }
+
+        function deleteLabel(idx) {
+            if(confirm("Are you sure you want to delete this mattress label?")) {
+                catalogData.labels.splice(idx, 1);
+                if(catalogData.labels.length > 0) {
+                    selectPage(0);
+                } else {
+                    document.getElementById('mainContent').innerHTML = '<div style="padding:40px; color:var(--text-secondary); text-align:center;">No labels exist. Add a new label.</div>';
+                    document.getElementById('pageTitle').textContent = 'No Labels';
+                    document.getElementById('headerActions').innerHTML = '';
+                    renderSidebar();
+                }
+                saveToDisk();
+            }
         }
 
         // ==========================================
