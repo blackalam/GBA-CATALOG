@@ -244,5 +244,72 @@
       "footerRight": "NEXT-DAY ASSEMBLY GUARANTEED"
     }
   ],
-  "labels": []
+  "labels": [
+    {
+      "id": "label-1773409841851",
+      "model": "New Mattress Model",
+      "brand": "GBA Furniture",
+      "tagline": "Luxury in Sleep",
+      "comfort": "Comfort Grade: Medium",
+      "subtitle": "New Series",
+      "specs": [
+        {
+          "icon": "◎",
+          "text": "1000 Pocket Sprung"
+        },
+        {
+          "icon": "🌿",
+          "text": "Aloe Vera Fabric"
+        },
+        {
+          "icon": "☁",
+          "text": "Memory Foam"
+        },
+        {
+          "icon": "▦",
+          "text": "4-Way Stretch"
+        },
+        {
+          "icon": "↺",
+          "text": "Non-Turn Mattress"
+        }
+      ],
+      "footerL1": "10 Year Warranty",
+      "footerL2": "BS7177 Compliant",
+      "footerRight": "Handcrafted in the UK 🇬🇧"
+    },
+    {
+      "id": "label-1773410033807",
+      "model": "New Mattress Model",
+      "brand": "Giltedge",
+      "tagline": "Luxury in Sleep",
+      "comfort": "Comfort Grade: Medium",
+      "subtitle": "New Series",
+      "specs": [
+        {
+          "icon": "◎",
+          "text": "1000 Pocket Sprung"
+        },
+        {
+          "icon": "🌿",
+          "text": "Aloe Vera Fabric"
+        },
+        {
+          "icon": "☁",
+          "text": "Memory Foam"
+        },
+        {
+          "icon": "▦",
+          "text": "4-Way Stretch"
+        },
+        {
+          "icon": "↺",
+          "text": "Non-Turn Mattress"
+        }
+      ],
+      "footerL1": "10 Year Warranty",
+      "footerL2": "BS7177 Compliant",
+      "footerRight": "Handcrafted in the UK 🇬🇧"
+    }
+  ]
 }

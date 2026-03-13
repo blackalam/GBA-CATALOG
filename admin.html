@@ -741,7 +741,7 @@
                     else if (itemObj.type === 'contact') icon = 'ri-contacts-line';
                 } else {
                     icon = 'ri-price-tag-3-line';
-                    label = itemObj.model || itemObj.id || label;
+                    label = itemObj.name || itemObj.model || itemObj.id || label;
                 }
 
                 item.innerHTML = `
@@ -904,6 +904,11 @@
                 content.innerHTML = `
                     <div style="background:var(--bg-surface); padding:32px; border-radius:var(--radius-lg); border:1px solid var(--border); max-width: 800px; display:flex; flex-direction:column; gap:20px;">
                         
+                        <div class="form-group" style="margin:0; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+                            <label class="form-label" style="color:var(--accent);">Internal Label Name (For sidebar reference)</label>
+                            <input type="text" class="form-control" style="font-weight:bold; font-size:16px;" value="${labelObj.name || labelObj.model || ''}" onchange="updateLabelData('name', this.value)">
+                        </div>
+
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
                             <div class="form-group" style="margin:0;">
                                 <label class="form-label">Brand Name</label>
@@ -975,8 +980,8 @@
             catalogData.labels[currentPageIndex][field] = value;
             saveToDisk();
             
-            // Re-render sidebar if changing model name so it updates the title
-            if(field === 'model') renderSidebar();
+            // Re-render sidebar if changing name or model name so it updates the title
+            if(field === 'model' || field === 'name') renderSidebar();
         }
 
         function updateSpec(idx, field, value) {
@@ -999,6 +1004,7 @@
             if(!catalogData.labels) catalogData.labels = [];
             catalogData.labels.push({
                 id: 'label-' + Date.now(),
+                name: 'New Mattress Label',
                 model: 'New Mattress Model',
                 brand: 'Giltedge',
                 tagline: 'Luxury in Sleep',
