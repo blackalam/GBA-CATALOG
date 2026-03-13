@@ -99,7 +99,8 @@
 
         .specs-grid {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
+            gap: 20px;
             border-top: 1px solid #eee;
             padding-top: 8mm;
             margin-bottom: 12mm;
@@ -107,7 +108,7 @@
 
         .spec-item {
             text-align: center;
-            flex: 1;
+            flex: 0 1 20%; /* Max 20% width to fit 5, will naturally center if fewer */
         }
 
         .icon-box {
@@ -245,11 +246,16 @@
                 // Specs
                 let specsHTML = "";
                 if(labelData.specs) {
-                    labelData.specs.forEach(s => {
+                    // Filter out any specs that have both empty text AND empty icon
+                    const activeSpecs = labelData.specs.filter(s => 
+                        (s.text && s.text.trim()) || (s.icon && s.icon.trim())
+                    );
+                    
+                    activeSpecs.forEach(s => {
                         specsHTML += `
                         <div class="spec-item">
-                            <div class="icon-box">${s.icon}</div>
-                            <div class="spec-label">${s.text}</div>
+                            <div class="icon-box">${s.icon || ''}</div>
+                            <div class="spec-label">${s.text || ''}</div>
                         </div>`;
                     });
                 }
