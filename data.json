@@ -4,7 +4,7 @@
       "id": "page-cover",
       "type": "cover",
       "title": "GBA<span style=\"color:var(--accent)\">.</span>",
-      "subtitle": "Furniture Portfolio 2026",
+      "subtitle": "Furniture Ca 2026",
       "footerLeft": "FOR AGENTS & LANDLORDS",
       "footerRight": "NEXT-DAY LONDON DELIVERY"
     },
@@ -243,5 +243,6 @@
       "footerLeft": "© 2026 GBA FURNITURE",
       "footerRight": "NEXT-DAY ASSEMBLY GUARANTEED"
     }
-  ]
+  ],
+  "labels": []
 }

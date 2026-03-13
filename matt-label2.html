@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giltedge Pisa - Aloe Vera (25x15.5cm) Enhanced Footer</title>
+    <style>
+        :root {
+            --aloe-green: #3d5245;
+            --accent-sage: #8ba88e;
+            --silk-cream: #fafaf7;
+            --text-dark: #2c312e;
+        }
+
+        body {
+            background-color: #dcdcdc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        /* Fixed Dimensions: 250mm x 155mm */
+        .mattress-label {
+            width: 250mm;
+            height: 155mm;
+            background-color: var(--silk-cream);
+            padding: 10mm;
+            border: 1px solid #e2e2e2;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            position: relative;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            outline: 2px dashed #ccc;
+            outline-offset: -4px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 6mm;
+        }
+
+        .brand-name {
+            font-family: 'Times New Roman', serif;
+            font-size: 38pt;
+            letter-spacing: 4px;
+            color: var(--aloe-green);
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .tagline {
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            color: var(--accent-sage);
+            margin-top: 4px;
+        }
+
+        .model-section {
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .comfort-badge {
+            display: inline-block;
+            border: 1px solid var(--aloe-green);
+            padding: 3px 12px;
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0 auto 10px auto;
+            color: var(--aloe-green);
+        }
+
+        .model-name {
+            font-family: 'Georgia', serif;
+            font-size: 64pt;
+            margin: 0;
+            color: var(--text-dark);
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .aloe-subtitle {
+            font-size: 10.5pt;
+            letter-spacing: 3.5px;
+            text-transform: uppercase;
+            color: var(--accent-sage);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .specs-grid {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #eee;
+            padding-top: 8mm;
+            margin-bottom: 12mm;
+            /* Increased margin for better separation from larger footer */
+        }
+
+        .spec-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .icon-box {
+            height: 30px;
+            margin-bottom: 8px;
+            color: var(--aloe-green);
+            font-size: 24pt;
+        }
+
+        .spec-label {
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1.3;
+            color: #666;
+            max-width: 80px;
+            margin: 0 auto;
+        }
+
+        /* Enhanced Footer Bar - Larger and bolder */
+        footer {
+            background-color: var(--aloe-green);
+            margin: 0 -10mm -10mm -10mm;
+            padding: 22px 18mm;
+            /* Increased padding from 12px to 22px */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 10pt;
+            /* Slightly larger font */
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .footer-left span {
+            margin-right: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 4px 12px;
+            /* Thicker border padding */
+            font-weight: 600;
+        }
+
+        .uk-flag {
+            color: #fff;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="mattress-label">
+        <header>
+            <h1 class="brand-name">Giltedge</h1>
+            <div class="tagline">Luxury in Sleep</div>
+        </header>
+
+        <section class="model-section">
+            <div class="comfort-badge">Comfort Grade: Medium</div>
+            <h2 class="model-name">Pisa</h2>
+            <div class="aloe-subtitle">Aloe Vera Infused Series</div>
+        </section>
+
+        <section class="specs-grid">
+            <div class="spec-item">
+                <div class="icon-box">◎</div>
+                <div class="spec-label">1000 Pocket Sprung</div>
+            </div>
+            <div class="spec-item">
+                <div class="icon-box">🌿</div>
+                <div class="spec-label">Aloe Vera Fabric</div>
+            </div>
+            <div class="spec-item">
+                <div class="icon-box">☁</div>
+                <div class="spec-label">Memory Foam</div>
+            </div>
+            <div class="spec-item">
+                <div class="icon-box">▦</div>
+                <div class="spec-label">4-Way Stretch</div>
+            </div>
+            <div class="spec-item">
+                <div class="icon-box">↺</div>
+                <div class="spec-label">Non-Turn Mattress</div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="footer-left">
+                <span>10 Year Warranty</span>
+                <span>BS7177 Compliant</span>
+            </div>
+            <div class="uk-flag">
+                Handcrafted in the UK 🇬🇧
+            </div>
+        </footer>
+    </div>
+
+</body>
+
+</html>
