@@ -580,12 +580,19 @@
     <div class="overlay" id="pageModalOverlay">
         <div class="modal" style="max-width: 400px;">
             <div class="modal-header">
-                <h2 class="modal-title">Add New Series</h2>
+                <h2 class="modal-title">Add New Page</h2>
                 <button class="modal-close" onclick="closePageModal()"><i class="ri-close-line"></i></button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Series Title (e.g. BEDROOM SERIES 03)</label>
+                    <label class="form-label">Page Type</label>
+                    <select class="form-control" id="newPageType" onchange="document.getElementById('newPageTitle').placeholder = this.value === 'logistics' ? 'e.g. SERVICE & LOGISTICS' : 'e.g. BEDROOM SERIES 03';">
+                        <option value="products">Product Catalog Page</option>
+                        <option value="logistics">Service & Logistics Page</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Page Title</label>
                     <input type="text" class="form-control" id="newPageTitle" placeholder="Enter series title...">
                 </div>
             </div>
@@ -642,16 +649,65 @@
         </div>
     </div>
 
+    <!-- MODAL (Service Editor) -->
+    <div class="overlay" id="serviceModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="smTitle">Edit Service</h2>
+                <button class="modal-close" onclick="closeServiceModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="modal-body" id="smBody">
+                <div class="form-group">
+                    <label class="form-label">Service Title</label>
+                    <input type="text" class="form-control" id="smTitleInput" placeholder="e.g. Old Item Removal">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="smDescInput" placeholder="Service details..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tags (Comma Separated)</label>
+                    <input type="text" class="form-control" id="smTagsInput" placeholder="e.g. Eco-Friendly, Same-Day">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Main Image</label>
+                    <div class="img-grid" id="smImgGrid">
+                        <!-- Img here -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Pricing Rows</label>
+                    <div id="smPriceList"></div>
+                    <button class="action-btn secondary" style="margin: 10px 0 0 0; width:100%;"
+                        onclick="addServicePriceRow()">
+                        <i class="ri-add-line"></i> Add Pricing Row
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn secondary" style="margin:0;" onclick="closeServiceModal()">Cancel</button>
+                <button class="action-btn" style="margin:0;" onclick="saveServiceModal()">Save Service</button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPTS -->
     <script>
         let catalogData = { pages: [], labels: [] };
         let activeMode = 'catalog'; // 'catalog' or 'labels'
         let currentPageIndex = -1; // Also used for currentLabelIndex
         
-        // Modal State
         let editingProductIndex = -1; // -1 means new product
         let currentModalPrices = [];
         let currentModalImages = [];
+
+        // Service Modal State
+        let editingServiceIndex = -1;
+        let currentServicePrices = [];
+        let currentServiceImage = "";
 
         let sortableSidebar = null;
 
@@ -848,6 +904,60 @@
                             </div>
                         </div>
                     `;
+                } else if (page.type === 'logistics') {
+                    titleEl.textContent = page.title || 'Logistics & Services';
+                    headerActions.innerHTML = `
+                        <button class="action-btn secondary" style="margin:0" onclick="renamePage(${idx})"><i class="ri-edit-line"></i> Rename Page</button>
+                        <button class="action-btn danger" style="margin:0" onclick="deletePage(${idx})"><i class="ri-delete-bin-line"></i> Delete Page</button>
+                        <button class="action-btn" style="margin:0" onclick="openServiceModal(-1)"><i class="ri-add-line"></i> Add Service</button>
+                    `;
+
+                    // Render services grid
+                    if (!page.services || page.services.length === 0) {
+                        content.innerHTML = `
+                            <div style="background:var(--bg-surface); padding:20px; border-radius:var(--radius-lg); border:1px solid var(--border); max-width: 600px; margin-bottom: 20px;">
+                                <div class="form-group">
+                                    <label class="form-label">Footer Left Text</label>
+                                    <input type="text" class="form-control" value="${page.footerLeft || ""}" onchange="updateStaticPage('footerLeft', this.value)">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label class="form-label">Footer Right Text</label>
+                                    <input type="text" class="form-control" value="${page.footerRight || ""}" onchange="updateStaticPage('footerRight', this.value)">
+                                </div>
+                            </div>
+                            <div style="text-align:center; padding:20px; color:var(--text-secondary);">No services yet. Click Add Service.</div>
+                        `;
+                        return;
+                    }
+
+                    let html = `
+                        <div style="background:var(--bg-surface); padding:20px; border-radius:var(--radius-lg); border:1px solid var(--border); max-width: 600px; margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label class="form-label">Footer Left Text</label>
+                                <input type="text" class="form-control" value="${page.footerLeft || ""}" onchange="updateStaticPage('footerLeft', this.value)">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label class="form-label">Footer Right Text</label>
+                                <input type="text" class="form-control" value="${page.footerRight || ""}" onchange="updateStaticPage('footerRight', this.value)">
+                            </div>
+                        </div>
+                        <div class="grid">`;
+                    page.services.forEach((srv, sIdx) => {
+                        const img = srv.image || 'https://placehold.co/400x300/1e293b/94a3b8?text=No+Image';
+                        html += `
+                            <div class="card">
+                                <img src="${img}" class="card-img" alt="${srv.title}">
+                                <h3 class="card-title">${srv.title || 'Untitled'}</h3>
+                                <p class="card-desc">${srv.description || 'No description'}</p>
+                                <div class="card-actions">
+                                    <button class="icon-btn" onclick="openServiceModal(${sIdx})" title="Edit"><i class="ri-pencil-line"></i></button>
+                                    <button class="icon-btn danger" onclick="deleteService(${sIdx})" title="Delete"><i class="ri-delete-bin-line"></i></button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                    content.innerHTML = html;
                 } else if (page.type === 'contact') {
                     titleEl.textContent = "Contact Page Settings";
                     headerActions.innerHTML = '';
@@ -1054,16 +1164,30 @@
 
         function saveNewPage() {
             const title = document.getElementById('newPageTitle').value.trim();
+            const type = document.getElementById('newPageType').value;
             if (!title) {
                 showToast("Please enter a title", true);
                 return;
             }
-            catalogData.pages.push({
-                id: 'page-' + Date.now(),
-                type: 'products',
-                seriesTitle: title,
-                products: []
-            });
+            
+            if (type === 'logistics') {
+                catalogData.pages.push({
+                    id: 'page-' + Date.now(),
+                    type: 'logistics',
+                    title: title,
+                    footerLeft: "SEPTEMBER 2023 LOGISTICS",
+                    footerRight: "LICENSED WASTE CARRIER",
+                    services: []
+                });
+            } else {
+                catalogData.pages.push({
+                    id: 'page-' + Date.now(),
+                    type: 'products',
+                    seriesTitle: title,
+                    products: []
+                });
+            }
+            
             closePageModal();
             selectPage(catalogData.pages.length - 1);
             saveToDisk();
@@ -1258,6 +1382,151 @@
         function deleteProduct(idx) {
             if (confirm("Are you sure you want to delete this item?")) {
                 catalogData.pages[currentPageIndex].products.splice(idx, 1);
+                selectPage(currentPageIndex);
+                saveToDisk();
+            }
+        }
+
+        // ==========================================
+        // SERVICE MODAL LOGIC (LOGISTICS)
+        // ==========================================
+        function openServiceModal(sIdx) {
+            editingServiceIndex = sIdx;
+            const page = catalogData.pages[currentPageIndex];
+
+            if (sIdx === -1) {
+                // New Service
+                document.getElementById('smTitle').innerText = "Add New Service";
+                document.getElementById('smTitleInput').value = "";
+                document.getElementById('smDescInput').value = "";
+                document.getElementById('smTagsInput').value = "";
+                currentServicePrices = [{ label: "", value: "", extra: "" }];
+                currentServiceImage = "";
+            } else {
+                // Edit Service
+                const srv = page.services[sIdx];
+                document.getElementById('smTitle').innerText = "Edit Service";
+                document.getElementById('smTitleInput').value = srv.title || "";
+                document.getElementById('smDescInput').value = srv.description || "";
+                document.getElementById('smTagsInput').value = (srv.tags || []).join(', ');
+                currentServicePrices = JSON.parse(JSON.stringify(srv.prices || []));
+                currentServiceImage = srv.image || "";
+            }
+
+            renderServicePrices();
+            renderServiceImage();
+            document.getElementById('serviceModalOverlay').classList.add('active');
+        }
+
+        function closeServiceModal() {
+            document.getElementById('serviceModalOverlay').classList.remove('active');
+        }
+
+        function renderServicePrices() {
+            const list = document.getElementById('smPriceList');
+            list.innerHTML = "";
+            currentServicePrices.forEach((price, idx) => {
+                const el = document.createElement('div');
+                el.className = "list-item";
+                el.innerHTML = `
+                    <input type="text" class="form-control" placeholder="Item/Label (e.g. Mattress)" value="${price.label}" onchange="updateServicePrice(${idx}, 'label', this.value)">
+                    <input type="text" class="form-control" placeholder="Price (e.g. £35)" value="${price.value}" onchange="updateServicePrice(${idx}, 'value', this.value)">
+                    <input type="text" class="form-control" placeholder="Notes (e.g. Inc. Recycling)" value="${price.extra}" onchange="updateServicePrice(${idx}, 'extra', this.value)">
+                    <button class="icon-btn danger" onclick="removeServicePriceRow(${idx})"><i class="ri-delete-bin-line"></i></button>
+                `;
+                list.appendChild(el);
+            });
+        }
+        function updateServicePrice(idx, field, val) { currentServicePrices[idx][field] = val; }
+        function addServicePriceRow() { currentServicePrices.push({ label: "", value: "", extra: "" }); renderServicePrices(); }
+        function removeServicePriceRow(idx) { currentServicePrices.splice(idx, 1); renderServicePrices(); }
+
+        function renderServiceImage() {
+            const grid = document.getElementById('smImgGrid');
+            grid.innerHTML = "";
+
+            if (currentServiceImage) {
+                grid.innerHTML = `
+                <div class="img-upload-box" style="border-color:transparent;">
+                    <img src="${currentServiceImage}" alt="service">
+                    <button class="remove-img" onclick="removeServiceImage()"><i class="ri-close-line"></i></button>
+                </div>`;
+            } else {
+                grid.innerHTML = `
+                <div class="img-upload-box">
+                    <i class="ri-upload-cloud-2-line" style="font-size:24px; margin-bottom:4px;"></i>
+                    <span style="font-size:11px; font-weight:600;">Upload</span>
+                    <input type="file" accept="image/*" onchange="uploadServiceImage(event)">
+                </div>`;
+            }
+        }
+
+        function removeServiceImage() {
+            currentServiceImage = "";
+            renderServiceImage();
+        }
+
+        async function uploadServiceImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const grid = document.getElementById('smImgGrid');
+            const uploader = grid.lastElementChild;
+            uploader.innerHTML = `<i class="ri-loader-4-line ri-spin" style="font-size:24px;"></i>`;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    currentServiceImage = data.imageUrl;
+                    renderServiceImage();
+                } else {
+                    showToast("Upload failed", true);
+                    renderServiceImage();
+                }
+            } catch (err) {
+                showToast("Upload error", true);
+                renderServiceImage();
+            }
+        }
+
+        function saveServiceModal() {
+            const page = catalogData.pages[currentPageIndex];
+
+            const title = document.getElementById('smTitleInput').value.trim();
+            const desc = document.getElementById('smDescInput').value.trim();
+            const tagsRaw = document.getElementById('smTagsInput').value;
+            const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
+
+            const newSrv = {
+                title: title,
+                description: desc,
+                tags: tags,
+                prices: currentServicePrices.filter(p => p.label || p.value),
+                image: currentServiceImage
+            };
+
+            if (editingServiceIndex === -1) {
+                if (!page.services) page.services = [];
+                page.services.push(newSrv);
+            } else {
+                page.services[editingServiceIndex] = newSrv;
+            }
+
+            closeServiceModal();
+            selectPage(currentPageIndex);
+            saveToDisk();
+        }
+
+        function deleteService(idx) {
+            if (confirm("Are you sure you want to delete this service?")) {
+                catalogData.pages[currentPageIndex].services.splice(idx, 1);
                 selectPage(currentPageIndex);
                 saveToDisk();
             }

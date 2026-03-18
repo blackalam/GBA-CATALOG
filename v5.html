@@ -219,6 +219,54 @@
                             ${productsHtml}
                         </main>
                     `;
+                } else if (page.type === 'logistics') {
+                    const servicesHtml = (page.services || []).map(srv => {
+                        const tagsHtml = (srv.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('');
+                        const pricesHtml = (srv.prices || []).map(price => `
+                            <div class="price-row">
+                                <span class="label">${price.label}</span>
+                                <span class="price-val">${price.value}</span>
+                                <span class="mat-only">${price.extra}</span>
+                            </div>
+                        `).join('');
+
+                        const img = srv.image || 'https://placehold.co/400x300/f8fafc/94a3b8?text=No+Image';
+
+                        return `
+                        <section class="product-card">
+                            <div class="image-side">
+                                <div class="main-img">
+                                    <img src="${img}" alt="${srv.title}">
+                                </div>
+                            </div>
+                            
+                            <div class="info-side">
+                                <h2 class="product-title">${srv.title}</h2>
+                                <div class="tag-row">
+                                    ${tagsHtml}
+                                </div>
+                                <p class="product-desc">${srv.description}</p>
+                                
+                                <div class="pricing-grid">
+                                    ${pricesHtml}
+                                </div>
+                            </div>
+                        </section>`;
+                    }).join('');
+
+                    pageEl.innerHTML = `
+                        <header class="page-header">
+                            <div class="brand-logo">GBA<span style="color:var(--accent)">.</span></div>
+                            <div style="font-size: 9px; font-weight: 800; color: var(--slate-text);">${page.title}</div>
+                        </header>
+                        <main class="page-content">
+                            ${servicesHtml}
+                        </main>
+                        <footer class="footer-status">
+                            <span>${page.footerLeft || ''}</span>
+                            <span>${page.footerRight || ''}</span>
+                        </footer>
+                    `;
                 } else if (page.type === 'contact') {
                     pageEl.style.textAlign = 'center';
                     pageEl.style.justifyContent = 'center';
