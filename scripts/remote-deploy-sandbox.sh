@@ -940,6 +940,9 @@ done
 # Content verification on staged candidate before cutover
 grep -F -q -- "GBA Furniture" "${STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Staged index.html missing brand title" >&2; exit 1; }
 grep -F -q -- "assets/gba-logo-official-transparent.png" "${STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Staged index.html missing official transparent logo reference" >&2; exit 1; }
+grep -F -q -- "assets/current-banner.jpg?v=hero-20261020-1677a163a5ca" "${STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Staged index.html missing cache-busted hero banner reference" >&2; exit 1; }
+grep -F -q -- "Specialists in Landlord & Agency Furniture" "${STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Staged index.html missing hero banner overlay copy" >&2; exit 1; }
+grep -F -q -- "Landlords • Letting • HMOs • Care Homes • Airbnb • Temporary Housing — Your Complete Furniture Partner. Only One Call Away" "${STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Staged index.html missing hero H1 heading" >&2; exit 1; }
 grep -F -q -- "--color-petrol" "${STAGE_DIR}/styles.css" || { echo "CRITICAL ERROR: Staged styles.css missing brand variables" >&2; exit 1; }
 grep -F -q -- "products" "${STAGE_DIR}/script.js" || { echo "CRITICAL ERROR: Staged script.js missing catalogue logic" >&2; exit 1; }
 grep -F -q -- "beds-mattresses" "${STAGE_DIR}/data/products.json" || { echo "CRITICAL ERROR: Staged products.json missing category data" >&2; exit 1; }
