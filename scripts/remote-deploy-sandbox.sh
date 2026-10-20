@@ -6,7 +6,7 @@
 #   ./scripts/remote-deploy-sandbox.sh <TARBALL_PATH> [PREVIEW_URL] [ARTIFACT_SHA256] [RELEASE_ID] [GIT_SHA]
 #
 # Process:
-#   1. Strict URL & Input Validation
+#   1. Strict URL, Input & Runtime Preflight ('node --check' before any mutation)
 #   2. Canonical Realpath Guards & Error-Checked Symlink Scan (Sandbox outside
 #      docroot at /home/alibhatt/sandbox/gbafurniture and recovery root at
 #      /home/alibhatt/sandbox/.gba-sandbox-recovery; overrides ONLY in TEST_MODE=1)
@@ -18,7 +18,8 @@
 #      Packaged Checksum Verification & release-metadata.json Binding
 #   6. Exclusive Invocation-Owned Pre-Cutover Recovery Archive & Tree with
 #      Trap-Driven Recovery Covering Every Error After Mutation Begins
-#   7. Public Smoke Test Proving Exact Deployed Identity (/release-metadata.json)
+#   7. Public Smoke Test Bound to Checksum-Verified Retained STAGE_DIR
+#      (Proving Exact Deployed Bytes & /release-metadata.json Identity)
 # ==============================================================================
 
 set -euo pipefail
@@ -81,6 +82,11 @@ if [ -L "${TARBALL_PATH}" ] || [ ! -f "${TARBALL_PATH}" ]; then
   echo "CRITICAL ERROR: Preview tarball not found or is a symlink at '${TARBALL_PATH}'" >&2
   exit 1
 fi
+
+# Note: In deployment mode (SMOKE_DEPLOYMENT_MODE=1) with mandatory EXPECTED_METADATA_FILE
+# and TRUSTED_ASSET_ROOT (EXPECTED_ASSET_ROOT) exact byte-size/SHA256 binding, smoke-test.sh
+# validates JavaScript without requiring a remote 'node' binary ('node --check') on PATH
+# because the packaged trusted bytes were syntax-checked in CI.
 
 # ==============================================================================
 # 1. Canonical Realpath & Error-Checked Symlink Guards (Overrides ONLY in TEST_MODE=1)
@@ -804,8 +810,10 @@ fi
 # ==============================================================================
 # 4. Staged Extraction, Allowlist & Packaged Checksum Verification on Host
 # ==============================================================================
-STAGE_DIR="$(mktemp -d)"
+RAW_STAGE_DIR="$(mktemp -d)"
+STAGE_DIR="$(cd -P -- "${RAW_STAGE_DIR}" && pwd -P)"
 STAGE_DIR_OWNED=1
+STAGE_DIR="$(guard_and_canonicalize_dir "${STAGE_DIR}" "STAGE_DIR" "0" "1")"
 
 echo "Extracting preview artifact to staging area: ${STAGE_DIR}"
 tar -xzf "${TARBALL_PATH}" -C "${STAGE_DIR}"
@@ -1014,17 +1022,20 @@ fi
 echo "✓ Artifact atomically installed into ${SANDBOX_DIR}"
 
 # ==============================================================================
-# 6. Smoke Test Verification (Proving Public Identity with Auto-Restore on Failure)
+# 6. Smoke Test Verification Bound to Checksum-Verified Retained STAGE_DIR
 # ==============================================================================
 echo "Running smoke test on preview URL: ${PREVIEW_URL}..."
 SMOKE_TEST_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/smoke-test.sh"
 
 SMOKE_OK=1
 if [ -f "${SMOKE_TEST_SCRIPT}" ]; then
-  if ! EXPECTED_RELEASE_ID="${META_RELEASE_ID}" \
+  if ! SMOKE_DEPLOYMENT_MODE="1" \
+       EXPECTED_RELEASE_ID="${META_RELEASE_ID}" \
        EXPECTED_GIT_SHA="${META_GIT_SHA}" \
        EXPECTED_TREE_SHA256="${META_TREE_SHA256}" \
-       EXPECTED_METADATA_FILE="${SANDBOX_DIR}/release-metadata.json" \
+       EXPECTED_METADATA_FILE="${STAGE_DIR}/release-metadata.json" \
+       TRUSTED_ASSET_ROOT="${STAGE_DIR}" \
+       EXPECTED_ASSET_ROOT="${STAGE_DIR}" \
        bash "${SMOKE_TEST_SCRIPT}" "${PREVIEW_URL}"; then
     SMOKE_OK=0
   fi

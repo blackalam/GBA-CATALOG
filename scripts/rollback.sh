@@ -1468,8 +1468,13 @@ verify_rollback_endpoint() {
   local required_marker="${3:-}"
   local reject_dir_listing="${4:-0}"
 
-  local code
-  code="$(curl -sSL --max-time 15 -w "%{http_code}" -o "${HEALTH_TMP}" -- "${target_url}" || echo "000")"
+  local code=""
+  local curl_rc=0
+  code="$(curl -sSL --max-time 15 -w "%{http_code}" -o "${HEALTH_TMP}" -- "${target_url}")" || curl_rc=$?
+  if [ "${curl_rc}" -ne 0 ]; then
+    echo "CRITICAL ERROR: Post-rollback HTTP health check curl transfer failed (exit ${curl_rc}) on ${endpoint_label} (${target_url})." >&2
+    return 1
+  fi
   if [ "${code}" != "200" ]; then
     echo "CRITICAL ERROR: Post-rollback HTTP health check failed on ${endpoint_label} (${target_url}): expected HTTP 200, received HTTP ${code}." >&2
     return 1
