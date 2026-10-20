@@ -1371,6 +1371,7 @@ check_endpoint "/index.html" "200" "020 8888 0322" "Contact telephone on index.h
 check_endpoint "/index.html" "200" "401 Lordship Lane" "Showroom address on index.html" "html"
 check_endpoint "/index.html" "200" "styles.css?v=public-audit-20261020" "Cache-busted stylesheet reference on index.html" "html"
 check_endpoint "/index.html" "200" "script.js?v=public-audit-20261020" "Cache-busted script reference on index.html" "html"
+check_endpoint "/index.html" "200" "assets/current-banner.jpg?v=hero-20261020-1677a163a5ca" "Cache-busted hero banner image reference on index.html" "html"
 
 # 3. Core Stylesheet (underlying file & cache-busted URL)
 check_endpoint "/styles.css" "200" "--color-petrol" "Stylesheet CSS delivery & brand root variables" "css"
@@ -1388,8 +1389,9 @@ check_endpoint "/data/products.json" "200" "v=public-audit-20261020" "Catalog JS
 check_endpoint "/assets/gba-logo-official-transparent.png" "200" "" "Official transparent brand logo delivery (gba-logo-official-transparent.png)" "png"
 check_endpoint "/assets/gba-logo-web.png" "200" "" "Brand logo image delivery (gba-logo-web.png)" "png"
 
-# 7. Banner Image
+# 7. Banner Image (underlying file & cache-busted URL)
 check_endpoint "/assets/current-banner.jpg" "200" "" "Showroom banner image delivery (current-banner.jpg)" "jpeg"
+check_endpoint "/assets/current-banner.jpg?v=hero-20261020-1677a163a5ca" "200" "" "Cache-busted showroom banner image delivery (current-banner.jpg?v=hero-20261020-1677a163a5ca)" "jpeg"
 
 # 8. Vector Placeholder SVGs (all 10 underlying files & all 10 cache-busted URLs)
 for svg_name in appliance bed-divan bed-frame bunk chest coffee-table dining-table sofa wardrobe; do

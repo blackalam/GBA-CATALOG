@@ -34,7 +34,7 @@ gba-furniture-website/
 ├── styles.css                      # Custom responsive CSS with custom properties & reduced-motion support
 ├── script.js                       # Vanilla JS catalogue rendering, variant switching, enquiry prefill & mailto
 ├── serve.js                        # Zero-dependency local development server (Node.js)
-├── test-site.js                    # Automated verification test suite (373 checks)
+├── test-site.js                    # Automated verification test suite (380 checks)
 ├── generate-placeholders.js        # Generator script for vector SVG placeholders
 ├── data/
 │   └── products.json               # Structured catalogue data sourced from reference price list
@@ -42,7 +42,7 @@ gba-furniture-website/
 │   ├── gba-logo-official-transparent.png # Official transparent production brand logo (header, mobile drawer, footer)
 │   ├── gba-logo-web.png            # Legacy web-optimized brand logo (retained for package compatibility)
 │   ├── gba-logo.png                # Original high-resolution master logo
-│   ├── current-banner.jpg          # Temporary showroom hero image
+│   ├── current-banner.jpg          # Homepage furnished bedroom hero image (1238x864 JPEG)
 │   └── placeholders/               # 10 bespoke architectural line-art SVGs for product cards
 └── reference/
     └── product-price-list.pdf      # Source price list document
