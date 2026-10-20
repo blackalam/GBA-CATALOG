@@ -5,7 +5,7 @@ const placeholders = [
   {
     filename: 'bed-divan.svg',
     title: 'DIVAN BED & MATTRESS',
-    sub: 'Oxford · Silk Ortho · Foam',
+    caption: 'Illustration only — not a product photograph',
     icon: `
       <path d="M120 340 h560 v30 h-560 z" fill="#014660" opacity="0.85"/>
       <path d="M130 280 h540 v60 h-540 z" fill="#D8D2C5" stroke="#014660" stroke-width="3"/>
@@ -20,7 +20,7 @@ const placeholders = [
   {
     filename: 'wardrobe.svg',
     title: 'BEDROOM WARDROBE',
-    sub: 'Budget & AB Ranges',
+    caption: 'Illustration only — not a product photograph',
     icon: `
       <rect x="250" y="140" width="300" height="260" rx="4" fill="#EAE5DC" stroke="#014660" stroke-width="4"/>
       <line x1="400" y1="140" x2="400" y2="340" stroke="#014660" stroke-width="3"/>
@@ -37,7 +37,7 @@ const placeholders = [
   {
     filename: 'chest.svg',
     title: 'CHEST OF DRAWERS',
-    sub: 'Bedside & Drawer Units',
+    caption: 'Illustration only — not a product photograph',
     icon: `
       <rect x="270" y="160" width="260" height="240" rx="4" fill="#EAE5DC" stroke="#014660" stroke-width="4"/>
       <line x1="270" y1="220" x2="530" y2="220" stroke="#014660" stroke-width="3"/>
@@ -54,7 +54,7 @@ const placeholders = [
   {
     filename: 'bed-frame.svg',
     title: 'BED FRAME',
-    sub: 'Metal, Wood & Storage Options',
+    caption: 'Illustration only — not a product photograph',
     icon: `
       <line x1="160" y1="160" x2="160" y2="380" stroke="#014660" stroke-width="5"/>
       <line x1="640" y1="240" x2="640" y2="380" stroke="#014660" stroke-width="5"/>
@@ -71,7 +71,7 @@ const placeholders = [
   {
     filename: 'bunk.svg',
     title: 'BUNK BED',
-    sub: 'Metal & Wood Options',
+    caption: 'Illustration only — not a product photograph',
     icon: `
       <line x1="200" y1="130" x2="200" y2="410" stroke="#014660" stroke-width="5"/>
       <line x1="600" y1="130" x2="600" y2="410" stroke="#014660" stroke-width="5"/>
@@ -90,8 +90,8 @@ const placeholders = [
   },
   {
     filename: 'dining-table.svg',
-    title: 'DINING SETS & TABLES',
-    sub: 'Budget & Wooden Ranges',
+    title: 'DINING FURNITURE',
+    caption: 'Illustration only — not a product photograph',
     icon: `
       <rect x="220" y="240" width="360" height="20" rx="3" fill="#C29B38" stroke="#014660" stroke-width="3"/>
       <line x1="250" y1="260" x2="250" y2="390" stroke="#014660" stroke-width="6"/>
@@ -106,8 +106,8 @@ const placeholders = [
   },
   {
     filename: 'sofa.svg',
-    title: 'SOFAS & LIVING',
-    sub: 'Suites & Sofa Beds',
+    title: 'SOFAS & LIVING ROOM',
+    caption: 'Illustration only — not a product photograph',
     icon: `
       <path d="M170 240 c0 -30 20 -50 50 -50 h360 c30 0 50 20 50 50 v110 h-460 z" fill="#E3DFD5" stroke="#014660" stroke-width="4"/>
       <rect x="150" y="250" width="70" height="110" rx="10" fill="#014660" opacity="0.9"/>
@@ -122,7 +122,7 @@ const placeholders = [
   {
     filename: 'coffee-table.svg',
     title: 'COFFEE TABLE',
-    sub: 'Living Room Occasional',
+    caption: 'Illustration only — not a product photograph',
     icon: `
       <rect x="220" y="250" width="360" height="18" rx="4" fill="#C29B38" stroke="#014660" stroke-width="3"/>
       <rect x="260" y="320" width="280" height="10" rx="2" fill="#E3DFD5" stroke="#014660" stroke-width="2"/>
@@ -133,7 +133,7 @@ const placeholders = [
   {
     filename: 'appliance.svg',
     title: 'APPLIANCES',
-    sub: 'Refrigeration & Laundry',
+    caption: 'Illustration only — not a product photograph',
     icon: `
       <rect x="270" y="140" width="260" height="260" rx="8" fill="#F4F2EC" stroke="#014660" stroke-width="4"/>
       <line x1="270" y1="240" x2="530" y2="240" stroke="#014660" stroke-width="3"/>
@@ -144,8 +144,8 @@ const placeholders = [
   },
   {
     filename: 'van.svg',
-    title: 'REMOVAL CHARGES',
-    sub: 'Item-Based Price List Rates',
+    title: 'FURNITURE REMOVALS',
+    caption: 'Furniture removal service',
     icon: `
       <path d="M180 230 h250 v110 h-250 z" fill="#EAE5DC" stroke="#014660" stroke-width="4"/>
       <path d="M430 260 h80 l40 40 v40 h-120 z" fill="#014660" stroke="#014660" stroke-width="3"/>
@@ -162,7 +162,7 @@ const placeholders = [
 
 placeholders.forEach(p => {
   const safeTitle = p.title.replace(/&/g, '&amp;');
-  const safeSub = p.sub.replace(/&/g, '&amp;');
+  const safeCaption = p.caption.replace(/&/g, '&amp;');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 560" width="800" height="560">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -194,15 +194,16 @@ placeholders.forEach(p => {
 
   <!-- Central Illustrated Silhouette -->
   <g id="illustration">
-    ${p.icon}
+${p.icon}
   </g>
 
   <!-- Bottom Editorial Caption Badge -->
   <rect x="160" y="440" width="480" height="56" rx="4" fill="#FFFFFF" fill-opacity="0.94" stroke="#DCD6CA" stroke-width="1.5"/>
   <text x="400" y="463" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#014660">${safeTitle}</text>
-  <text x="400" y="482" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500" fill="#7A746B">Temporary Placeholder · Real Photography Coming Soon</text>
+  <text x="400" y="482" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500" fill="#7A746B">${safeCaption}</text>
 </svg>`;
 
-  fs.writeFileSync(path.join('assets/placeholders', p.filename), svg.trim());
+  const cleanSvg = svg.replace(/[ \t]+$/gm, '').trim();
+  fs.writeFileSync(path.join(__dirname, 'assets/placeholders', p.filename), cleanSvg);
   console.log('Generated:', p.filename);
 });

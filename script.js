@@ -2,7 +2,7 @@
  * GBA Furniture — Public Catalogue Redesign
  * Core JavaScript: Product catalog rendering, live variant switching,
  * smooth enquiry population & scrolling, accessible mobile drawer & modals.
- * Strictly source-grounded: no invented specifications, claims, or fake backend submissions.
+ * Strictly source-grounded: no invented specifications, claims, or fake server submissions.
  */
 
 (function () {
@@ -11,14 +11,56 @@
   // --- Embedded Catalogue Data (Matching data/products.json) ---
   const CATALOGUE_DATA = {
     categories: [
-      { id: "all", name: "All Collections", shortName: "All" },
-      { id: "beds-mattresses", name: "Beds & Mattresses", shortName: "Beds" },
-      { id: "bedroom-storage", name: "Bedroom Storage", shortName: "Storage" },
-      { id: "bed-frames-bunks", name: "Bed Frames & Bunks", shortName: "Frames & Bunks" },
-      { id: "dining", name: "Dining Sets & Tables", shortName: "Dining" },
-      { id: "sofas-living", name: "Sofas & Living Room", shortName: "Sofas & Living" },
-      { id: "appliances", name: "Appliances", shortName: "Appliances" },
-      { id: "removals", name: "Removal Services", shortName: "Removals" }
+      { id: "all", name: "All Items", shortName: "All" },
+      {
+        id: "beds-mattresses",
+        name: "Beds & Mattresses",
+        shortName: "Beds",
+        tagline: "Divan bed sets and replacement mattresses for rental properties",
+        icon: "bed"
+      },
+      {
+        id: "bedroom-storage",
+        name: "Bedroom Storage",
+        shortName: "Storage",
+        tagline: "Wardrobes, chests of drawers and bedside units in the Budget and AB ranges",
+        icon: "wardrobe"
+      },
+      {
+        id: "bed-frames-bunks",
+        name: "Bed Frames & Bunk Beds",
+        shortName: "Frames & Bunks",
+        tagline: "Metal and wooden bed frames, storage beds and bunk beds",
+        icon: "frame"
+      },
+      {
+        id: "dining",
+        name: "Dining Furniture",
+        shortName: "Dining",
+        tagline: "Dining sets, individual tables and chairs in the Budget and Wooden ranges",
+        icon: "dining"
+      },
+      {
+        id: "sofas-living",
+        name: "Sofas & Living Room",
+        shortName: "Sofas & Living",
+        tagline: "Sofas, sofa beds and coffee tables for rental living rooms",
+        icon: "sofa"
+      },
+      {
+        id: "appliances",
+        name: "Appliances",
+        shortName: "Appliances",
+        tagline: "Fridge/freezer and washing machine options for your property",
+        icon: "appliance"
+      },
+      {
+        id: "removals",
+        name: "Furniture Removals",
+        shortName: "Removals",
+        tagline: "Removal prices for divan beds, sofas, wardrobes and chests of drawers",
+        icon: "van"
+      }
     ],
     products: [
       {
@@ -26,241 +68,241 @@
         name: "Oxford Divan Bed",
         category: "beds-mattresses",
         collection: "Divan Beds",
-        description: "Oxford divan bed available as a full set (base and mattress) or mattress only, based on supplied store price list. Contact store to confirm specifications and availability.",
+        description: "Choose an Oxford base-and-mattress set or a replacement mattress. Drawers and headboards are priced separately.",
         startingPrice: 95,
         placeholder: "assets/placeholders/bed-divan.svg",
         variants: [
           { id: "oxford-set-3ft", label: "3ft Single — Set (Base & Mattress)", price: 130 },
-          { id: "oxford-set-4ft", label: "4ft / 4ft6 Double — Set (Base & Mattress)", price: 170 },
+          { id: "oxford-set-4ft", label: "4ft / 4ft6 — Set (Base & Mattress)", price: 170 },
           { id: "oxford-set-5ft", label: "5ft King — Set (Base & Mattress)", price: 200 },
-          { id: "oxford-matt-3ft", label: "3ft Single — Matt Only", price: 95 },
-          { id: "oxford-matt-4ft", label: "4ft / 4ft6 Double — Matt Only", price: 125 },
-          { id: "oxford-matt-5ft", label: "5ft King — Matt Only", price: 155 }
+          { id: "oxford-matt-3ft", label: "3ft Single — Mattress Only", price: 95 },
+          { id: "oxford-matt-4ft", label: "4ft / 4ft6 — Mattress Only", price: 125 },
+          { id: "oxford-matt-5ft", label: "5ft King — Mattress Only", price: 155 }
         ],
         addons: [
-          { name: "Drawer Add-on", price: 35, unit: "per drawer" },
+          { name: "Drawer", price: 35, unit: "per drawer" },
           { name: "Headboard (3ft Single)", price: 25, unit: "each" },
-          { name: "Headboard (4ft / 4ft6 Double)", price: 35, unit: "each" },
+          { name: "Headboard (4ft / 4ft6)", price: 35, unit: "each" },
           { name: "Headboard (5ft King)", price: 45, unit: "each" }
         ],
-        specNotes: "Prices from supplied store price list. Contact store to confirm current stock and details."
+        specNotes: ""
       },
       {
         id: "silk-ortho-divan-bed",
         name: "Silk Ortho Divan Bed",
         category: "beds-mattresses",
         collection: "Divan Beds",
-        description: "Silk Ortho divan bed available as a full set (base and mattress) or mattress only, based on supplied store price list. Contact store to confirm specifications and availability.",
+        description: "Choose a Silk Ortho base-and-mattress set or a replacement mattress. Drawers and headboards are priced separately.",
         startingPrice: 120,
         placeholder: "assets/placeholders/bed-divan.svg",
         variants: [
           { id: "silk-set-3ft", label: "3ft Single — Set (Base & Mattress)", price: 155 },
-          { id: "silk-set-4ft", label: "4ft / 4ft6 Double — Set (Base & Mattress)", price: 200 },
+          { id: "silk-set-4ft", label: "4ft / 4ft6 — Set (Base & Mattress)", price: 200 },
           { id: "silk-set-5ft", label: "5ft King — Set (Base & Mattress)", price: 240 },
-          { id: "silk-matt-3ft", label: "3ft Single — Matt Only", price: 120 },
-          { id: "silk-matt-4ft", label: "4ft / 4ft6 Double — Matt Only", price: 150 },
-          { id: "silk-matt-5ft", label: "5ft King — Matt Only", price: 195 }
+          { id: "silk-matt-3ft", label: "3ft Single — Mattress Only", price: 120 },
+          { id: "silk-matt-4ft", label: "4ft / 4ft6 — Mattress Only", price: 150 },
+          { id: "silk-matt-5ft", label: "5ft King — Mattress Only", price: 195 }
         ],
         addons: [
-          { name: "Drawer Add-on", price: 35, unit: "per drawer" },
+          { name: "Drawer", price: 35, unit: "per drawer" },
           { name: "Headboard (3ft Single)", price: 25, unit: "each" },
-          { name: "Headboard (4ft / 4ft6 Double)", price: 35, unit: "each" },
+          { name: "Headboard (4ft / 4ft6)", price: 35, unit: "each" },
           { name: "Headboard (5ft King)", price: 45, unit: "each" }
         ],
-        specNotes: "Prices from supplied store price list. Contact store to confirm current stock and details."
+        specNotes: ""
       },
       {
         id: "foam-divan-bed",
         name: "Foam Divan Bed",
         category: "beds-mattresses",
         collection: "Divan Beds",
-        description: "Foam divan bed available as a full set (base and mattress) or mattress only, based on supplied store price list. Contact store to confirm specifications and availability.",
+        description: "Choose a Foam Divan Bed base-and-mattress set or a replacement mattress. Drawers and headboards are priced separately.",
         startingPrice: 120,
         placeholder: "assets/placeholders/bed-divan.svg",
         variants: [
           { id: "foam-set-3ft", label: "3ft Single — Set (Base & Mattress)", price: 155 },
-          { id: "foam-set-4ft", label: "4ft / 4ft6 Double — Set (Base & Mattress)", price: 200 },
+          { id: "foam-set-4ft", label: "4ft / 4ft6 — Set (Base & Mattress)", price: 200 },
           { id: "foam-set-5ft", label: "5ft King — Set (Base & Mattress)", price: 240 },
-          { id: "foam-matt-3ft", label: "3ft Single — Matt Only", price: 120 },
-          { id: "foam-matt-4ft", label: "4ft / 4ft6 Double — Matt Only", price: 150 },
-          { id: "foam-matt-5ft", label: "5ft King — Matt Only", price: 195 }
+          { id: "foam-matt-3ft", label: "3ft Single — Mattress Only", price: 120 },
+          { id: "foam-matt-4ft", label: "4ft / 4ft6 — Mattress Only", price: 150 },
+          { id: "foam-matt-5ft", label: "5ft King — Mattress Only", price: 195 }
         ],
         addons: [
-          { name: "Drawer Add-on", price: 35, unit: "per drawer" },
+          { name: "Drawer", price: 35, unit: "per drawer" },
           { name: "Headboard (3ft Single)", price: 25, unit: "each" },
-          { name: "Headboard (4ft / 4ft6 Double)", price: 35, unit: "each" },
+          { name: "Headboard (4ft / 4ft6)", price: 35, unit: "each" },
           { name: "Headboard (5ft King)", price: 45, unit: "each" }
         ],
-        specNotes: "Prices from supplied store price list. Contact store to confirm current stock and details."
+        specNotes: ""
       },
       {
         id: "budget-wardrobe-2door",
-        name: "Budget 2 Door Wardrobe",
+        name: "Budget 2-Door Wardrobe",
         category: "bedroom-storage",
         collection: "Budget Range",
-        description: "Two-door wardrobe from the budget bedroom storage list. Available in standard 2-door or 2-door 2-drawer configuration.",
+        description: "Budget Range two-door wardrobe, with a choice of models with or without two drawers.",
         startingPrice: 95,
         placeholder: "assets/placeholders/wardrobe.svg",
         variants: [
-          { id: "budget-2door-plain", label: "2 Door Wardrobe", price: 95 },
-          { id: "budget-2door-2draw", label: "2 Door 2 Drawer Wardrobe", price: 120 }
+          { id: "budget-2door-plain", label: "2-Door Wardrobe", price: 95 },
+          { id: "budget-2door-2draw", label: "2-Door Wardrobe with 2 Drawers", price: 120 }
         ],
         addons: [
-          { name: "Mirror on Wardrobe", price: 20, unit: "optional" }
+          { name: "Wardrobe Mirror", price: 20, unit: "optional" }
         ],
-        specNotes: "Price list note: 'Color can vary' (colours may vary by batch; confirm with store)."
+        specNotes: "Colours may vary. Ask us about the current colour options."
       },
       {
         id: "budget-wardrobe-3door",
-        name: "Budget 3 Door Wardrobe",
+        name: "Budget 3-Door Wardrobe",
         category: "bedroom-storage",
         collection: "Budget Range",
-        description: "Three-door wardrobe from the budget bedroom storage list. Available in standard 3-door or 3-door 2-drawer configuration.",
+        description: "Budget Range three-door wardrobe, with a choice of models with or without two drawers.",
         startingPrice: 170,
         placeholder: "assets/placeholders/wardrobe.svg",
         variants: [
-          { id: "budget-3door-plain", label: "3 Door Wardrobe", price: 170 },
-          { id: "budget-3door-2draw", label: "3 Door 2 Drawer Wardrobe", price: 195 }
+          { id: "budget-3door-plain", label: "3-Door Wardrobe", price: 170 },
+          { id: "budget-3door-2draw", label: "3-Door Wardrobe with 2 Drawers", price: 195 }
         ],
         addons: [
-          { name: "Mirror on Wardrobe", price: 20, unit: "optional" }
+          { name: "Wardrobe Mirror", price: 20, unit: "optional" }
         ],
-        specNotes: "Price list note: 'Color can vary' (colours may vary by batch; confirm with store)."
+        specNotes: "Colours may vary. Ask us about the current colour options."
       },
       {
         id: "budget-chests-bedside",
-        name: "Budget Chest & Bedside",
+        name: "Budget Chests & Bedside Units",
         category: "bedroom-storage",
         collection: "Budget Range",
-        description: "Drawer storage items from the budget bedroom storage list.",
+        description: "Choose a three-drawer bedside unit or a four-drawer chest from the Budget Range.",
         startingPrice: 40,
         placeholder: "assets/placeholders/chest.svg",
         variants: [
-          { id: "budget-bedside-3draw", label: "3 Drawer Bedside", price: 40 },
-          { id: "budget-chest-4draw", label: "4 Chest Drawer (4-Drawer Chest)", price: 70 }
+          { id: "budget-bedside-3draw", label: "3-Drawer Bedside Unit", price: 40 },
+          { id: "budget-chest-4draw", label: "4-Drawer Chest", price: 70 }
         ],
         addons: [],
-        specNotes: "Price list note: 'Color can vary' (colours may vary by batch; confirm with store)."
+        specNotes: "Colours may vary. Ask us about the current colour options."
       },
       {
         id: "ab-wardrobe-2door",
-        name: "AB Range 2 Door Wardrobe",
+        name: "AB Range 2-Door Wardrobe",
         category: "bedroom-storage",
         collection: "AB Range",
-        description: "Two-door wardrobe from the AB storage range. Available in standard 2-door or 2-door 2-drawer configuration.",
+        description: "AB Range two-door wardrobe, with a choice of models with or without two drawers.",
         startingPrice: 150,
         placeholder: "assets/placeholders/wardrobe.svg",
         variants: [
-          { id: "ab-2door-plain", label: "2 Door Wardrobe", price: 150 },
-          { id: "ab-2door-2draw", label: "2 Door 2 Drawer Wardrobe", price: 180 }
+          { id: "ab-2door-plain", label: "2-Door Wardrobe", price: 150 },
+          { id: "ab-2door-2draw", label: "2-Door Wardrobe with 2 Drawers", price: 180 }
         ],
         addons: [
-          { name: "Mirror on Wardrobe", price: 35, unit: "optional" }
+          { name: "Wardrobe Mirror", price: 35, unit: "optional" }
         ],
-        specNotes: "Finishes listed on price sheet: White, Oak, Grey, Walnut, Black (confirm availability with store)."
+        specNotes: "Finish options: white, oak, grey, walnut and black. Ask us which finishes are currently available."
       },
       {
         id: "ab-wardrobe-3door",
-        name: "AB Range 3 Door Wardrobe",
+        name: "AB Range 3-Door Wardrobe",
         category: "bedroom-storage",
         collection: "AB Range",
-        description: "Three-door wardrobe from the AB storage range. Available in standard 3-door or 3-door 2-drawer configuration.",
+        description: "AB Range three-door wardrobe, with a choice of models with or without two drawers.",
         startingPrice: 250,
         placeholder: "assets/placeholders/wardrobe.svg",
         variants: [
-          { id: "ab-3door-plain", label: "3 Door Wardrobe", price: 250 },
-          { id: "ab-3door-2draw", label: "3 Door 2 Drawer Wardrobe", price: 280 }
+          { id: "ab-3door-plain", label: "3-Door Wardrobe", price: 250 },
+          { id: "ab-3door-2draw", label: "3-Door Wardrobe with 2 Drawers", price: 280 }
         ],
         addons: [
-          { name: "Mirror on Wardrobe", price: 35, unit: "optional" }
+          { name: "Wardrobe Mirror", price: 35, unit: "optional" }
         ],
-        specNotes: "Finishes listed on price sheet: White, Oak, Grey, Walnut, Black (confirm availability with store)."
+        specNotes: "Finish options: white, oak, grey, walnut and black. Ask us which finishes are currently available."
       },
       {
         id: "ab-chests-bedside",
-        name: "AB Range Chests & Bedside",
+        name: "AB Range Chests & Bedside Units",
         category: "bedroom-storage",
         collection: "AB Range",
-        description: "Chests of drawers and bedside units from the AB storage range.",
+        description: "Choose a three-drawer bedside unit, four-drawer chest or five-drawer chest from the AB Range.",
         startingPrice: 55,
         placeholder: "assets/placeholders/chest.svg",
         variants: [
-          { id: "ab-bedside-3draw", label: "3 Drawer Bedside", price: 55 },
-          { id: "ab-chest-4draw", label: "4 Chest Drawer (4-Drawer Chest)", price: 120 },
-          { id: "ab-chest-5draw", label: "5 Chest Drawer (5-Drawer Chest)", price: 140 }
+          { id: "ab-bedside-3draw", label: "3-Drawer Bedside Unit", price: 55 },
+          { id: "ab-chest-4draw", label: "4-Drawer Chest", price: 120 },
+          { id: "ab-chest-5draw", label: "5-Drawer Chest", price: 140 }
         ],
         addons: [],
-        specNotes: "Finishes listed on price sheet: White, Oak, Grey, Walnut, Black (confirm availability with store)."
+        specNotes: "Finish options: white, oak, grey, walnut and black. Ask us which finishes are currently available."
       },
       {
         id: "chester-metal-bed",
         name: "Chester Metal Bed",
         category: "bed-frames-bunks",
         collection: "Bed Frames",
-        description: "Chester metal bed frame listed on store price sheet. Available in 3ft and 4ft/4ft6 sizes.",
+        description: "Chester Metal Bed frame with 3ft and 4ft / 4ft6 size options.",
         startingPrice: 110,
         placeholder: "assets/placeholders/bed-frame.svg",
         variants: [
           { id: "chester-3ft", label: "3ft Single Frame", price: 110 },
-          { id: "chester-4ft", label: "4ft / 4ft6 Double Frame", price: 130 }
+          { id: "chester-4ft", label: "4ft / 4ft6 Frame", price: 130 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm dimensions and details."
+        specNotes: "Ask us for the frame dimensions before ordering."
       },
       {
         id: "jersey-metal-bed",
         name: "Jersey Metal Bed",
         category: "bed-frames-bunks",
         collection: "Bed Frames",
-        description: "Jersey metal bed frame listed on store price sheet. Available in 3ft, 4ft/4ft6, and 5ft sizes.",
+        description: "Jersey Metal Bed frame with 3ft, 4ft / 4ft6 and 5ft size options.",
         startingPrice: 180,
         placeholder: "assets/placeholders/bed-frame.svg",
         variants: [
           { id: "jersey-3ft", label: "3ft Single Frame", price: 180 },
-          { id: "jersey-4ft", label: "4ft / 4ft6 Double Frame", price: 200 },
+          { id: "jersey-4ft", label: "4ft / 4ft6 Frame", price: 200 },
           { id: "jersey-5ft", label: "5ft King Frame", price: 220 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm dimensions and details."
+        specNotes: "Ask us for the frame dimensions before ordering."
       },
       {
         id: "colorado-wooden-bed",
         name: "Colorado Wooden Bed",
         category: "bed-frames-bunks",
         collection: "Bed Frames",
-        description: "Wooden bed frame listed on store price sheet (listed as Colarado Wooden Bed). Available in 3ft, 4ft/4ft6, and 5ft sizes.",
+        description: "Colorado Wooden Bed frame with 3ft, 4ft / 4ft6 and 5ft size options.",
         startingPrice: 150,
         placeholder: "assets/placeholders/bed-frame.svg",
         variants: [
           { id: "colorado-3ft", label: "3ft Single Frame", price: 150 },
-          { id: "colorado-4ft", label: "4ft / 4ft6 Double Frame", price: 180 },
+          { id: "colorado-4ft", label: "4ft / 4ft6 Frame", price: 180 },
           { id: "colorado-5ft", label: "5ft King Frame", price: 200 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm dimensions and details."
+        specNotes: "Ask us for the frame dimensions before ordering."
       },
       {
         id: "storage-bed-frame",
         name: "PVC / Fabric Storage Bed",
         category: "bed-frames-bunks",
         collection: "Bed Frames",
-        description: "Storage bed listed as 'pvc/fabric storage' on store price sheet. Available in 3ft, 4ft/4ft6, and 5ft sizes.",
+        description: "Storage bed with 3ft, 4ft / 4ft6 and 5ft size options.",
         startingPrice: 240,
         placeholder: "assets/placeholders/bed-frame.svg",
         variants: [
           { id: "storage-3ft", label: "3ft Single Storage Bed", price: 240 },
-          { id: "storage-4ft", label: "4ft / 4ft6 Double Storage Bed", price: 270 },
+          { id: "storage-4ft", label: "4ft / 4ft6 Storage Bed", price: 270 },
           { id: "storage-5ft", label: "5ft King Storage Bed", price: 290 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm covering options (PVC/fabric) and dimensions."
+        specNotes: "Ask us about PVC or fabric covering options and the bed’s dimensions."
       },
       {
         id: "metal-bunk-bed",
         name: "Metal Bunk Bed",
         category: "bed-frames-bunks",
-        collection: "Bunk Bed",
-        description: "Metal bunk bed listed on store price sheet. Available in Single / Single and Trio Sleeper options.",
+        collection: "Bunk Beds",
+        description: "Metal Bunk Bed with Single / Single and Trio Sleeper options.",
         startingPrice: 250,
         placeholder: "assets/placeholders/bunk.svg",
         variants: [
@@ -268,14 +310,14 @@
           { id: "metal-bunk-trio", label: "Trio Sleeper", price: 290 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm dimensions and specifications."
+        specNotes: "Ask us for dimensions and details of your chosen bunk-bed option."
       },
       {
         id: "wooden-bunk-bed",
         name: "Wooden Bunk Bed",
         category: "bed-frames-bunks",
-        collection: "Bunk Bed",
-        description: "Wooden bunk bed listed on store price sheet. Available in Single / Single and Trio Sleeper options.",
+        collection: "Bunk Beds",
+        description: "Wooden Bunk Bed with Single / Single and Trio Sleeper options.",
         startingPrice: 320,
         placeholder: "assets/placeholders/bunk.svg",
         variants: [
@@ -283,185 +325,185 @@
           { id: "wooden-bunk-trio", label: "Trio Sleeper", price: 390 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm dimensions and specifications."
+        specNotes: "Ask us for dimensions and details of your chosen bunk-bed option."
       },
       {
         id: "budget-dining-range",
         name: "Budget Dining Range",
         category: "dining",
-        collection: "Dining Set",
-        description: "Dining sets and individual tables and chairs from the Budget Range section of the price list.",
+        collection: "Dining Furniture",
+        description: "Choose a dining set or individual tables and chairs from the Budget Dining Range.",
         startingPrice: 30,
         placeholder: "assets/placeholders/dining-table.svg",
         variants: [
-          { id: "budget-dining-chair", label: "Dining Chair (Individual)", price: 30 },
-          { id: "budget-dining-tbl-sm", label: "Dining Table Small", price: 80 },
-          { id: "budget-dining-tbl-md", label: "Dining Table Medium", price: 105 },
-          { id: "budget-dining-tbl-lg", label: "Dining Table Large", price: 140 },
+          { id: "budget-dining-chair", label: "Individual Dining Chair", price: 30 },
+          { id: "budget-dining-tbl-sm", label: "Small Dining Table", price: 80 },
+          { id: "budget-dining-tbl-md", label: "Medium Dining Table", price: 105 },
+          { id: "budget-dining-tbl-lg", label: "Large Dining Table", price: 140 },
           { id: "budget-dining-set-2", label: "Dining Set of 2", price: 150 },
           { id: "budget-dining-set-4", label: "Dining Set of 4", price: 190 },
           { id: "budget-dining-set-6", label: "Dining Set of 6", price: 240 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm dimensions and details."
+        specNotes: "Ask us to confirm the items included in your chosen set and the table dimensions."
       },
       {
         id: "wooden-dining-range",
         name: "Wooden Dining Range",
         category: "dining",
-        collection: "Dining Set",
-        description: "Dining sets and individual tables and chairs from the Wooden Range section of the price list.",
+        collection: "Dining Furniture",
+        description: "Choose a dining set or individual tables and chairs from the Wooden Dining Range.",
         startingPrice: 50,
         placeholder: "assets/placeholders/dining-table.svg",
         variants: [
-          { id: "wood-dining-chair", label: "Dining Chair (Individual)", price: 50 },
-          { id: "wood-dining-tbl-sm", label: "Dining Table Small", price: 120 },
-          { id: "wood-dining-tbl-md", label: "Dining Table Medium", price: 150 },
-          { id: "wood-dining-tbl-lg", label: "Dining Table Large", price: 190 },
+          { id: "wood-dining-chair", label: "Individual Dining Chair", price: 50 },
+          { id: "wood-dining-tbl-sm", label: "Small Dining Table", price: 120 },
+          { id: "wood-dining-tbl-md", label: "Medium Dining Table", price: 150 },
+          { id: "wood-dining-tbl-lg", label: "Large Dining Table", price: 190 },
           { id: "wood-dining-set-2", label: "Dining Set of 2", price: 180 },
           { id: "wood-dining-set-4", label: "Dining Set of 4", price: 250 },
           { id: "wood-dining-set-6", label: "Dining Set of 6", price: 360 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm dimensions and details."
+        specNotes: "Ask us to confirm the items included in your chosen set and the table dimensions."
       },
       {
         id: "box-sofa-suite",
         name: "Box Sofa",
         category: "sofas-living",
-        collection: "Living Room Sofa",
-        description: "Box sofa options listed on store price sheet. Available in 1 Seater, 2 Seater, 3 Seater, and 3+2 Seater options.",
+        collection: "Sofas & Sofa Beds",
+        description: "Box Sofa options include a one-seater, two-seater, three-seater and a three-plus-two-seater combination.",
         startingPrice: 170,
         placeholder: "assets/placeholders/sofa.svg",
         variants: [
-          { id: "box-sofa-1s", label: "1 Seater", price: 170 },
-          { id: "box-sofa-2s", label: "2 Seater", price: 220 },
-          { id: "box-sofa-3s", label: "3 Seater", price: 270 },
-          { id: "box-sofa-combo", label: "3+2 Seater", price: 420 }
+          { id: "box-sofa-1s", label: "1-Seater", price: 170 },
+          { id: "box-sofa-2s", label: "2-Seater", price: 220 },
+          { id: "box-sofa-3s", label: "3-Seater", price: 270 },
+          { id: "box-sofa-combo", label: "3 + 2-Seater Combination", price: 420 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm available colours and dimensions."
+        specNotes: "Ask us about current colours and the dimensions of your chosen option."
       },
       {
         id: "dylan-sofa-suite",
         name: "Dylan Sofa Suite",
         category: "sofas-living",
-        collection: "Living Room Sofa",
-        description: "Dylan sofa suite options listed on store price sheet. Available in 2 Seater, 3 Seater, and 3+2 Seater options.",
+        collection: "Sofas & Sofa Beds",
+        description: "Choose a Dylan two-seater, three-seater or three-plus-two-seater combination.",
         startingPrice: 240,
         placeholder: "assets/placeholders/sofa.svg",
         variants: [
-          { id: "dylan-sofa-2s", label: "2 Seater", price: 240 },
-          { id: "dylan-sofa-3s", label: "3 Seater", price: 290 },
-          { id: "dylan-sofa-combo", label: "3+2 Seater", price: 480 }
+          { id: "dylan-sofa-2s", label: "2-Seater", price: 240 },
+          { id: "dylan-sofa-3s", label: "3-Seater", price: 290 },
+          { id: "dylan-sofa-combo", label: "3 + 2-Seater Combination", price: 480 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm available colours and dimensions."
+        specNotes: "Ask us about current colours and the dimensions of your chosen option."
       },
       {
         id: "turkish-sofa-bed",
         name: "Turkish Sofa Bed",
         category: "sofas-living",
-        collection: "Living Room Sofa",
-        description: "Turkish sofa bed options listed on store price sheet. Available in 2 Seater, 3 Seater, and 3+2 Seater options.",
+        collection: "Sofas & Sofa Beds",
+        description: "Turkish Sofa Bed options include a two-seater, three-seater and a three-plus-two-seater combination.",
         startingPrice: 320,
         placeholder: "assets/placeholders/sofa.svg",
         variants: [
-          { id: "turkish-sb-2s", label: "2 Seater", price: 320 },
-          { id: "turkish-sb-3s", label: "3 Seater", price: 350 },
-          { id: "turkish-sb-combo", label: "3+2 Seater", price: 650 }
+          { id: "turkish-sb-2s", label: "2-Seater", price: 320 },
+          { id: "turkish-sb-3s", label: "3-Seater", price: 350 },
+          { id: "turkish-sb-combo", label: "3 + 2-Seater Combination", price: 650 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm available colours and dimensions."
+        specNotes: "Ask us about current colours and the dimensions of your chosen option."
       },
       {
         id: "click-clack-sofa-bed",
         name: "ClickClac Sofa Bed",
         category: "sofas-living",
-        collection: "Living Room Sofa",
-        description: "Sofa bed listed as 'ClickClac Sofa Bed' on store price sheet. Available in 2 Seater and 3 Seater options.",
+        collection: "Sofas & Sofa Beds",
+        description: "Choose a two-seater or three-seater ClickClac Sofa Bed.",
         startingPrice: 170,
         placeholder: "assets/placeholders/sofa.svg",
         variants: [
-          { id: "clickclack-2s", label: "2 Seater", price: 170 },
-          { id: "clickclack-3s", label: "3 Seater", price: 190 }
+          { id: "clickclack-2s", label: "2-Seater", price: 170 },
+          { id: "clickclack-3s", label: "3-Seater", price: 190 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm available colours and dimensions."
+        specNotes: "Ask us about current colours and the dimensions of your chosen option."
       },
       {
         id: "living-coffee-table",
         name: "Coffee Table",
         category: "sofas-living",
-        collection: "Living Room Other",
-        description: "Coffee table listed under 'Living Room Other' on store price sheet.",
+        collection: "Living Room Furniture",
+        description: "A coffee table for your rental property’s living room.",
         startingPrice: 40,
         placeholder: "assets/placeholders/coffee-table.svg",
         variants: [
           { id: "coffee-table-std", label: "Coffee Table", price: 40 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm finish and dimensions."
+        specNotes: "Ask us about the finish and table dimensions."
       },
       {
         id: "fridge-freezer-tall",
         name: "Fridge/Freezer",
         category: "appliances",
         collection: "Appliances",
-        description: "Fridge/Freezer listed under 'Applicances' on store price sheet.",
+        description: "Enquire about a fridge/freezer for your property.",
         startingPrice: 420,
         placeholder: "assets/placeholders/appliance.svg",
         variants: [
           { id: "app-fridge-freezer", label: "Fridge/Freezer", price: 420 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm dimensions, brand and model details."
+        specNotes: "Ask us to confirm the appliance type, brand, model and dimensions before ordering."
       },
       {
         id: "fridge-freezer-undercounter",
         name: "Under Counter Fridge/Freezer",
         category: "appliances",
         collection: "Appliances",
-        description: "Under counter fridge/freezer unit listed under 'Applicances' on store price sheet.",
+        description: "Enquire about under-counter refrigeration for your property.",
         startingPrice: 290,
         placeholder: "assets/placeholders/appliance.svg",
         variants: [
           { id: "app-undercounter", label: "Under Counter Fridge/Freezer", price: 290 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm dimensions, brand and model details."
+        specNotes: "Ask us to confirm whether this option is a fridge, freezer or combined unit, along with the brand, model and dimensions."
       },
       {
         id: "washing-machine",
         name: "Washing Machine",
         category: "appliances",
         collection: "Appliances",
-        description: "Washing machine unit listed under 'Applicances' on store price sheet.",
+        description: "Enquire about a washing machine for your property.",
         startingPrice: 360,
         placeholder: "assets/placeholders/appliance.svg",
         variants: [
           { id: "app-washer", label: "Washing Machine", price: 360 }
         ],
         addons: [],
-        specNotes: "Prices from supplied store price list. Contact store to confirm brand, load capacity and model details."
+        specNotes: "Ask us to confirm the brand, model, load capacity and dimensions before ordering."
       },
       {
         id: "furniture-removal-service",
-        name: "Removal Charges",
+        name: "Furniture Removal",
         category: "removals",
-        collection: "Removal Charges",
-        description: "Item removal charges listed on the supplied store price sheet.",
+        collection: "Removal Services",
+        description: "Removal options for chests of drawers, single and double divan beds, sofas and wardrobes.",
         startingPrice: 20,
         placeholder: "assets/placeholders/van.svg",
         variants: [
           { id: "rem-chest", label: "Chest of Drawers", price: 20 },
-          { id: "rem-bed-single", label: "Any Bed (Single) (Divan Only)", price: 25 },
-          { id: "rem-bed-double", label: "Any Bed (Double) (Divan Only)", price: 30 },
-          { id: "rem-sofa", label: "Any Sofa (1 piece)", price: 30 },
+          { id: "rem-bed-single", label: "Single Divan Bed", price: 25 },
+          { id: "rem-bed-double", label: "Double Divan Bed", price: 30 },
+          { id: "rem-sofa", label: "Sofa — Per Piece", price: 30 },
           { id: "rem-wardrobe", label: "Wardrobe", price: 30 }
         ],
         addons: [],
-        specNotes: "Charges from supplied price sheet. Bed removal note: '(Divan Only)'. Contact store to confirm removal arrangements and conditions."
+        specNotes: "Bed removal is for divan beds only. Contact us to discuss your items and arrange collection."
       }
     ]
   };
@@ -470,28 +512,51 @@
   let currentCategory = 'all';
   let searchQuery = '';
   let selectedProductItem = null;
+  let lastGeneratedTemplate = '';
+  const variantStateByProduct = {};
+  CATALOGUE_DATA.products.forEach(prod => {
+    if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+      variantStateByProduct[prod.id] = prod.variants[0].id;
+    }
+  });
+  let drawerReturnFocusElem = null;
+  let modalReturnFocusElem = null;
 
   // --- DOM References ---
+  const skipLink = document.querySelector('.skip-link');
+  const topBar = document.querySelector('.top-bar');
   const header = document.querySelector('.site-header');
+  const mainContent = document.getElementById('mainContent');
+  const footer = document.querySelector('.site-footer');
   const productGrid = document.getElementById('productGrid');
   const filterPillsContainer = document.getElementById('filterPills');
   const searchInput = document.getElementById('catalogueSearch');
+  const catalogueHeading = document.getElementById('catalogueHeading');
   const activeFilterLabel = document.getElementById('activeFilterLabel');
   const productCountLabel = document.getElementById('productCountLabel');
   const categoryTiles = document.querySelectorAll('.category-tile');
+  const footerCategoryLinks = document.querySelectorAll('.footer-category-link');
 
   // Contact / Enquiry Elements
   const contactSection = document.getElementById('contact');
+  const enquiryFormCard = document.getElementById('enquiryFormCard') || document.querySelector('.enquiry-form-card');
   const selectedBanner = document.getElementById('selectedProductBanner');
   const selectedNameElem = document.getElementById('selectedProductName');
   const selectedPriceElem = document.getElementById('selectedProductPrice');
   const clearSelectionBtn = document.getElementById('clearProductSelection');
   const formProductSelect = document.getElementById('enquiryProductSelect');
+  const formProductSelectLabel = document.getElementById('enquiryProductSelectLabel');
   const enquiryForm = document.getElementById('enquiryForm');
+  const enquiryFormError = document.getElementById('enquiryFormError');
+  const enquiryNameInput = document.getElementById('enquiryName');
+  const enquiryPhoneInput = document.getElementById('enquiryPhone');
+  const enquiryEmailInput = document.getElementById('enquiryEmail');
+  const enquiryPostcodeInput = document.getElementById('enquiryPostcode');
   const enquiryMessage = document.getElementById('enquiryMessage');
   const enquiryFeedback = document.getElementById('enquiryFeedback');
   const feedbackSummaryText = document.getElementById('feedbackSummaryText');
   const copyEnquiryBtn = document.getElementById('copyEnquiryBtn');
+  const copyFeedbackMessage = document.getElementById('copyFeedbackMessage');
   const reOpenEmailBtn = document.getElementById('reOpenEmailBtn');
 
   // Mobile Navigation Elements
@@ -514,44 +579,43 @@
     ordering: {
       title: "How Ordering Works",
       content: `
-        <p><strong>Direct In-Store & Telephone Orders:</strong> GBA Furniture is a physical showroom. There is no automated online shopping basket, user account, or card payment on this website.</p>
-        <p><strong>Confirmation Process:</strong></p>
+        <p>Browse the catalogue and choose the items you need, or contact us about a landlord furniture package.</p>
         <ol style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
-          <li>Browse products and variants from the supplied price list.</li>
-          <li>Click "Enquire / Order" to draft an enquiry email or telephone 020 8888 0322.</li>
-          <li>Staff at the store will confirm current stock, finishes, delivery availability, any applicable charges, and final prices.</li>
+          <li>Select an item and choose “Enquire About This Item” to add it to your enquiry.</li>
+          <li>Call, WhatsApp or email our team, or visit the showroom, to discuss your requirements.</li>
+          <li>Confirm your quote, stock and delivery arrangements directly with us.</li>
         </ol>
+        <p>There is no online checkout.</p>
         <p><em>Store Address: 401 Lordship Lane, London, N17 6AE. Open Monday–Friday 9:30am–6:00pm, Saturday 9:30am–5:00pm, Sunday Closed.</em></p>
       `
     },
     delivery: {
-      title: "Delivery Arrangements (Placeholder)",
+      title: "Delivery Information",
       content: `
-        <p><strong>Store Delivery Terms:</strong> Delivery availability, schedules, and costs are confirmed directly with the store.</p>
-        <p>Please contact staff at 401 Lordship Lane, London, N17 6AE or call 020 8888 0322 to check delivery options for your area before ordering.</p>
-        <p><em>This catalogue does not establish guaranteed delivery zones, assembly services, or free delivery thresholds.</em></p>
+        <p>Contact us with your delivery postcode, required items and preferred date to discuss delivery options and charges.</p>
+        <p>Same-day delivery is subject to stock, your location, our delivery route and a confirmed delivery slot.</p>
+        <p>Key collection and property access can be coordinated by arrangement.</p>
+        <p>Call or WhatsApp 020 8888 0322.</p>
       `
     },
     removals: {
-      title: "Removal Charges Information",
+      title: "Furniture Removal Prices",
       content: `
-        <p><strong>Price Sheet Charges:</strong> The supplied price list quotes the following item charges for removals:</p>
         <ul style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
-          <li>Chest of Drawers: £20</li>
-          <li>Any Bed (Divan Only, Single): £25</li>
-          <li>Any Bed (Divan Only, Double): £30</li>
-          <li>Any Sofa (1 piece): £30</li>
+          <li>Chest of drawers: £20</li>
+          <li>Single divan bed: £25</li>
+          <li>Double divan bed: £30</li>
+          <li>Sofa: £30 per piece</li>
           <li>Wardrobe: £30</li>
         </ul>
-        <p><strong>Important Note:</strong> The price list notes that bed removal applies to divans only. Timing, feasibility, and specific collection arrangements must be confirmed directly with the store.</p>
+        <p>Bed removal is for divan beds only. Contact our team to discuss your items and arrange collection.</p>
       `
     },
     privacy: {
-      title: "Privacy & Data Notice",
+      title: "How Email Enquiries Work",
       content: `
-        <p>This website does not store or process your personal details on a backend server.</p>
-        <p>When you click submit on the enquiry form, your default email client opens a pre-composed message to <strong>info@gbafurniture.com</strong>. You retain full control over sending the message.</p>
-        <p>For official privacy policy information on the live site, visit <a href="https://gbafurniture.com/privacy-policy/" target="_blank" rel="noopener noreferrer">gbafurniture.com/privacy-policy/</a>.</p>
+        <p>The form adds your details to an email draft addressed to <strong>info@gbafurniture.com</strong>. Review and send the draft from your email app. The form does not send your enquiry automatically.</p>
+        <p>If your email app does not open, copy the enquiry text into an email or contact us by phone or WhatsApp.</p>
       `
     }
   };
@@ -562,9 +626,92 @@
   function init() {
     renderFilterPills();
     populateFormProductSelect();
+    updateContactMethodRequirements();
     renderProducts();
+    updateCategoryNavigationState();
+    updateHeaderCollapseState();
     bindEvents();
     checkUrlHash();
+    if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+      document.fonts.ready.then(updateHeaderCollapseState).catch(() => {});
+    }
+  }
+
+  // ==========================================================================
+  // HEADER COLLAPSE & HIT-TARGET OVERLAP PREVENTION
+  // ==========================================================================
+  function rectsOverlapHorizontally(a, b, minGap = 4) {
+    if (!a || !b) return false;
+    if (a.width <= 0 || a.height <= 0 || b.width <= 0 || b.height <= 0) return false;
+    const verticalOverlap = a.bottom > b.top && b.bottom > a.top;
+    if (!verticalOverlap) return false;
+    return (a.right + minGap > b.left) && (b.right + minGap > a.left);
+  }
+
+  function updateHeaderCollapseState() {
+    if (!header) return;
+    const headerInner = header.querySelector('.header-inner');
+    const viewportWidth = typeof window.innerWidth === 'number' ? window.innerWidth : 1400;
+
+    if (viewportWidth <= 1399) {
+      header.classList.add('is-collapsed');
+      return;
+    }
+
+    header.classList.remove('is-collapsed');
+    if (!headerInner) return;
+
+    let shouldCollapse = false;
+    if (headerInner.scrollWidth > headerInner.clientWidth + 1) {
+      shouldCollapse = true;
+    } else {
+      const innerRect = typeof headerInner.getBoundingClientRect === 'function' ? headerInner.getBoundingClientRect() : null;
+      const brand = headerInner.querySelector('.site-brand');
+      const nav = headerInner.querySelector('.primary-nav');
+      const actions = headerInner.querySelector('.header-actions');
+      const brandRect = brand && typeof brand.getBoundingClientRect === 'function' ? brand.getBoundingClientRect() : null;
+      const navRect = nav && typeof nav.getBoundingClientRect === 'function' ? nav.getBoundingClientRect() : null;
+      const actionsRect = actions && typeof actions.getBoundingClientRect === 'function' ? actions.getBoundingClientRect() : null;
+
+      if (
+        rectsOverlapHorizontally(brandRect, navRect, 8) ||
+        rectsOverlapHorizontally(navRect, actionsRect, 8) ||
+        rectsOverlapHorizontally(brandRect, actionsRect, 8)
+      ) {
+        shouldCollapse = true;
+      }
+
+      if (!shouldCollapse && innerRect && innerRect.width > 0) {
+        const controls = Array.from(
+          headerInner.querySelectorAll(
+            '.site-brand, .primary-nav .nav-link, .header-actions .btn-tel, .header-actions .btn-whatsapp, .header-actions .btn-primary'
+          )
+        );
+        const rects = controls
+          .map(el => (typeof el.getBoundingClientRect === 'function' ? el.getBoundingClientRect() : null))
+          .filter(r => r && r.width > 0 && r.height > 0);
+
+        for (let i = 0; i < rects.length; i++) {
+          if (rects[i].left < innerRect.left - 1 || rects[i].right > innerRect.right + 1) {
+            shouldCollapse = true;
+            break;
+          }
+          for (let j = i + 1; j < rects.length; j++) {
+            if (rectsOverlapHorizontally(rects[i], rects[j], 2)) {
+              shouldCollapse = true;
+              break;
+            }
+          }
+          if (shouldCollapse) break;
+        }
+      }
+    }
+
+    if (shouldCollapse) {
+      header.classList.add('is-collapsed');
+    } else if (isMobileDrawerOpen()) {
+      closeMobileDrawer({ restoreFocus: false });
+    }
   }
 
   // ==========================================================================
@@ -575,10 +722,12 @@
     filterPillsContainer.innerHTML = '';
 
     CATALOGUE_DATA.categories.forEach(cat => {
+      const isActive = cat.id === currentCategory;
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = `filter-pill ${cat.id === currentCategory ? 'is-active' : ''}`;
+      button.className = `filter-pill ${isActive ? 'is-active' : ''}`;
       button.setAttribute('data-category', cat.id);
+      button.setAttribute('aria-pressed', String(isActive));
       button.textContent = cat.name;
       button.addEventListener('click', () => {
         setCategory(cat.id);
@@ -596,7 +745,7 @@
 
     const defaultOpt = document.createElement('option');
     defaultOpt.value = 'general';
-    defaultOpt.textContent = 'General Enquiry / Multiple Items';
+    defaultOpt.textContent = 'Furniture Package, Multiple Items or General Enquiry';
     formProductSelect.appendChild(defaultOpt);
 
     CATALOGUE_DATA.categories.filter(c => c.id !== 'all').forEach(cat => {
@@ -607,12 +756,72 @@
       catProducts.forEach(prod => {
         const opt = document.createElement('option');
         opt.value = prod.id;
-        opt.textContent = `${prod.name} (from £${prod.startingPrice})`;
+        const defaultText = prod.variants.length > 1
+          ? `${prod.name} (from £${prod.startingPrice})`
+          : `${prod.name} (£${prod.startingPrice})`;
+        opt.textContent = defaultText;
+        opt.setAttribute('data-default-text', defaultText);
         group.appendChild(opt);
       });
 
       formProductSelect.appendChild(group);
     });
+
+    syncFormProductSelectLabel();
+  }
+
+  function resetFormProductSelectLabels() {
+    if (!formProductSelect) return;
+    for (let i = 0; i < formProductSelect.options.length; i++) {
+      const opt = formProductSelect.options[i];
+      const defaultText = opt.getAttribute('data-default-text');
+      if (defaultText) {
+        opt.textContent = defaultText;
+      }
+    }
+  }
+
+  function syncFormProductSelectLabel() {
+    if (!formProductSelect || !formProductSelectLabel) return;
+    const opts = formProductSelect.options || [];
+    let selectedOpt = opts[formProductSelect.selectedIndex] || null;
+    if (!selectedOpt && formProductSelect.value) {
+      for (let i = 0; i < opts.length; i++) {
+        if (opts[i].value === formProductSelect.value) {
+          selectedOpt = opts[i];
+          break;
+        }
+      }
+    }
+    if (selectedOpt && selectedOpt.textContent) {
+      formProductSelectLabel.textContent = selectedOpt.textContent.trim();
+    } else if (selectedProductItem) {
+      formProductSelectLabel.textContent = `${formatSelectedItemLabel(selectedProductItem)} (£${selectedProductItem.price})`;
+    } else {
+      formProductSelectLabel.textContent = 'Furniture Package, Multiple Items or General Enquiry';
+    }
+  }
+
+  // ==========================================================================
+  // AUTHORITATIVE PRODUCT / VARIANT RESOLUTION
+  // ==========================================================================
+  function resolveProductSelection(productId, preferredVariantId) {
+    const prod = CATALOGUE_DATA.products.find(p => p.id === productId);
+    if (!prod || !Array.isArray(prod.variants) || prod.variants.length === 0) {
+      return null;
+    }
+    const targetVariantId = preferredVariantId || variantStateByProduct[prod.id] || prod.variants[0].id;
+    const variantObj = prod.variants.find(v => v.id === targetVariantId) || prod.variants[0];
+    variantStateByProduct[prod.id] = variantObj.id;
+
+    return {
+      id: prod.id,
+      name: prod.name,
+      category: prod.category,
+      variantId: variantObj.id,
+      variant: variantObj.label,
+      price: variantObj.price
+    };
   }
 
   // ==========================================================================
@@ -626,8 +835,9 @@
       return p.category === currentCategory;
     });
 
-    if (searchQuery.trim() !== '') {
-      const q = searchQuery.toLowerCase().trim();
+    const trimmedQuery = searchQuery.trim();
+    if (trimmedQuery !== '') {
+      const q = trimmedQuery.toLowerCase();
       filtered = filtered.filter(p => {
         const inName = p.name.toLowerCase().includes(q);
         const inDesc = p.description.toLowerCase().includes(q);
@@ -639,11 +849,24 @@
     }
 
     const currentCatObj = CATALOGUE_DATA.categories.find(c => c.id === currentCategory);
+    const categoryName = currentCatObj ? currentCatObj.name : 'All Items';
     if (activeFilterLabel) {
-      activeFilterLabel.textContent = currentCatObj ? currentCatObj.name : 'All Products';
+      activeFilterLabel.textContent = categoryName;
+    }
+    if (catalogueHeading) {
+      catalogueHeading.textContent = currentCategory === 'all' ? 'Browse Our Catalogue' : categoryName;
     }
     if (productCountLabel) {
-      productCountLabel.textContent = `Showing ${filtered.length} product${filtered.length === 1 ? '' : 's'}`;
+      const countText = `${filtered.length} item${filtered.length === 1 ? '' : 's'}`;
+      if (trimmedQuery !== '' && currentCategory !== 'all') {
+        productCountLabel.textContent = `Showing ${countText} in ${categoryName} for “${trimmedQuery}”`;
+      } else if (trimmedQuery !== '') {
+        productCountLabel.textContent = `Showing ${countText} for “${trimmedQuery}”`;
+      } else if (currentCategory !== 'all') {
+        productCountLabel.textContent = `Showing ${countText} in ${categoryName}`;
+      } else {
+        productCountLabel.textContent = `Showing ${countText}`;
+      }
     }
 
     productGrid.innerHTML = '';
@@ -652,8 +875,8 @@
       const emptyDiv = document.createElement('div');
       emptyDiv.className = 'catalogue-empty-state';
       emptyDiv.innerHTML = `
-        <h3>No matching items found</h3>
-        <p>No products found matching "<strong>${escapeHtml(searchQuery)}</strong>" in this category.</p>
+        <h3>No Matching Items</h3>
+        <p>Try a different search or browse all items. For help finding furniture for your property, call 020 8888 0322.</p>
         <button type="button" class="btn btn-primary" id="resetFiltersBtn">View All Items</button>
       `;
       productGrid.appendChild(emptyDiv);
@@ -674,23 +897,27 @@
       card.className = 'product-card';
       card.setAttribute('data-product-id', product.id);
 
-      const defaultVariant = product.variants[0];
+      const activeVariantId = variantStateByProduct[product.id] || product.variants[0].id;
+      const activeVariant = product.variants.find(v => v.id === activeVariantId) || product.variants[0];
+      variantStateByProduct[product.id] = activeVariant.id;
       const hasMultipleVariants = product.variants.length > 1;
 
       let variantSelectHtml = '';
       if (hasMultipleVariants) {
-        const options = product.variants.map((v, idx) => `
-          <option value="${v.id}" data-price="${v.price}" ${idx === 0 ? 'selected' : ''}>
-            ${v.label} — £${v.price}
+        const variantPrompt = product.category === 'removals' ? 'Choose an Item to Remove' : 'Choose an Option';
+        const options = product.variants.map(v => `
+          <option value="${v.id}" data-price="${v.price}" data-label="${escapeHtml(v.label)}" ${v.id === activeVariant.id ? 'selected' : ''}>
+            ${escapeHtml(v.label)} — £${v.price}
           </option>
         `).join('');
 
         variantSelectHtml = `
           <div class="variant-selector-wrapper">
-            <label for="variant-${product.id}" class="variant-label">Select Option / Size</label>
-            <select id="variant-${product.id}" class="variant-select" data-card-id="${product.id}">
+            <label for="variant-${product.id}" class="variant-label">${variantPrompt}</label>
+            <select id="variant-${product.id}" class="variant-select" data-card-id="${product.id}" aria-describedby="variant-selected-${product.id}">
               ${options}
             </select>
+            <div class="variant-selected-label" id="variant-selected-${product.id}">${escapeHtml(activeVariant.label)} — £${activeVariant.price}</div>
           </div>
         `;
       }
@@ -706,7 +933,7 @@
 
         addonsHtml = `
           <div class="product-addons-wrapper">
-            <div class="product-addons-title">Add-ons Listed on Sheet</div>
+            <div class="product-addons-title">Optional Extras</div>
             <ul class="product-addons-list">
               ${addonItems}
             </ul>
@@ -716,11 +943,10 @@
 
       card.innerHTML = `
         <div class="product-card-media">
-          <img src="${product.placeholder}" alt="${product.name} placeholder illustration" class="product-card-img" loading="lazy">
-          <span class="product-card-badge">Price List Item</span>
+          <img src="${product.placeholder}" alt="Illustration only; not a photograph of ${escapeHtml(product.name)}" class="product-card-img" loading="lazy">
           <div class="product-price-tag" id="price-tag-${product.id}">
-            <span class="product-price-prefix">${hasMultipleVariants ? 'From' : 'Price'}</span>
-            <span class="price-val">£${defaultVariant.price}</span>
+            <span class="product-price-prefix">${hasMultipleVariants ? 'Selected Option' : 'Price'}</span>
+            <span class="price-val">£${activeVariant.price}</span>
           </div>
         </div>
         <div class="product-card-body">
@@ -730,7 +956,7 @@
 
           ${product.specNotes ? `
             <div class="product-spec-strip">
-              <strong>Price List Note:</strong> ${product.specNotes}
+              <strong>Product Details:</strong> ${product.specNotes}
             </div>
           ` : ''}
 
@@ -742,13 +968,14 @@
                     class="btn btn-primary enquire-action-btn"
                     data-product-id="${product.id}"
                     data-product-name="${escapeHtml(product.name)}"
-                    data-variant-id="${defaultVariant.id}"
-                    data-variant-label="${escapeHtml(defaultVariant.label)}"
-                    data-price="${defaultVariant.price}">
+                    data-product-category="${escapeHtml(product.category)}"
+                    data-variant-id="${activeVariant.id}"
+                    data-variant-label="${escapeHtml(activeVariant.label)}"
+                    data-price="${activeVariant.price}">
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
               </svg>
-              <span>Enquire / Order</span>
+              <span>Enquire About This Item</span>
             </button>
           </div>
         </div>
@@ -758,6 +985,7 @@
 
       if (hasMultipleVariants) {
         const select = card.querySelector('.variant-select');
+        const selectedLabelElem = card.querySelector('.variant-selected-label');
         const priceTagVal = card.querySelector(`#price-tag-${product.id} .price-val`);
         const pricePrefix = card.querySelector(`#price-tag-${product.id} .product-price-prefix`);
         const actionBtn = card.querySelector('.enquire-action-btn');
@@ -765,16 +993,32 @@
         if (select) {
           select.addEventListener('change', () => {
             const selectedOpt = select.options[select.selectedIndex];
-            const newPrice = selectedOpt.getAttribute('data-price');
-            const newLabel = selectedOpt.text.split(' — ')[0];
+            const canonicalVariant = product.variants.find(v => v.id === select.value);
+            const newPrice = canonicalVariant
+              ? canonicalVariant.price
+              : Number(selectedOpt ? selectedOpt.getAttribute('data-price') : activeVariant.price);
+            const newLabel = canonicalVariant
+              ? canonicalVariant.label
+              : (selectedOpt && selectedOpt.getAttribute('data-label')) ||
+                (selectedOpt ? selectedOpt.text.replace(/\s+—\s+£\d+(?:\.\d+)?$/, '').trim() : activeVariant.label);
 
+            variantStateByProduct[product.id] = select.value;
+
+            if (selectedLabelElem) selectedLabelElem.textContent = `${newLabel} — £${newPrice}`;
             if (priceTagVal) priceTagVal.textContent = `£${newPrice}`;
-            if (pricePrefix) pricePrefix.textContent = 'Selected';
+            if (pricePrefix) pricePrefix.textContent = 'Selected Option';
 
             if (actionBtn) {
               actionBtn.setAttribute('data-variant-id', select.value);
               actionBtn.setAttribute('data-variant-label', newLabel);
-              actionBtn.setAttribute('data-price', newPrice);
+              actionBtn.setAttribute('data-price', String(newPrice));
+            }
+
+            if (selectedProductItem && selectedProductItem.id === product.id) {
+              selectProductForEnquiry(
+                resolveProductSelection(product.id, select.value),
+                { scroll: false }
+              );
             }
           });
         }
@@ -792,74 +1036,273 @@
     actionBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const prodId = btn.getAttribute('data-product-id');
-        const prodName = btn.getAttribute('data-product-name');
-        const variantLabel = btn.getAttribute('data-variant-label');
-        const price = btn.getAttribute('data-price');
-
-        selectProductForEnquiry({
-          id: prodId,
-          name: prodName,
-          variant: variantLabel,
-          price: price
-        });
+        const variantId = btn.getAttribute('data-variant-id');
+        const resolved = resolveProductSelection(prodId, variantId);
+        if (resolved) {
+          selectProductForEnquiry(resolved, { scroll: true });
+        } else {
+          selectProductForEnquiry({
+            id: prodId,
+            name: btn.getAttribute('data-product-name'),
+            category: btn.getAttribute('data-product-category'),
+            variantId: variantId,
+            variant: btn.getAttribute('data-variant-label'),
+            price: Number(btn.getAttribute('data-price'))
+          }, { scroll: true });
+        }
       });
     });
   }
 
   // ==========================================================================
-  // ENQUIRY SELECTION & SCROLL
+  // ENQUIRY SELECTION, CUSTOMER REQUIREMENT PRESERVATION & SCROLL
   // ==========================================================================
-  function selectProductForEnquiry(item) {
-    selectedProductItem = item;
+  function formatSelectedItemLabel(item) {
+    if (!item) return '';
+    if (item.variant && item.variant !== item.name) {
+      return `${item.name} — ${item.variant}`;
+    }
+    return item.name;
+  }
+
+  function buildEnquiryTemplateMessage(item) {
+    if (!item) return '';
+    const isRemoval = item.category === 'removals' || item.id === 'furniture-removal-service';
+    if (isRemoval) {
+      return `Hello GBA Furniture,\n\nI would like to arrange removal of ${item.variant}, shown at £${item.price} in your catalogue.\n\nPlease confirm collection arrangements. I will include the quantity, property postcode and access details below.`;
+    }
+    const itemLabel = formatSelectedItemLabel(item);
+    return `Hello GBA Furniture,\n\nPlease provide a quote for ${itemLabel}, shown at £${item.price} in your catalogue.\n\nPlease confirm stock and delivery options. I will include the quantity, property postcode and preferred delivery date below.`;
+  }
+
+  function findIntactGeneratedBlock(text, template) {
+    if (!text || !template) return null;
+    if (text === template) {
+      return { start: 0, end: text.length };
+    }
+    let idx = text.indexOf(template);
+    while (idx !== -1) {
+      const prevChar = idx === 0 ? '\n' : text[idx - 1];
+      const afterIdx = idx + template.length;
+      const nextChar = afterIdx === text.length ? '\n' : text[afterIdx];
+      if ((prevChar === '\n' || prevChar === '\r') && (nextChar === '\n' || nextChar === '\r')) {
+        return { start: idx, end: afterIdx };
+      }
+      idx = text.indexOf(template, idx + 1);
+    }
+    return null;
+  }
+
+  function updateRequirementsMessageForSelection(newTemplate) {
+    if (!enquiryMessage) return;
+    const current = enquiryMessage.value;
+    const trimmed = current.trim();
+
+    if (!newTemplate) {
+      if (!trimmed) {
+        enquiryMessage.value = '';
+      } else {
+        const block = findIntactGeneratedBlock(current, lastGeneratedTemplate);
+        if (block) {
+          const before = current.slice(0, block.start).replace(/(?:\r?\n)+$/, '');
+          const after = current.slice(block.end).replace(/^(?:\r?\n)+/, '');
+          if (before && after) {
+            enquiryMessage.value = `${before}\n\n${after}`;
+          } else {
+            enquiryMessage.value = before || after;
+          }
+        }
+      }
+      lastGeneratedTemplate = '';
+      return;
+    }
+
+    if (!trimmed) {
+      enquiryMessage.value = newTemplate;
+    } else {
+      const block = findIntactGeneratedBlock(current, lastGeneratedTemplate);
+      if (block) {
+        const before = current.slice(0, block.start);
+        const after = current.slice(block.end);
+        enquiryMessage.value = `${before}${newTemplate}${after}`;
+      } else if (!findIntactGeneratedBlock(current, newTemplate)) {
+        enquiryMessage.value = `${newTemplate}\n\n${trimmed}`;
+      }
+    }
+
+    lastGeneratedTemplate = newTemplate;
+
+    if (enquiryMessage.getAttribute('aria-invalid') === 'true' && enquiryMessage.value.trim() !== '') {
+      validateSingleField(enquiryMessage);
+      syncFormErrorSummary();
+    }
+  }
+
+  function invalidatePreparedEnquiryFeedback() {
+    if (enquiryFeedback) {
+      enquiryFeedback.style.display = 'none';
+      enquiryFeedback.hidden = true;
+    }
+    if (feedbackSummaryText) {
+      feedbackSummaryText.textContent = '';
+    }
+    if (reOpenEmailBtn) {
+      reOpenEmailBtn.href = '#';
+    }
+    if (copyEnquiryBtn) {
+      copyEnquiryBtn.textContent = 'Copy Enquiry Text';
+    }
+    if (copyFeedbackMessage) {
+      copyFeedbackMessage.textContent = '';
+      copyFeedbackMessage.style.display = 'none';
+    }
+  }
+
+  function selectProductForEnquiry(item, options = {}) {
+    if (!item) return;
+    const shouldScroll = options.scroll !== false;
+    const normalized = resolveProductSelection(item.id, item.variantId) || item;
+    if (item.variant && item.price !== undefined) {
+      normalized.variant = item.variant;
+      normalized.price = Number(item.price);
+      if (item.variantId) {
+        normalized.variantId = item.variantId;
+        variantStateByProduct[normalized.id] = item.variantId;
+      }
+    }
+
+    selectedProductItem = normalized;
+    const itemLabel = formatSelectedItemLabel(normalized);
+
+    const card = productGrid ? productGrid.querySelector(`.product-card[data-product-id="${normalized.id}"]`) : null;
+    if (card) {
+      const cardSelect = card.querySelector('.variant-select');
+      const selectedLabelElem = card.querySelector('.variant-selected-label');
+      const priceTagVal = card.querySelector(`#price-tag-${normalized.id} .price-val`);
+      const actionBtn = card.querySelector('.enquire-action-btn');
+      if (cardSelect && normalized.variantId && cardSelect.value !== normalized.variantId) {
+        cardSelect.value = normalized.variantId;
+      }
+      if (selectedLabelElem) selectedLabelElem.textContent = `${normalized.variant} — £${normalized.price}`;
+      if (priceTagVal) priceTagVal.textContent = `£${normalized.price}`;
+      if (actionBtn) {
+        if (normalized.variantId) actionBtn.setAttribute('data-variant-id', normalized.variantId);
+        actionBtn.setAttribute('data-variant-label', normalized.variant);
+        actionBtn.setAttribute('data-price', String(normalized.price));
+      }
+    }
 
     if (selectedBanner) {
       selectedBanner.style.display = 'flex';
+      selectedBanner.hidden = false;
       selectedBanner.classList.add('is-highlighted');
       setTimeout(() => selectedBanner.classList.remove('is-highlighted'), 1600);
     }
 
     if (selectedNameElem) {
-      selectedNameElem.textContent = `${item.name} (${item.variant})`;
+      selectedNameElem.textContent = itemLabel;
     }
 
     if (selectedPriceElem) {
-      selectedPriceElem.textContent = `Listed Price: £${item.price} (subject to store confirmation)`;
+      selectedPriceElem.textContent = `Catalogue price: £${normalized.price}`;
     }
 
     if (formProductSelect) {
+      resetFormProductSelectLabels();
       let optionExists = false;
       for (let i = 0; i < formProductSelect.options.length; i++) {
-        if (formProductSelect.options[i].value === item.id) {
+        if (formProductSelect.options[i].value === normalized.id) {
+          formProductSelect.options[i].textContent = `${itemLabel} (£${normalized.price})`;
           formProductSelect.selectedIndex = i;
+          formProductSelect.value = normalized.id;
           optionExists = true;
           break;
         }
       }
       if (!optionExists) {
         const newOpt = document.createElement('option');
-        newOpt.value = item.id;
-        newOpt.textContent = `${item.name} — £${item.price}`;
+        newOpt.value = normalized.id;
+        newOpt.textContent = `${itemLabel} (£${normalized.price})`;
         newOpt.selected = true;
         formProductSelect.appendChild(newOpt);
+        formProductSelect.value = normalized.id;
       }
+      syncFormProductSelectLabel();
     }
 
-    if (enquiryMessage) {
-      enquiryMessage.value = `Hello GBA Furniture,\n\nI am enquiring about the ${item.name} (${item.variant}), listed at £${item.price} on the price sheet.\n\nPlease confirm availability, current colours/finishes, and delivery arrangements to my address.`;
-    }
+    updateRequirementsMessageForSelection(buildEnquiryTemplateMessage(normalized));
+    invalidatePreparedEnquiryFeedback();
 
-    if (contactSection) {
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      contactSection.scrollIntoView({
-        behavior: prefersReducedMotion ? 'auto' : 'smooth',
-        block: 'start'
-      });
+    if (shouldScroll) {
+      if (selectedBanner && !selectedBanner.hasAttribute('tabindex')) {
+        selectedBanner.setAttribute('tabindex', '-1');
+      }
 
-      setTimeout(() => {
-        if (enquiryMessage) {
-          enquiryMessage.focus();
+      const scrollTarget = selectedBanner || enquiryFormCard || contactSection;
+      if (scrollTarget && typeof scrollTarget.scrollIntoView === 'function') {
+        const hasRootStyle = Boolean(document.documentElement && document.documentElement.style);
+        const prevScrollBehavior = hasRootStyle ? document.documentElement.style.scrollBehavior : '';
+        if (hasRootStyle) {
+          document.documentElement.style.scrollBehavior = 'auto';
         }
-      }, 400);
+        try {
+          scrollTarget.scrollIntoView({
+            behavior: 'auto',
+            block: 'start'
+          });
+        } finally {
+          if (hasRootStyle) {
+            document.documentElement.style.scrollBehavior = prevScrollBehavior;
+          }
+        }
+      }
+
+      const viewportWidth =
+        typeof window.innerWidth === 'number'
+          ? window.innerWidth
+          : (document.documentElement && document.documentElement.clientWidth) || 1024;
+      const viewportHeight =
+        typeof window.innerHeight === 'number'
+          ? window.innerHeight
+          : (document.documentElement && document.documentElement.clientHeight) || 900;
+      const isMobileViewport =
+        viewportWidth <= 768 ||
+        Boolean(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+
+      let canFocusName = false;
+      if (
+        !isMobileViewport &&
+        enquiryNameInput &&
+        !enquiryNameInput.value.trim() &&
+        typeof enquiryNameInput.getBoundingClientRect === 'function'
+      ) {
+        const rect = enquiryNameInput.getBoundingClientRect();
+        canFocusName = Boolean(
+          rect &&
+            rect.width > 0 &&
+            rect.height > 0 &&
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= viewportHeight &&
+            rect.right <= viewportWidth
+        );
+      }
+
+      const focusTarget =
+        (canFocusName ? enquiryNameInput : null) ||
+        selectedBanner ||
+        formProductSelect ||
+        enquiryMessage;
+
+      if (focusTarget && typeof focusTarget.focus === 'function') {
+        try {
+          focusTarget.focus({ preventScroll: true });
+        } catch (_) {
+          if (focusTarget === selectedBanner) {
+            focusTarget.focus();
+          }
+        }
+      }
     }
   }
 
@@ -867,30 +1310,67 @@
     selectedProductItem = null;
     if (selectedBanner) {
       selectedBanner.style.display = 'none';
+      selectedBanner.hidden = true;
+    }
+    if (selectedNameElem) {
+      selectedNameElem.textContent = '';
+    }
+    if (selectedPriceElem) {
+      selectedPriceElem.textContent = '';
     }
     if (formProductSelect) {
+      resetFormProductSelectLabels();
       formProductSelect.value = 'general';
+      formProductSelect.selectedIndex = 0;
+      syncFormProductSelectLabel();
     }
-    if (enquiryMessage) {
-      enquiryMessage.value = '';
-    }
+    updateRequirementsMessageForSelection('');
+    invalidatePreparedEnquiryFeedback();
   }
 
   // ==========================================================================
-  // CATEGORY SWITCHING
+  // CATEGORY SWITCHING & NAVIGATION ARIA STATE
   // ==========================================================================
-  function setCategory(categoryId) {
-    currentCategory = categoryId;
-
+  function updateCategoryNavigationState() {
     const pills = document.querySelectorAll('.filter-pill');
     pills.forEach(p => {
-      p.classList.toggle('is-active', p.getAttribute('data-category') === categoryId);
+      const isActive = p.getAttribute('data-category') === currentCategory;
+      p.classList.toggle('is-active', isActive);
+      p.setAttribute('aria-pressed', String(isActive));
     });
 
+    const allCategoryLinks = document.querySelectorAll('.category-tile[data-category], .footer-category-link[data-category], .mobile-nav-item[data-category]');
+    allCategoryLinks.forEach(link => {
+      const isActive = link.getAttribute('data-category') === currentCategory;
+      link.classList.toggle('is-active', isActive);
+      if (isActive) {
+        link.setAttribute('aria-current', 'true');
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    });
+  }
+
+  function setCategory(categoryId, options = {}) {
+    const valid = CATALOGUE_DATA.categories.some(c => c.id === categoryId);
+    currentCategory = valid ? categoryId : 'all';
+
+    updateCategoryNavigationState();
     renderProducts();
 
-    if (history.replaceState) {
-      history.replaceState(null, null, `#category-${categoryId}`);
+    if (options.updateHistory !== false && typeof history !== 'undefined' && history.replaceState) {
+      history.replaceState(null, null, `#category-${currentCategory}`);
+    }
+  }
+
+  function scrollToCatalogueSection() {
+    const catalogueAnchor = document.getElementById('catalogue');
+    if (catalogueAnchor && typeof catalogueAnchor.scrollIntoView === 'function') {
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      catalogueAnchor.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start'
+      });
     }
   }
 
@@ -900,7 +1380,11 @@
       const catId = hash.replace('#category-', '');
       const valid = CATALOGUE_DATA.categories.some(c => c.id === catId);
       if (valid) {
-        setCategory(catId);
+        if (searchInput && searchQuery.trim() !== '') {
+          searchInput.value = '';
+          searchQuery = '';
+        }
+        setCategory(catId, { updateHistory: false });
       }
     }
   }
@@ -919,18 +1403,28 @@
       }
     }, { passive: true });
 
-    categoryTiles.forEach(tile => {
-      tile.addEventListener('click', (e) => {
-        e.preventDefault();
-        const cat = tile.getAttribute('data-category');
-        if (cat) {
-          setCategory(cat);
-          const catalogueAnchor = document.getElementById('catalogue');
-          if (catalogueAnchor) {
-            catalogueAnchor.scrollIntoView({ behavior: 'smooth' });
-          }
+    window.addEventListener('resize', updateHeaderCollapseState);
+    window.addEventListener('hashchange', checkUrlHash);
+
+    const handleCategoryJumpClick = (link, e) => {
+      e.preventDefault();
+      const cat = link.getAttribute('data-category');
+      if (cat) {
+        if (searchInput && searchQuery.trim() !== '') {
+          searchInput.value = '';
+          searchQuery = '';
         }
-      });
+        setCategory(cat);
+        scrollToCatalogueSection();
+      }
+    };
+
+    categoryTiles.forEach(tile => {
+      tile.addEventListener('click', (e) => handleCategoryJumpClick(tile, e));
+    });
+
+    footerCategoryLinks.forEach(link => {
+      link.addEventListener('click', (e) => handleCategoryJumpClick(link, e));
     });
 
     if (searchInput) {
@@ -944,22 +1438,43 @@
       clearSelectionBtn.addEventListener('click', clearProductSelection);
     }
 
+    if (formProductSelect) {
+      formProductSelect.addEventListener('change', () => {
+        const selectedVal = formProductSelect.value;
+        if (selectedVal === 'general') {
+          clearProductSelection();
+          return;
+        }
+        const resolved = resolveProductSelection(selectedVal);
+        if (!resolved) return;
+        selectProductForEnquiry(resolved, { scroll: false });
+      });
+    }
+
     if (mobileNavToggle) {
-      mobileNavToggle.addEventListener('click', openMobileDrawer);
+      mobileNavToggle.addEventListener('click', (e) => openMobileDrawer(e.currentTarget));
     }
     if (mobileDrawerClose) {
-      mobileDrawerClose.addEventListener('click', closeMobileDrawer);
+      mobileDrawerClose.addEventListener('click', () => closeMobileDrawer());
     }
     if (mobileBackdrop) {
-      mobileBackdrop.addEventListener('click', closeMobileDrawer);
+      mobileBackdrop.addEventListener('click', () => closeMobileDrawer());
     }
     mobileNavLinks.forEach(link => {
-      link.addEventListener('click', () => {
+      link.addEventListener('click', (e) => {
         const cat = link.getAttribute('data-category');
         if (cat) {
+          e.preventDefault();
+          if (searchInput && searchQuery.trim() !== '') {
+            searchInput.value = '';
+            searchQuery = '';
+          }
           setCategory(cat);
+          closeMobileDrawer({ restoreFocus: false });
+          scrollToCatalogueSection();
+          return;
         }
-        closeMobileDrawer();
+        closeMobileDrawer({ restoreFocus: false });
       });
     });
 
@@ -967,71 +1482,596 @@
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         const policyKey = btn.getAttribute('data-policy-trigger');
-        openPolicyModal(policyKey);
+        openPolicyModal(policyKey, btn);
       });
     });
 
     if (policyModalClose) {
-      policyModalClose.addEventListener('click', closePolicyModal);
+      policyModalClose.addEventListener('click', () => closePolicyModal());
     }
     if (policyModalBackdrop) {
-      policyModalBackdrop.addEventListener('click', closePolicyModal);
+      policyModalBackdrop.addEventListener('click', () => closePolicyModal());
     }
 
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeMobileDrawer();
-        closePolicyModal();
-      }
-    });
+    window.addEventListener('keydown', handleGlobalKeydown);
+    document.addEventListener('focusin', handleOverlayFocusIn);
 
     if (enquiryForm) {
       enquiryForm.addEventListener('submit', handleFormSubmit);
+
+      const trackedFields = [
+        enquiryNameInput,
+        enquiryPhoneInput,
+        enquiryEmailInput,
+        enquiryPostcodeInput,
+        enquiryMessage
+      ].filter(Boolean);
+
+      trackedFields.forEach(field => {
+        const onFieldEdit = () => {
+          invalidatePreparedEnquiryFeedback();
+          if (field.getAttribute('aria-invalid') === 'true' || (enquiryFormError && !enquiryFormError.hidden)) {
+            validateSingleField(field);
+            syncFormErrorSummary();
+          }
+        };
+        field.addEventListener('input', onFieldEdit);
+        field.addEventListener('change', onFieldEdit);
+      });
+
+      const radioInputs = enquiryForm.querySelectorAll('input[name="pref_contact"]');
+      radioInputs.forEach(radio => {
+        radio.addEventListener('change', () => {
+          updateContactMethodRequirements();
+          invalidatePreparedEnquiryFeedback();
+          const summaryVisible = Boolean(enquiryFormError && !enquiryFormError.hidden);
+          if (summaryVisible) {
+            [enquiryNameInput, enquiryPhoneInput, enquiryEmailInput, enquiryMessage]
+              .filter(Boolean)
+              .forEach(field => validateSingleField(field));
+            syncFormErrorSummary();
+          } else {
+            if (enquiryPhoneInput && enquiryPhoneInput.getAttribute('aria-invalid') === 'true') {
+              validateSingleField(enquiryPhoneInput);
+            }
+            if (enquiryEmailInput && enquiryEmailInput.getAttribute('aria-invalid') === 'true') {
+              validateSingleField(enquiryEmailInput);
+            }
+            syncFormErrorSummary();
+          }
+        });
+      });
     }
   }
 
   // ==========================================================================
-  // MOBILE DRAWER
+  // OVERLAY ACCESSIBILITY: FOCUS TRAP, INERT BACKGROUND, ESCAPE & RESTORE FOCUS
   // ==========================================================================
-  function openMobileDrawer() {
+  function isMobileDrawerOpen() {
+    return Boolean(mobileDrawer && mobileDrawer.classList.contains('is-open'));
+  }
+
+  function isPolicyModalOpen() {
+    return Boolean(policyModal && policyModal.classList.contains('is-open'));
+  }
+
+  function getActiveOverlay() {
+    if (isPolicyModalOpen()) return policyModal;
+    if (isMobileDrawerOpen()) return mobileDrawer;
+    return null;
+  }
+
+  function setBackgroundInert(isInert) {
+    const backgroundRegions = [skipLink, topBar, header, mainContent, footer].filter(Boolean);
+    backgroundRegions.forEach(region => {
+      if (isInert) {
+        region.inert = true;
+        region.setAttribute('inert', '');
+        region.setAttribute('aria-hidden', 'true');
+      } else {
+        region.inert = false;
+        region.removeAttribute('inert');
+        region.removeAttribute('aria-hidden');
+      }
+    });
+  }
+
+  function getFocusableElements(container) {
+    if (!container) return [];
+    const candidates = Array.from(
+      container.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    );
+    return candidates.filter(el => {
+      if (el.disabled || el.hidden) return false;
+      if (el.getAttribute('aria-hidden') === 'true') return false;
+      if (el.inert || el.hasAttribute('inert')) return false;
+      if (typeof window.getComputedStyle === 'function') {
+        const style = window.getComputedStyle(el);
+        if (style && (style.display === 'none' || style.visibility === 'hidden')) return false;
+      }
+      return true;
+    });
+  }
+
+  function handleGlobalKeydown(e) {
+    if (e.key === 'Escape') {
+      if (isPolicyModalOpen()) {
+        e.preventDefault();
+        closePolicyModal();
+        return;
+      }
+      if (isMobileDrawerOpen()) {
+        e.preventDefault();
+        closeMobileDrawer();
+        return;
+      }
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      const activeOverlay = getActiveOverlay();
+      if (!activeOverlay) return;
+
+      const focusables = getFocusableElements(activeOverlay);
+      if (focusables.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+
+      if (e.shiftKey) {
+        if (active === first || !activeOverlay.contains(active)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (active === last || !activeOverlay.contains(active)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+  }
+
+  function handleOverlayFocusIn(e) {
+    const activeOverlay = getActiveOverlay();
+    if (!activeOverlay || !e.target) return;
+    if (!activeOverlay.contains(e.target)) {
+      const focusables = getFocusableElements(activeOverlay);
+      if (focusables.length > 0) {
+        focusables[0].focus();
+      }
+    }
+  }
+
+  function openMobileDrawer(triggerElem) {
     if (!mobileDrawer || !mobileBackdrop) return;
+    if (isPolicyModalOpen()) {
+      closePolicyModal({ restoreFocus: false });
+    }
+
+    drawerReturnFocusElem =
+      (triggerElem && typeof triggerElem.focus === 'function' ? triggerElem : null) ||
+      (document.activeElement && typeof document.activeElement.focus === 'function' ? document.activeElement : null) ||
+      mobileNavToggle;
+
+    mobileDrawer.inert = false;
+    mobileDrawer.removeAttribute('inert');
+    mobileDrawer.setAttribute('aria-hidden', 'false');
+    mobileDrawer.style.visibility = 'visible';
+    if (mobileDrawerClose) {
+      mobileDrawerClose.style.visibility = 'visible';
+    }
     mobileDrawer.classList.add('is-open');
     mobileBackdrop.classList.add('is-open');
     if (mobileNavToggle) mobileNavToggle.setAttribute('aria-expanded', 'true');
+    setBackgroundInert(true);
     document.body.style.overflow = 'hidden';
-    if (mobileDrawerClose) mobileDrawerClose.focus();
+
+    if (typeof mobileDrawer.getBoundingClientRect === 'function') {
+      mobileDrawer.getBoundingClientRect();
+    }
+
+    const focusDrawerTarget = () => {
+      if (!isMobileDrawerOpen()) return;
+      if (mobileDrawerClose) {
+        mobileDrawerClose.focus();
+      } else {
+        const focusables = getFocusableElements(mobileDrawer);
+        if (focusables.length > 0) focusables[0].focus();
+      }
+    };
+
+    focusDrawerTarget();
+    if (typeof window.requestAnimationFrame === 'function' && document.activeElement !== mobileDrawerClose) {
+      window.requestAnimationFrame(focusDrawerTarget);
+    }
   }
 
-  function closeMobileDrawer() {
-    if (!mobileDrawer || !mobileBackdrop) return;
+  function closeMobileDrawer(options = {}) {
+    if (!mobileDrawer || !mobileBackdrop || !isMobileDrawerOpen()) return;
+    const shouldRestoreFocus = options.restoreFocus !== false;
+    const targetToFocus = drawerReturnFocusElem || mobileNavToggle;
+    drawerReturnFocusElem = null;
+
     mobileDrawer.classList.remove('is-open');
     mobileBackdrop.classList.remove('is-open');
+    mobileDrawer.style.visibility = '';
+    if (mobileDrawerClose) {
+      mobileDrawerClose.style.visibility = '';
+    }
+    mobileDrawer.inert = true;
+    mobileDrawer.setAttribute('inert', '');
+    mobileDrawer.setAttribute('aria-hidden', 'true');
     if (mobileNavToggle) {
       mobileNavToggle.setAttribute('aria-expanded', 'false');
-      mobileNavToggle.focus();
     }
-    document.body.style.overflow = '';
+
+    if (!isPolicyModalOpen()) {
+      setBackgroundInert(false);
+      document.body.style.overflow = '';
+    }
+
+    if (shouldRestoreFocus && targetToFocus && typeof targetToFocus.focus === 'function') {
+      targetToFocus.focus();
+    }
   }
 
   // ==========================================================================
   // POLICY MODAL
   // ==========================================================================
-  function openPolicyModal(policyKey) {
+  function openPolicyModal(policyKey, triggerElem) {
     const policy = POLICIES[policyKey];
     if (!policy || !policyModal) return;
+
+    if (isMobileDrawerOpen()) {
+      closeMobileDrawer({ restoreFocus: false });
+    }
+
+    modalReturnFocusElem =
+      (triggerElem && typeof triggerElem.focus === 'function' ? triggerElem : null) ||
+      (document.activeElement && typeof document.activeElement.focus === 'function' ? document.activeElement : null);
 
     if (policyModalTitle) policyModalTitle.textContent = policy.title;
     if (policyModalBody) policyModalBody.innerHTML = policy.content;
 
+    policyModal.inert = false;
+    policyModal.removeAttribute('inert');
+    policyModal.setAttribute('aria-hidden', 'false');
     policyModal.classList.add('is-open');
+    setBackgroundInert(true);
     document.body.style.overflow = 'hidden';
-    if (policyModalClose) policyModalClose.focus();
+
+    if (policyModalClose) {
+      policyModalClose.focus();
+    } else {
+      const focusables = getFocusableElements(policyModal);
+      if (focusables.length > 0) focusables[0].focus();
+    }
   }
 
-  function closePolicyModal() {
-    if (!policyModal) return;
+  function closePolicyModal(options = {}) {
+    if (!policyModal || !isPolicyModalOpen()) return;
+    const shouldRestoreFocus = options.restoreFocus !== false;
+    const targetToFocus = modalReturnFocusElem;
+    modalReturnFocusElem = null;
+
     policyModal.classList.remove('is-open');
-    document.body.style.overflow = '';
+    policyModal.inert = true;
+    policyModal.setAttribute('inert', '');
+    policyModal.setAttribute('aria-hidden', 'true');
+
+    if (!isMobileDrawerOpen()) {
+      setBackgroundInert(false);
+      document.body.style.overflow = '';
+    }
+
+    if (shouldRestoreFocus && targetToFocus && typeof targetToFocus.focus === 'function') {
+      targetToFocus.focus();
+    }
+  }
+
+  // ==========================================================================
+  // ACCESSIBLE FORM VALIDATION (DYNAMIC CONTACT REQUIREMENTS & FORMAT VALIDITY)
+  // ==========================================================================
+  function getPreferredContactMethod() {
+    const checkedRadio = enquiryForm
+      ? enquiryForm.querySelector('input[name="pref_contact"]:checked')
+      : document.querySelector('input[name="pref_contact"]:checked');
+    return checkedRadio && checkedRadio.value ? checkedRadio.value : 'Telephone Call';
+  }
+
+  function isTelephoneRequired(contactMethod = getPreferredContactMethod()) {
+    return contactMethod === 'Telephone Call' || contactMethod === 'WhatsApp';
+  }
+
+  function isEmailRequired(contactMethod = getPreferredContactMethod()) {
+    return contactMethod === 'Email';
+  }
+
+  function setRequiredAttributeAndIndicator(inputElem, indicatorElem, isRequired) {
+    if (inputElem) {
+      inputElem.required = isRequired;
+      if (isRequired) {
+        inputElem.setAttribute('required', '');
+        inputElem.setAttribute('aria-required', 'true');
+      } else {
+        inputElem.removeAttribute('required');
+        inputElem.setAttribute('aria-required', 'false');
+      }
+    }
+    if (indicatorElem) {
+      if (isRequired) {
+        indicatorElem.hidden = false;
+        indicatorElem.removeAttribute('hidden');
+        indicatorElem.style.display = '';
+      } else {
+        indicatorElem.hidden = true;
+        indicatorElem.setAttribute('hidden', '');
+        indicatorElem.style.display = 'none';
+      }
+    }
+  }
+
+  function updateContactMethodRequirements() {
+    const contactMethod = getPreferredContactMethod();
+    const phoneReq = isTelephoneRequired(contactMethod);
+    const emailReq = isEmailRequired(contactMethod);
+
+    setRequiredAttributeAndIndicator(enquiryNameInput, null, true);
+    setRequiredAttributeAndIndicator(enquiryMessage, null, true);
+
+    const phoneReqIndicator =
+      document.getElementById('enquiryPhoneReq') ||
+      (enquiryForm && enquiryForm.querySelector('label[for="enquiryPhone"] .req'));
+    setRequiredAttributeAndIndicator(enquiryPhoneInput, phoneReqIndicator, phoneReq);
+
+    const emailReqIndicator =
+      document.getElementById('enquiryEmailReq') ||
+      (enquiryForm && enquiryForm.querySelector('label[for="enquiryEmail"] .req'));
+    setRequiredAttributeAndIndicator(enquiryEmailInput, emailReqIndicator, emailReq);
+  }
+
+  function isValidTelephone(val) {
+    const trimmed = (val || '').trim();
+    if (!trimmed) return false;
+    if (!/^[+\d()\s.\-]+$/.test(trimmed)) return false;
+    const digits = trimmed.replace(/\D/g, '');
+    return digits.length >= 7 && digits.length <= 15;
+  }
+
+  function isValidEmailAddress(val, inputElem) {
+    const trimmed = (val || '').trim();
+    if (!trimmed) return false;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(trimmed)) return false;
+    if (inputElem && typeof inputElem.checkValidity === 'function') {
+      inputElem.setCustomValidity('');
+      if (!inputElem.checkValidity()) return false;
+    }
+    return true;
+  }
+
+  function setFieldValidationState(field, errorId, errorMessage) {
+    if (!field) return true;
+    const errorElem = errorId ? document.getElementById(errorId) : null;
+    const isInvalid = Boolean(errorMessage);
+
+    if (typeof field.setCustomValidity === 'function') {
+      field.setCustomValidity(errorMessage || '');
+    }
+
+    if (isInvalid) {
+      field.classList.add('is-invalid');
+      field.setAttribute('aria-invalid', 'true');
+      if (errorElem) {
+        errorElem.textContent = errorMessage;
+        errorElem.hidden = false;
+        errorElem.style.display = 'block';
+      }
+    } else {
+      field.classList.remove('is-invalid');
+      field.removeAttribute('aria-invalid');
+      if (errorElem) {
+        errorElem.textContent = '';
+        errorElem.hidden = true;
+        errorElem.style.display = 'none';
+      }
+    }
+    return !isInvalid;
+  }
+
+  function evaluateFieldValidity(field) {
+    if (!field) return { valid: true, missing: false, fieldName: '', errorId: '', message: '' };
+    const val = (field.value || '').trim();
+    const contactMethod = getPreferredContactMethod();
+
+    if (field === enquiryNameInput) {
+      if (!val) {
+        return {
+          valid: false,
+          missing: true,
+          fieldName: 'full name',
+          errorId: 'enquiryNameError',
+          message: 'Enter your full name.'
+        };
+      }
+      return { valid: true, missing: false, fieldName: 'full name', errorId: 'enquiryNameError', message: '' };
+    }
+
+    if (field === enquiryPhoneInput) {
+      const phoneReq = isTelephoneRequired(contactMethod);
+      if (!val) {
+        if (phoneReq) {
+          return {
+            valid: false,
+            missing: true,
+            fieldName: 'telephone number',
+            errorId: 'enquiryPhoneError',
+            message: 'Enter your telephone number.'
+          };
+        }
+        return { valid: true, missing: false, fieldName: 'telephone number', errorId: 'enquiryPhoneError', message: '' };
+      }
+      if (!isValidTelephone(val)) {
+        return {
+          valid: false,
+          missing: false,
+          fieldName: 'telephone number',
+          errorId: 'enquiryPhoneError',
+          message: 'Enter a valid telephone number, for example 020 8888 0322 or 07123 456789.'
+        };
+      }
+      return { valid: true, missing: false, fieldName: 'telephone number', errorId: 'enquiryPhoneError', message: '' };
+    }
+
+    if (field === enquiryEmailInput) {
+      const emailReq = isEmailRequired(contactMethod);
+      if (!val) {
+        if (emailReq) {
+          return {
+            valid: false,
+            missing: true,
+            fieldName: 'email address',
+            errorId: 'enquiryEmailError',
+            message: 'Enter your email address.'
+          };
+        }
+        return { valid: true, missing: false, fieldName: 'email address', errorId: 'enquiryEmailError', message: '' };
+      }
+      if (!isValidEmailAddress(val, field)) {
+        return {
+          valid: false,
+          missing: false,
+          fieldName: 'email address',
+          errorId: 'enquiryEmailError',
+          message: 'Enter a valid email address, for example name@example.co.uk.'
+        };
+      }
+      return { valid: true, missing: false, fieldName: 'email address', errorId: 'enquiryEmailError', message: '' };
+    }
+
+    if (field === enquiryMessage) {
+      if (!val) {
+        return {
+          valid: false,
+          missing: true,
+          fieldName: 'requirements',
+          errorId: 'enquiryMessageError',
+          message: 'Enter your requirements.'
+        };
+      }
+      return { valid: true, missing: false, fieldName: 'requirements', errorId: 'enquiryMessageError', message: '' };
+    }
+
+    return { valid: true, missing: false, fieldName: '', errorId: '', message: '' };
+  }
+
+  function validateSingleField(field) {
+    const result = evaluateFieldValidity(field);
+    if (field && result.errorId) {
+      setFieldValidationState(field, result.errorId, result.message);
+    }
+    return result;
+  }
+
+  function formatMissingFieldsSummary(missingNames) {
+    if (!missingNames || missingNames.length === 0) return '';
+    if (missingNames.length === 1) {
+      return `Enter your ${missingNames[0]} to prepare your email draft.`;
+    }
+    if (missingNames.length === 2) {
+      return `Enter your ${missingNames[0]} and ${missingNames[1]} to prepare your email draft.`;
+    }
+    const allButLast = missingNames.slice(0, -1).join(', ');
+    const last = missingNames[missingNames.length - 1];
+    return `Enter your ${allButLast} and ${last} to prepare your email draft.`;
+  }
+
+  function buildErrorSummaryText(results) {
+    const missingNames = [];
+    const formatErrors = [];
+    results.forEach(res => {
+      if (!res.valid) {
+        if (res.missing && res.fieldName) {
+          missingNames.push(res.fieldName);
+        } else if (res.message) {
+          formatErrors.push(res.message);
+        }
+      }
+    });
+    const summaryParts = [];
+    if (missingNames.length > 0) {
+      summaryParts.push(formatMissingFieldsSummary(missingNames));
+    }
+    if (formatErrors.length > 0) {
+      summaryParts.push(formatErrors.join(' '));
+    }
+    return summaryParts.join(' ');
+  }
+
+  function syncFormErrorSummary() {
+    if (!enquiryFormError) return;
+    const fields = [enquiryNameInput, enquiryPhoneInput, enquiryEmailInput, enquiryMessage].filter(Boolean);
+    const invalidFields = fields.filter(f => f.getAttribute('aria-invalid') === 'true');
+    if (invalidFields.length === 0) {
+      enquiryFormError.textContent = '';
+      enquiryFormError.hidden = true;
+      enquiryFormError.style.display = 'none';
+      return;
+    }
+    if (!enquiryFormError.hidden) {
+      const activeInvalidResults = invalidFields.map(f => evaluateFieldValidity(f)).filter(r => !r.valid);
+      const summaryText = buildErrorSummaryText(activeInvalidResults);
+      if (summaryText) {
+        enquiryFormError.textContent = summaryText;
+      } else {
+        enquiryFormError.textContent = '';
+        enquiryFormError.hidden = true;
+        enquiryFormError.style.display = 'none';
+      }
+    }
+  }
+
+  function validateEnquiryForm() {
+    updateContactMethodRequirements();
+    const fields = [enquiryNameInput, enquiryPhoneInput, enquiryEmailInput, enquiryMessage].filter(Boolean);
+    let firstInvalidField = null;
+    const results = [];
+
+    fields.forEach(field => {
+      const result = validateSingleField(field);
+      results.push(result);
+      if (!result.valid && !firstInvalidField) {
+        firstInvalidField = field;
+      }
+    });
+
+    if (firstInvalidField) {
+      const summaryText = buildErrorSummaryText(results);
+
+      if (enquiryFormError) {
+        enquiryFormError.textContent = summaryText;
+        enquiryFormError.hidden = false;
+        enquiryFormError.style.display = 'block';
+      }
+
+      if (typeof firstInvalidField.focus === 'function') {
+        firstInvalidField.focus();
+      }
+      return false;
+    }
+
+    if (enquiryFormError) {
+      enquiryFormError.textContent = '';
+      enquiryFormError.hidden = true;
+      enquiryFormError.style.display = 'none';
+    }
+    return true;
   }
 
   // ==========================================================================
@@ -1040,24 +2080,27 @@
   function handleFormSubmit(e) {
     e.preventDefault();
 
-    const name = document.getElementById('enquiryName')?.value.trim();
-    const phone = document.getElementById('enquiryPhone')?.value.trim();
-    const email = document.getElementById('enquiryEmail')?.value.trim();
-    const addressArea = document.getElementById('enquiryPostcode')?.value.trim();
-    const message = document.getElementById('enquiryMessage')?.value.trim();
-    const contactMethod = document.querySelector('input[name="pref_contact"]:checked')?.value || 'Telephone Call';
-
-    if (!name || !phone || !email || !message) {
-      alert('Please fill in the required fields (Full Name, Phone Number, Email Address, and Message) before preparing your email.');
+    if (!validateEnquiryForm()) {
+      invalidatePreparedEnquiryFeedback();
       return;
     }
 
-    let itemInfo = 'General Enquiry';
+    const name = enquiryNameInput ? enquiryNameInput.value.trim() : '';
+    const phone = enquiryPhoneInput ? enquiryPhoneInput.value.trim() : '';
+    const email = enquiryEmailInput ? enquiryEmailInput.value.trim() : '';
+    const addressArea = enquiryPostcodeInput ? enquiryPostcodeInput.value.trim() : '';
+    const message = enquiryMessage ? enquiryMessage.value.trim() : '';
+    const contactMethod = getPreferredContactMethod();
+
+    let itemInfo = 'Furniture Package, Multiple Items or General Enquiry';
     if (selectedProductItem) {
-      itemInfo = `${selectedProductItem.name} — ${selectedProductItem.variant} (£${selectedProductItem.price})`;
+      itemInfo = `${formatSelectedItemLabel(selectedProductItem)} (£${selectedProductItem.price})`;
     } else if (formProductSelect && formProductSelect.value !== 'general') {
-      const selectedOption = formProductSelect.options[formProductSelect.selectedIndex];
-      itemInfo = selectedOption ? selectedOption.text : 'Catalogue Item';
+      const resolved = resolveProductSelection(formProductSelect.value);
+      if (resolved) {
+        selectedProductItem = resolved;
+        itemInfo = `${formatSelectedItemLabel(resolved)} (£${resolved.price})`;
+      }
     }
 
     // Compose email body
@@ -1065,16 +2108,14 @@
       `Enquiry for GBA Furniture (401 Lordship Lane, London, N17 6AE)`,
       `--------------------------------------------------`,
       `Customer Name: ${name}`,
-      `Telephone: ${phone}`,
-      `Email: ${email}`,
-      `Delivery Area / Postcode: ${addressArea || 'Not specified'}`,
+      `Telephone: ${phone || 'Not provided'}`,
+      `Email: ${email || 'Not provided'}`,
+      `Property Postcode: ${addressArea || 'Not specified'}`,
       `Preferred Contact Method: ${contactMethod}`,
       `Item of Interest: ${itemInfo}`,
       ``,
       `Message / Requirements:`,
-      message,
-      `--------------------------------------------------`,
-      `Note: Sourced from GBA Furniture price list. Final details and prices to be confirmed directly with store.`
+      message
     ].join('\n');
 
     const subject = `Catalogue Enquiry: ${itemInfo} - ${name}`;
@@ -1086,19 +2127,46 @@
     }
 
     if (enquiryFeedback) {
+      enquiryFeedback.hidden = false;
       enquiryFeedback.style.display = 'block';
-      enquiryFeedback.scrollIntoView({ behavior: 'smooth' });
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (typeof enquiryFeedback.scrollIntoView === 'function') {
+        enquiryFeedback.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+      }
     }
 
+    const showCopyFailure = () => {
+      const failureText = 'We couldn’t copy the enquiry. Select the text below and copy it into your email.';
+      if (copyFeedbackMessage) {
+        copyFeedbackMessage.textContent = failureText;
+        copyFeedbackMessage.style.display = 'block';
+      } else if (copyEnquiryBtn) {
+        copyEnquiryBtn.textContent = failureText;
+      }
+    };
+
     if (copyEnquiryBtn) {
+      copyEnquiryBtn.textContent = 'Copy Enquiry Text';
+      if (copyFeedbackMessage) {
+        copyFeedbackMessage.textContent = '';
+        copyFeedbackMessage.style.display = 'none';
+      }
       copyEnquiryBtn.onclick = () => {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
           navigator.clipboard.writeText(emailBody).then(() => {
-            copyEnquiryBtn.textContent = 'Copied to Clipboard!';
+            if (copyFeedbackMessage) {
+              copyFeedbackMessage.textContent = '';
+              copyFeedbackMessage.style.display = 'none';
+            }
+            copyEnquiryBtn.textContent = 'Enquiry Copied';
             setTimeout(() => {
               copyEnquiryBtn.textContent = 'Copy Enquiry Text';
             }, 2500);
+          }).catch(() => {
+            showCopyFailure();
           });
+        } else {
+          showCopyFailure();
         }
       };
     }
