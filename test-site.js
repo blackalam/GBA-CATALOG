@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const vm = require('vm');
+const crypto = require('crypto');
 
 let totalTests = 0;
 let passedTests = 0;
@@ -129,9 +130,82 @@ assert(startingPricesMatchMin, 'Every product startingPrice matches its minimum 
 
 // Extract embedded CATALOGUE_DATA from script.js and verify exact synchronisation with data/products.json
 const EXPECTED_CACHE_BUST_QUERY = '?v=public-audit-20261020';
+const EXPECTED_HERO_IMAGE_PATH = 'assets/current-banner.jpg';
+const EXPECTED_HERO_CACHE_BUST_QUERY = '?v=hero-20261020-1677a163a5ca';
+const EXPECTED_HERO_VERSIONED_REF = `${EXPECTED_HERO_IMAGE_PATH}${EXPECTED_HERO_CACHE_BUST_QUERY}`;
+const EXPECTED_HERO_SHA256 = '1677a163a5cad2b7741a21877c059a7952faa6473f0ee7da92ade9878f831614';
+const EXPECTED_HERO_BYTE_LENGTH = 79880;
+const EXPECTED_HERO_WIDTH = 1238;
+const EXPECTED_HERO_HEIGHT = 864;
+const heroBannerBytes = fs.readFileSync(path.join(__dirname, EXPECTED_HERO_IMAGE_PATH));
+const heroBannerSha256 = crypto.createHash('sha256').update(heroBannerBytes).digest('hex');
+
+function parseJpegSofDimensions(buf) {
+  if (
+    !Buffer.isBuffer(buf) ||
+    buf.length < 4 ||
+    buf.subarray(0, 3).toString('hex') !== 'ffd8ff' ||
+    buf.subarray(buf.length - 2).toString('hex') !== 'ffd9'
+  ) {
+    return null;
+  }
+  const sofMarkers = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
+  let offset = 2;
+  while (offset < buf.length) {
+    if (buf[offset] !== 0xff) return null;
+    while (offset < buf.length && buf[offset] === 0xff) offset++;
+    if (offset >= buf.length) return null;
+    const marker = buf[offset++];
+    if (marker === 0xd9 || marker === 0xda) break;
+    if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+    if (offset + 2 > buf.length) return null;
+    const segLen = buf.readUInt16BE(offset);
+    if (segLen < 2 || offset + segLen > buf.length) return null;
+    if (sofMarkers.has(marker)) {
+      if (segLen < 8) return null;
+      const precision = buf[offset + 2];
+      const height = buf.readUInt16BE(offset + 3);
+      const width = buf.readUInt16BE(offset + 5);
+      const components = buf[offset + 7];
+      return { width, height, precision, components };
+    }
+    offset += segLen;
+  }
+  return null;
+}
+
+const heroDimensions = parseJpegSofDimensions(heroBannerBytes);
+
 function resolveAssetPathname(assetUrl) {
   return new URL(String(assetUrl || ''), 'http://127.0.0.1/').pathname.replace(/^\/+/, '');
 }
+
+assert(
+  heroBannerBytes.length === EXPECTED_HERO_BYTE_LENGTH && heroBannerSha256 === EXPECTED_HERO_SHA256,
+  `assets/current-banner.jpg matches exact supplied JPEG byte length (${EXPECTED_HERO_BYTE_LENGTH}) and SHA-256 (${EXPECTED_HERO_SHA256})`
+);
+assert(
+  Boolean(heroDimensions) &&
+    heroDimensions.width === EXPECTED_HERO_WIDTH &&
+    heroDimensions.height === EXPECTED_HERO_HEIGHT &&
+    heroDimensions.precision === 8 &&
+    heroDimensions.components === 3,
+  `assets/current-banner.jpg has valid JPEG SOF structure and exact ${EXPECTED_HERO_WIDTH}x${EXPECTED_HERO_HEIGHT} dimensions`
+);
+assert(
+  html.includes(`src="${EXPECTED_HERO_VERSIONED_REF}"`) &&
+    !html.includes('src="assets/current-banner.jpg"') &&
+    (html.match(/assets\/current-banner\.jpg/g) || []).length === 1 &&
+    (html.match(/assets\/current-banner\.jpg\?v=hero-20261020-1677a163a5ca/g) || []).length === 1 &&
+    resolveAssetPathname(EXPECTED_HERO_VERSIONED_REF) === EXPECTED_HERO_IMAGE_PATH,
+  `index.html references cache-busted hero image ${EXPECTED_HERO_VERSIONED_REF} with zero unversioned hero references`
+);
+assert(
+  /<img\s+src="assets\/current-banner\.jpg\?v=hero-20261020-1677a163a5ca"[\s\S]*?alt="GBA Furniture furnished bedroom with upholstered bed, bedside drawers, chest of drawers and wardrobe"[\s\S]*?class="hero-image"[\s\S]*?width="1238"[\s\S]*?height="864"\s*>/.test(
+    html
+  ) && !html.includes('showroom living banner'),
+  'index.html .hero-image <img> binds 1238x864 intrinsic dimensions and grounded bedroom alt description without invented product claims'
+);
 
 assert(
   html.includes('href="styles.css?v=public-audit-20261020"') && !html.includes('href="styles.css"'),
@@ -287,15 +361,20 @@ assert(
     smokeTestSh.includes("zlib.crc32") &&
     smokeTestSh.includes("media_type != \"image/jpeg\"") &&
     smokeTestSh.includes("ffd8ff") &&
+    smokeTestSh.includes(`check_endpoint "/index.html" "200" "${EXPECTED_HERO_VERSIONED_REF}"`) &&
+    smokeTestSh.includes('check_endpoint "/assets/current-banner.jpg" "200" ""') &&
+    smokeTestSh.includes(`check_endpoint "/${EXPECTED_HERO_VERSIONED_REF}" "200" ""`) &&
     smokeTestSh.includes("ET.fromstring(raw_bytes)") &&
     smokeTestSh.includes("Trusted byte verification failed") &&
     remoteDeploySandboxSh.includes('EXPECTED_METADATA_FILE="${STAGE_DIR}/release-metadata.json"') &&
     remoteDeploySandboxSh.includes('EXPECTED_ASSET_ROOT="${STAGE_DIR}"') &&
+    remoteDeploySandboxSh.includes(EXPECTED_HERO_VERSIONED_REF) &&
     remoteDeploySandboxSh.includes('node --check') &&
     remoteDeployProdSh.includes('EXPECTED_METADATA_FILE="${RELEASE_DIR}/release-metadata.json"') &&
     remoteDeployProdSh.includes('EXPECTED_ASSET_ROOT="${RELEASE_DIR}"') &&
+    remoteDeployProdSh.includes(EXPECTED_HERO_VERSIONED_REF) &&
     remoteDeployProdSh.includes('node --check'),
-  'scripts/smoke-test.sh and deploy scripts enforce mandatory trusted asset binding (STAGE_DIR/RELEASE_DIR), ancestor symlink rejection, preflight node --check, separate curl exit capture, fail-closed Content-Type & format checks, and exact trusted-byte verification'
+  'scripts/smoke-test.sh and deploy scripts enforce mandatory trusted asset binding (STAGE_DIR/RELEASE_DIR), ancestor symlink rejection, preflight node --check, separate curl exit capture, fail-closed Content-Type & format checks, and exact trusted-byte verification (including underlying & cache-busted hero endpoints)'
 );
 
 // Check specific key catalogue items, names, collections, and variant labels
@@ -504,6 +583,16 @@ assert(!html.includes('Monday to Sunday'), 'Obsolete phrase "Monday to Sunday" a
 const htmlLower = html.toLowerCase();
 assert(html.includes('<title>GBA Furniture | Furniture for Landlords &amp; Letting Agents</title>'), 'Audited page title present');
 assert(html.includes('Family-run furniture specialists with 20 years’ experience serving landlords and letting agents. Explore packages and replacements, and contact us for a quote.'), 'Audited meta description present');
+assert(
+  html.includes(
+    '<h1 class="hero-title" id="heroHeading">Landlords • Letting • HMOs • Care Homes • Airbnb • Temporary Housing — Your Complete Furniture Partner. Only One Call Away</h1>'
+  ),
+  'Hero H1 heading present with exact updated text'
+);
+assert(
+  !html.includes('Furniture for <em>Landlords &amp; Letting Agents</em>'),
+  'Obsolete hero H1 phrase "Furniture for <em>Landlords &amp; Letting Agents</em>" absent from HTML'
+);
 assert(htmlLower.includes('family-run'), 'Confirmed copy "family-run" present in HTML');
 assert(htmlLower.includes('20 years'), 'Confirmed copy "20 years" present in HTML');
 assert(htmlLower.includes('landlords'), 'Confirmed copy "landlords" present in HTML');
@@ -1869,7 +1958,26 @@ server.listen(0, '127.0.0.1', () => {
     { path: '/data/products.json', status: 200, type: 'application/json', checkBody: (buf) => { try { const j = JSON.parse(buf.toString('utf8')); return Array.isArray(j.products) && j.products.length === 26; } catch (_e) { return false; } } },
     { path: '/assets/gba-logo-official-transparent.png', status: 200, type: 'image/png', checkBody: (buf) => buf.length >= 24 && buf.subarray(0, 8).toString('hex') === '89504e470d0a1a0a' },
     { path: '/assets/gba-logo-web.png', status: 200, type: 'image/png', checkBody: (buf) => buf.length >= 24 && buf.subarray(0, 8).toString('hex') === '89504e470d0a1a0a' },
-    { path: '/assets/current-banner.jpg', status: 200, type: 'image/jpeg', checkBody: (buf) => buf.length >= 4 && buf.subarray(0, 3).toString('hex') === 'ffd8ff' },
+    {
+      path: '/assets/current-banner.jpg',
+      status: 200,
+      type: 'image/jpeg',
+      checkBody: (buf) =>
+        buf.length === EXPECTED_HERO_BYTE_LENGTH &&
+        buf.subarray(0, 3).toString('hex') === 'ffd8ff' &&
+        crypto.createHash('sha256').update(buf).digest('hex') === EXPECTED_HERO_SHA256 &&
+        buf.equals(heroBannerBytes)
+    },
+    {
+      path: `/${EXPECTED_HERO_VERSIONED_REF}`,
+      status: 200,
+      type: 'image/jpeg',
+      checkBody: (buf) =>
+        buf.length === EXPECTED_HERO_BYTE_LENGTH &&
+        buf.subarray(0, 3).toString('hex') === 'ffd8ff' &&
+        crypto.createHash('sha256').update(buf).digest('hex') === EXPECTED_HERO_SHA256 &&
+        buf.equals(heroBannerBytes)
+    },
     ...svgFiles.map(file => ({
       path: `/${file}`,
       status: 200,

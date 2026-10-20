@@ -1124,6 +1124,9 @@ done
 # Verify candidate content markers before touching backups or docroot
 grep -F -q -- "GBA Furniture" "${TEMP_STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Candidate index.html missing brand title" >&2; exit 1; }
 grep -F -q -- "assets/gba-logo-official-transparent.png" "${TEMP_STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Candidate index.html missing official transparent logo reference" >&2; exit 1; }
+grep -F -q -- "assets/current-banner.jpg?v=hero-20261020-1677a163a5ca" "${TEMP_STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Candidate index.html missing cache-busted hero banner reference" >&2; exit 1; }
+grep -F -q -- "Specialists in Landlord & Agency Furniture" "${TEMP_STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Candidate index.html missing hero banner overlay copy" >&2; exit 1; }
+grep -F -q -- "Landlords • Letting • HMOs • Care Homes • Airbnb • Temporary Housing — Your Complete Furniture Partner. Only One Call Away" "${TEMP_STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Candidate index.html missing hero H1 heading" >&2; exit 1; }
 grep -F -q -- "020 8888 0322" "${TEMP_STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Candidate index.html missing telephone" >&2; exit 1; }
 grep -F -q -- "401 Lordship Lane" "${TEMP_STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Candidate index.html missing address" >&2; exit 1; }
 grep -F -q -- "--color-petrol" "${TEMP_STAGE_DIR}/styles.css" || { echo "CRITICAL ERROR: Candidate styles.css missing brand variables" >&2; exit 1; }
