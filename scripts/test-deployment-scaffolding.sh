@@ -30,8 +30,9 @@
 #      failures (restoring live files + pre-rollback DB state & preserving
 #      evidence on restore failure), and verified DB + HTTP 200 rollback
 #  11. Workflow security controls: immutable github.sha checkout + HEAD check,
-#      shared concurrency, full-SHA pinning, and pre-upload staging symlink
-#      escape prevention
+#      shared concurrency, full-SHA pinning, explicit SSH/SCP keepalive options
+#      (ServerAliveInterval=30, ServerAliveCountMax=60, TCPKeepAlive=yes), and
+#      pre-upload staging symlink escape prevention
 # ==============================================================================
 
 set -euo pipefail
@@ -1924,12 +1925,49 @@ for wf in deploy-sandbox.yml deploy-production.yml rollback.yml; do
 done
 echo "  ✓ All deployment and rollback workflows share concurrency group 'gba-deployment'."
 
-# 11d. Verify unified staging path and execute extracted pre-upload staging reservation script against symlink escape probes
+# 11d. Verify unified staging path, explicit SSH/SCP keepalive options, and execute extracted pre-upload staging reservation script against symlink escape probes
 for wf in deploy-sandbox.yml deploy-production.yml rollback.yml; do
   WF_PATH="${WORKFLOW_DIR}/${wf}"
   grep -q "SSH_KNOWN_HOSTS" "${WF_PATH}" || { echo "Fail: SSH_KNOWN_HOSTS missing from ${wf}"; exit 1; }
   grep -q "StrictHostKeyChecking=yes" "${WF_PATH}" || { echo "Fail: StrictHostKeyChecking=yes missing from ${wf}"; exit 1; }
   grep -q 'REMOTE_STAGE="/home/alibhatt/.gba-deploy-staging/${RELEASE_ID}"' "${WF_PATH}" || { echo "Fail: unified REMOTE_STAGE missing from ${wf}"; exit 1; }
+
+  # Regression assertions: every SSH_OPTS and SCP_OPTS array in all remote workflows must include explicit keepalive and strict host-key options
+  SSH_OPTS_LINES="$(grep -E '^[[:space:]]*SSH_OPTS=\(' "${WF_PATH}" || true)"
+  SCP_OPTS_LINES="$(grep -E '^[[:space:]]*SCP_OPTS=\(' "${WF_PATH}" || true)"
+  [ -n "${SSH_OPTS_LINES}" ] || { echo "  ✗ FAIL: SSH_OPTS array missing from ${wf}!" >&2; exit 1; }
+  [ -n "${SCP_OPTS_LINES}" ] || { echo "  ✗ FAIL: SCP_OPTS array missing from ${wf}!" >&2; exit 1; }
+
+  while IFS= read -r ssh_opt_line; do
+    [ -n "${ssh_opt_line}" ] || continue
+    for req_opt in '-i ~/.ssh/deploy_id' '-p "${SSH_PORT}"' '-o BatchMode=yes' '-o StrictHostKeyChecking=yes' '-o ServerAliveInterval=30' '-o ServerAliveCountMax=60' '-o TCPKeepAlive=yes'; do
+      grep -F -q -- "${req_opt}" <<< "${ssh_opt_line}" || {
+        echo "  ✗ FAIL: Required SSH option '${req_opt}' missing from SSH_OPTS in ${wf}: ${ssh_opt_line}" >&2
+        exit 1
+      }
+    done
+  done <<< "${SSH_OPTS_LINES}"
+
+  while IFS= read -r scp_opt_line; do
+    [ -n "${scp_opt_line}" ] || continue
+    for req_opt in '-i ~/.ssh/deploy_id' '-P "${SSH_PORT}"' '-o BatchMode=yes' '-o StrictHostKeyChecking=yes' '-o ServerAliveInterval=30' '-o ServerAliveCountMax=60' '-o TCPKeepAlive=yes'; do
+      grep -F -q -- "${req_opt}" <<< "${scp_opt_line}" || {
+        echo "  ✗ FAIL: Required SCP option '${req_opt}' missing from SCP_OPTS in ${wf}: ${scp_opt_line}" >&2
+        exit 1
+      }
+    done
+  done <<< "${SCP_OPTS_LINES}"
+
+  # Ensure every ssh/scp invocation in the workflow uses "${SSH_OPTS[@]}" / "${SCP_OPTS[@]}"
+  if grep -E '^[[:space:]]*ssh[[:space:]]+' "${WF_PATH}" | grep -F -v '"${SSH_OPTS[@]}"'; then
+    echo "  ✗ FAIL: Found ssh invocation not using \"\${SSH_OPTS[@]}\" in ${wf}!" >&2
+    exit 1
+  fi
+  if grep -E '^[[:space:]]*scp[[:space:]]+' "${WF_PATH}" | grep -F -v '"${SCP_OPTS[@]}"'; then
+    echo "  ✗ FAIL: Found scp invocation not using \"\${SCP_OPTS[@]}\" in ${wf}!" >&2
+    exit 1
+  fi
+
   grep -q 'mkdir -m 700 -- "${REMOTE_STAGE}"' "${WF_PATH}" || { echo "Fail: exclusive mkdir reservation missing from ${wf}"; exit 1; }
   grep -q "bash -s --" "${WF_PATH}" || { echo "Fail: positional bash -s -- SSH invocation missing from ${wf}"; exit 1; }
   grep -q "<<'EOF'" "${WF_PATH}" || { echo "Fail: single-quoted heredoc <<'EOF' missing from ${wf}"; exit 1; }
@@ -1987,7 +2025,7 @@ for wf in deploy-sandbox.yml deploy-production.yml rollback.yml; do
   }
   rm -rf "${TRANSPORT_STAGE}" "${OUTSIDE_STAGE}" "${STAGE_SNIPPET}"
 done
-echo "  ✓ All remote workflows reserve /home/alibhatt/.gba-deploy-staging/<release-id> exclusively before SCP and block symlink escapes."
+echo "  ✓ All remote workflows enforce explicit SSH/SCP keepalives (ServerAliveInterval=30, ServerAliveCountMax=60, TCPKeepAlive=yes), reserve /home/alibhatt/.gba-deploy-staging/<release-id> exclusively before SCP, and block symlink escapes."
 
 echo "================================================================================"
 echo "ALL RELEASE SCAFFOLDING TESTS PASSED (11/11)"
