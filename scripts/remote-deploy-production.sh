@@ -93,11 +93,10 @@ if [ -L "${TARBALL_PATH}" ] || [ ! -f "${TARBALL_PATH}" ]; then
   exit 1
 fi
 
-# Preflight node availability (with working 'node --check') before any directory creation, lock, backup, or mutation
-if ! command -v node >/dev/null 2>&1 || ! printf 'void 0;\n' | node --check >/dev/null 2>&1; then
-  echo "CRITICAL ERROR: Required 'node' runtime (with working 'node --check' for smoke verification) is unavailable on PATH! Aborting before any mutation." >&2
-  exit 1
-fi
+# Note: In deployment mode (SMOKE_DEPLOYMENT_MODE=1) with mandatory EXPECTED_METADATA_FILE
+# and TRUSTED_ASSET_ROOT (EXPECTED_ASSET_ROOT) exact byte-size/SHA256 binding, smoke-test.sh
+# validates JavaScript without requiring a remote 'node' binary ('node --check') on PATH
+# because the packaged trusted bytes were syntax-checked in CI.
 
 # ==============================================================================
 # 1. Canonical Realpath Guards & Error-Checked Symlink Scan
@@ -1396,10 +1395,12 @@ SMOKE_TEST_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/smoke-test.s
 
 SMOKE_PASSED=1
 if [ -f "${SMOKE_TEST_SCRIPT}" ]; then
-  if ! EXPECTED_RELEASE_ID="${RELEASE_ID}" \
+  if ! SMOKE_DEPLOYMENT_MODE="1" \
+       EXPECTED_RELEASE_ID="${RELEASE_ID}" \
        EXPECTED_GIT_SHA="${GIT_SHA}" \
        EXPECTED_TREE_SHA256="${META_TREE_SHA256}" \
        EXPECTED_METADATA_FILE="${RELEASE_DIR}/release-metadata.json" \
+       TRUSTED_ASSET_ROOT="${RELEASE_DIR}" \
        EXPECTED_ASSET_ROOT="${RELEASE_DIR}" \
        bash "${SMOKE_TEST_SCRIPT}" "${PRODUCTION_URL}"; then
     SMOKE_PASSED=0
