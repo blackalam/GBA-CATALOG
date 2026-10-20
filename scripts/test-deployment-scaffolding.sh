@@ -211,11 +211,11 @@ TARBALL_HASH="$(awk '{print $1}' "${TARBALL_SHA_FILE}")"
 [ -f "${TARBALL_SHA_FILE}" ] || { echo "  ✗ FAIL: Tarball SHA256 companion file was not created!" >&2; exit 1; }
 
 TAR_CONTENTS="$(tar -tzf "${TARBALL}")"
-for req in "index.html" "styles.css" "script.js" "data/products.json" "assets/gba-logo-web.png" "checksums.sha256" "release-metadata.json"; do
+for req in "index.html" "styles.css" "script.js" "data/products.json" "assets/gba-logo-official-transparent.png" "assets/gba-logo-web.png" "checksums.sha256" "release-metadata.json"; do
   grep -F -q "${req}" <<< "${TAR_CONTENTS}" || { echo "Missing ${req} in tarball"; exit 1; }
 done
 
-FORBIDDEN=("serve.js" "test-site.js" "README.md" "RELEASE.md" "reference" "screenshot" "._")
+FORBIDDEN=("serve.js" "test-site.js" "README.md" "RELEASE.md" "reference" "screenshot" "gba-logo-official-transparent-original.png" "gba-logo-official-cropped.jpg" "gba-logo-replacement-original.jpg" "._")
 for f in "${FORBIDDEN[@]}"; do
   if grep -F -q "${f}" <<< "${TAR_CONTENTS}"; then
     echo "  ✗ FAIL: Forbidden file '${f}' found in tarball!" >&2
@@ -993,6 +993,7 @@ echo "preserved-archive" > "${SANDBOX_RECOVERY_ROOT}/prior-preserved-evidence/ke
 [ -f "${MOCK_SANDBOX}/styles.css" ] || { echo "Fail: sandbox styles.css missing"; exit 1; }
 [ -f "${MOCK_SANDBOX}/script.js" ] || { echo "Fail: sandbox script.js missing"; exit 1; }
 [ -f "${MOCK_SANDBOX}/data/products.json" ] || { echo "Fail: sandbox data/products.json missing"; exit 1; }
+[ -f "${MOCK_SANDBOX}/assets/gba-logo-official-transparent.png" ] || { echo "Fail: sandbox assets/gba-logo-official-transparent.png missing"; exit 1; }
 [ -f "${MOCK_SANDBOX}/release-metadata.json" ] || { echo "Fail: sandbox release-metadata.json missing"; exit 1; }
 [ ! -d "${MOCK_DOCROOT}/release-preview" ] || { echo "Fail: sandbox wrote inside MOCK_DOCROOT!"; exit 1; }
 [ -f "${SANDBOX_RECOVERY_ROOT}/prior-preserved-evidence/keep.tar.gz" ] || { echo "  ✗ FAIL: Sandbox cleanup deleted non-owned prior recovery path!" >&2; exit 1; }
@@ -1466,6 +1467,7 @@ export MOCK_TABLE_COUNT="0"
 [ -f "${MOCK_BACKUPS}/${TEST_REL}_db.sql.gz" ] || { echo "Fail: db backup missing"; exit 1; }
 [ -f "${MOCK_BACKUPS}/${TEST_REL}_manifest.json" ] || { echo "Fail: manifest missing"; exit 1; }
 [ -f "${MOCK_DOCROOT}/index.html" ] || { echo "Fail: index.html not installed"; exit 1; }
+[ -f "${MOCK_DOCROOT}/assets/gba-logo-official-transparent.png" ] || { echo "Fail: assets/gba-logo-official-transparent.png not installed"; exit 1; }
 [ -f "${MOCK_DOCROOT}/release-metadata.json" ] || { echo "Fail: release-metadata.json not installed"; exit 1; }
 [ ! -f "${MOCK_DOCROOT}/wp-config.php" ] || { echo "Fail: wp-config.php still in docroot"; exit 1; }
 
