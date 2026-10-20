@@ -16,16 +16,16 @@ This document describes the release engineering, automated deployment workflows,
 - **Shared Host Deployment Lock File:** `/home/alibhatt/.gba-deploy.lock` (with separate atomic metadata `/home/alibhatt/.gba-deploy.lock.meta`)
 
 ### Exhaustive Static-Only Allowlist & Safe Packaging
-To guarantee zero clutter and prevent server-side code execution in both production and sandbox environments, `scripts/package-artifact.sh`, `scripts/remote-deploy-production.sh`, and `scripts/remote-deploy-sandbox.sh` enforce an **exhaustive static-only allowlist** of 4 directories (`.`, `./data`, `./assets`, `./assets/placeholders`) and 19 files:
-1. `index.html` (Semantic, accessible showroom catalogue)
+To guarantee zero clutter and prevent server-side code execution in both production and sandbox environments, `scripts/package-artifact.sh`, `scripts/remote-deploy-production.sh`, and `scripts/remote-deploy-sandbox.sh` enforce an **exhaustive static-only allowlist** of 4 directories (`.`, `./data`, `./assets`, `./assets/placeholders`) and 20 files (18 static payload files plus `release-metadata.json` and `checksums.sha256`):
+1. `index.html` (Semantic, accessible showroom catalogue referencing `assets/gba-logo-official-transparent.png`, confirmed opening hours, WhatsApp `https://wa.me/442088880322`, Instagram `@gba_furniture`, and TikTok `@gbafurniture`)
 2. `styles.css` (Editorial styling, CSS variables, reduced-motion rules)
 3. `script.js` (Client-side catalogue rendering and enquiry prefill)
-4. `release-metadata.json` (Static non-secret release identity file binding `release_id`, `git_sha`, and `tree_sha256`)
+4. `release-metadata.json` (Static non-secret release identity file binding `release_id`, `git_sha`, and `tree_sha256` across the 18 static payload files)
 5. `checksums.sha256` (Per-file SHA256 manifest verified on the remote host)
 6. `data/products.json` (Catalogue pricing and specifications)
-7. `assets/current-banner.jpg`, `assets/gba-logo-web.png`, `assets/gba-logo.png`, and the 10 vector placeholders in `assets/placeholders/*.svg`
+7. `assets/current-banner.jpg`, `assets/gba-logo-official-transparent.png` (official transparent production logo), `assets/gba-logo-web.png` (retained legacy web logo), `assets/gba-logo.png` (retained master logo), and the 10 vector placeholders in `assets/placeholders/*.svg`
 
-All development scripts (`serve.js`, `test-site.js`, `generate-placeholders.js`), documentation (`README.md`, `RELEASE.md`), reference PDFs, PHP/server-executable files (`*.php*`, `*.phtml`, `*.phar`, `*.cgi`, `*.pl`, `*.py`, `*.sh`, `*.fcgi`, `*.htaccess`, etc.), files containing server-executable code tags (`<?php`, `<?=`, `<script language="php"`, `#!`), executable file modes (`0644` enforced on all files, `0755` on directories), symlinks, and macOS AppleDouble resource forks (`COPYFILE_DISABLE=1`) are strictly rejected at both packaging and deployment time. `scripts/package-artifact.sh` validates `dist/` and ancestor canonical paths before arming cleanup traps, acquires an OS-held nonblocking `flock` on canonical regular lock file `dist/.gba-package.lock` before duplicate checks and holds it through all publication and latest-pointer steps (failing closed if `flock` is unavailable), rejects symlinked `dist` or `dist/staging` and any duplicate/pre-existing tarball, checksum, staging, or release output paths under the lock, stages all outputs in exclusively created (`O_CREAT | O_EXCL`) invocation-owned same-filesystem temporary files in `dist/`, publishes the tarball and checksum via kernel-atomic NO-CLOBBER hardlinks (`os.link` + `os.unlink`), preserves any pre-existing `dist/latest-artifact.txt` if a step fails, and atomically updates `dist/latest-artifact.txt` only after complete success.
+All development scripts (`serve.js`, `test-site.js`, `generate-placeholders.js`), documentation (`README.md`, `RELEASE.md`), reference PDFs, intermediate/source logo working files (`gba-logo-official-transparent-original.png`, `gba-logo-official-cropped.jpg`, `gba-logo-replacement-original.jpg`), screenshots, PHP/server-executable files (`*.php*`, `*.phtml`, `*.phar`, `*.cgi`, `*.pl`, `*.py`, `*.sh`, `*.fcgi`, `*.htaccess`, etc.), files containing server-executable code tags (`<?php`, `<?=`, `<script language="php"`, `#!`), executable file modes (`0644` enforced on all files, `0755` on directories), symlinks, and macOS AppleDouble resource forks (`COPYFILE_DISABLE=1`) are strictly rejected at both packaging and deployment time. `scripts/package-artifact.sh` validates `dist/` and ancestor canonical paths before arming cleanup traps, acquires an OS-held nonblocking `flock` on canonical regular lock file `dist/.gba-package.lock` before duplicate checks and holds it through all publication and latest-pointer steps (failing closed if `flock` is unavailable), rejects symlinked `dist` or `dist/staging` and any duplicate/pre-existing tarball, checksum, staging, or release output paths under the lock, stages all outputs in exclusively created (`O_CREAT | O_EXCL`) invocation-owned same-filesystem temporary files in `dist/`, publishes the tarball and checksum via kernel-atomic NO-CLOBBER hardlinks (`os.link` + `os.unlink`), preserves any pre-existing `dist/latest-artifact.txt` if a step fails, and atomically updates `dist/latest-artifact.txt` only after complete success.
 
 ---
 
@@ -196,7 +196,7 @@ The release scaffolding and website can be tested completely locally without req
 # 1. Validate bash syntax of all release scripts
 bash -n scripts/*.sh
 
-# 2. Run catalogue content & DOM verification suite (80 checks)
+# 2. Run catalogue content & DOM verification suite (127 checks)
 node test-site.js
 
 # 3. Run release scaffolding test suite (11 test groups including all independent security reproductions)

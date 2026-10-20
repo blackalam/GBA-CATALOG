@@ -11,10 +11,16 @@ A responsive, editorial furniture catalogue prototype created for **GBA Furnitur
 - **Structural Reference:** Customer flow inspired by trade/landlord furniture supplier `whitefern.co.uk` (browse by room category, direct enquire/order action), with bespoke GBA branding, styling, and code.
 - **Truthful Customer Flow:** No basket, account login, checkout, or online payments. Every "Enquire / Order" action carries the selected product and variant directly into the contact section, smoothly scrolling and focusing the enquiry field.
 - **Public Contact Details:**
-  - **Telephone:** 020 8888 0322
+  - **Telephone & WhatsApp:** 020 8888 0322 (Call or WhatsApp: `https://wa.me/442088880322`)
   - **Email:** info@gbafurniture.com
   - **Showroom Address:** 401 Lordship Lane, London, N17 6AE
-  - **Opening Hours:** Monday – Sunday: 9:00am – 8:00pm
+  - **Opening Hours:**
+    - Monday to Friday: 9:30am–6:00pm
+    - Saturday: 9:30am–5:00pm
+    - Sunday: Closed
+  - **Social Channels:**
+    - Instagram: [@gba_furniture](https://www.instagram.com/gba_furniture/)
+    - TikTok: [@gbafurniture](https://www.tiktok.com/@gbafurniture)
 
 ---
 
@@ -28,12 +34,13 @@ gba-furniture-website/
 ├── styles.css                      # Custom responsive CSS with custom properties & reduced-motion support
 ├── script.js                       # Vanilla JS catalogue rendering, variant switching, enquiry prefill & mailto
 ├── serve.js                        # Zero-dependency local development server (Node.js)
-├── test-site.js                    # Automated verification test suite (80+ checks)
+├── test-site.js                    # Automated verification test suite (127 checks)
 ├── generate-placeholders.js        # Generator script for vector SVG placeholders
 ├── data/
 │   └── products.json               # Structured catalogue data sourced from reference price list
 ├── assets/
-│   ├── gba-logo-web.png            # Web-optimized primary brand logo
+│   ├── gba-logo-official-transparent.png # Official transparent production brand logo (header, mobile drawer, footer)
+│   ├── gba-logo-web.png            # Legacy web-optimized brand logo (retained for package compatibility)
 │   ├── gba-logo.png                # Original high-resolution master logo
 │   ├── current-banner.jpg          # Temporary showroom hero image
 │   └── placeholders/               # 10 bespoke architectural line-art SVGs for product cards
@@ -90,20 +97,25 @@ Run the automated test suite with Node.js:
 node test-site.js
 ```
 The test suite verifies:
-- File existence and MIME delivery over an ephemeral local HTTP server.
+- File existence and MIME delivery (including `assets/gba-logo-official-transparent.png`) over an ephemeral local HTTP server.
 - All 7 categories and 26 catalogue products with numeric GBP (£) pricing.
 - Complete absence of unsupported claims (no invented materials, dispatch guarantees, or unverified claims).
+- Confirmed showroom opening hours (`Mon–Fri: 9:30am–6:00pm`, `Sat: 9:30am–5:00pm`, `Sun: Closed`), telephone & WhatsApp (`https://wa.me/442088880322`), Instagram (`@gba_furniture`), TikTok (`@gbafurniture`), and official transparent PNG logo (`assets/gba-logo-official-transparent.png`) usage across header, mobile drawer, and footer with zero legacy JPEG references.
 - Semantic HTML landmarks, accessible skip links, and modal attributes.
 - Honest client-side enquiry flow (prefills `mailto:` email, does not claim fake server logging).
 
 ---
 
-## 6. Pre-Production Checklist (Remaining Steps)
+## 6. Pre-Production Checklist (Status & Remaining Steps)
 
-Before deploying this prototype to production, the following tasks remain:
+**Confirmed & Integrated in Current Release Candidate:**
+- **Official Transparent Brand Logo:** `assets/gba-logo-official-transparent.png` integrated across desktop header, mobile navigation drawer, and footer (and added to all packaging/deployment allowlists).
+- **Confirmed Showroom Opening Hours:** Monday to Friday `9:30am–6:00pm`, Saturday `9:30am–5:00pm`, Sunday `Closed`.
+- **Direct WhatsApp & Social Channels:** Direct WhatsApp enquiry links (`https://wa.me/442088880322`), Instagram (`https://www.instagram.com/gba_furniture/`), and TikTok (`https://www.tiktok.com/@gbafurniture`) verified with safe external link attributes.
 
-1. **Real Product Photography:** Replace the temporary vector SVG placeholders with high-resolution photography of actual store inventory.
+**Remaining Tasks Before / During Production Launch:**
+1. **Real Product Photography:** Replace the temporary vector SVG placeholders with high-resolution photography of actual store inventory (product photography has not yet been supplied).
 2. **Final Product & Price Verification:** Review all 26 product lines and 81 variants with GBA Furniture showroom management to ensure prices and specifications match current stock.
-3. **Contact Details & Policy Confirmation:** Re-confirm showroom opening hours, telephone numbers, delivery radius, charges, and removal conditions before publishing.
+3. **Delivery & Removal Policy Confirmation:** Confirm delivery radius, charges, and removal conditions with showroom management before publishing.
 4. **Official Policy Text:** Formalise customer returns, delivery terms, and privacy documentation with management to replace prototype notes.
-5. **Production Hosting Deployment:** Deploy static files (`index.html`, `styles.css`, `script.js`, `data/`, `assets/`) to the production web server.
+5. **Production Hosting Deployment:** Execute the production deployment workflow to publish the static release package (`index.html`, `styles.css`, `script.js`, `data/`, `assets/`) to the production web server (deployment has not yet been executed).
