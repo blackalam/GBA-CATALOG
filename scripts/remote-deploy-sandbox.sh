@@ -300,6 +300,7 @@ ALLOWED_FILES = {
     "./checksums.sha256",
     "./data/products.json",
     "./assets/current-banner.jpg",
+    "./assets/gba-logo-official-transparent.png",
     "./assets/gba-logo-web.png",
     "./assets/gba-logo.png",
     "./assets/placeholders/appliance.svg",
@@ -914,6 +915,7 @@ REQUIRED_STATIC=(
   "styles.css"
   "script.js"
   "data/products.json"
+  "assets/gba-logo-official-transparent.png"
   "assets/gba-logo-web.png"
   "assets/current-banner.jpg"
   "assets/placeholders/bed-divan.svg"
@@ -929,6 +931,7 @@ done
 
 # Content verification on staged candidate before cutover
 grep -F -q -- "GBA Furniture" "${STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Staged index.html missing brand title" >&2; exit 1; }
+grep -F -q -- "assets/gba-logo-official-transparent.png" "${STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Staged index.html missing official transparent logo reference" >&2; exit 1; }
 grep -F -q -- "--color-petrol" "${STAGE_DIR}/styles.css" || { echo "CRITICAL ERROR: Staged styles.css missing brand variables" >&2; exit 1; }
 grep -F -q -- "products" "${STAGE_DIR}/script.js" || { echo "CRITICAL ERROR: Staged script.js missing catalogue logic" >&2; exit 1; }
 grep -F -q -- "beds-mattresses" "${STAGE_DIR}/data/products.json" || { echo "CRITICAL ERROR: Staged products.json missing category data" >&2; exit 1; }

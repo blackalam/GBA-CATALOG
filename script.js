@@ -521,7 +521,7 @@
           <li>Click "Enquire / Order" to draft an enquiry email or telephone 020 8888 0322.</li>
           <li>Staff at the store will confirm current stock, finishes, delivery availability, any applicable charges, and final prices.</li>
         </ol>
-        <p><em>Store Address: 401 Lordship Lane, London, N17 6AE. Open Monday to Sunday, 9:00am – 8:00pm.</em></p>
+        <p><em>Store Address: 401 Lordship Lane, London, N17 6AE. Open Monday–Friday 9:30am–6:00pm, Saturday 9:30am–5:00pm, Sunday Closed.</em></p>
       `
     },
     delivery: {

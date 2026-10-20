@@ -328,6 +328,7 @@ ALLOWED_FILES = {
     "./checksums.sha256",
     "./data/products.json",
     "./assets/current-banner.jpg",
+    "./assets/gba-logo-official-transparent.png",
     "./assets/gba-logo-web.png",
     "./assets/gba-logo.png",
     "./assets/placeholders/appliance.svg",
@@ -1097,6 +1098,7 @@ REQUIRED_STATIC=(
   "styles.css"
   "script.js"
   "data/products.json"
+  "assets/gba-logo-official-transparent.png"
   "assets/gba-logo-web.png"
   "assets/current-banner.jpg"
   "assets/placeholders/bed-divan.svg"
@@ -1112,6 +1114,7 @@ done
 
 # Verify candidate content markers before touching backups or docroot
 grep -F -q -- "GBA Furniture" "${TEMP_STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Candidate index.html missing brand title" >&2; exit 1; }
+grep -F -q -- "assets/gba-logo-official-transparent.png" "${TEMP_STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Candidate index.html missing official transparent logo reference" >&2; exit 1; }
 grep -F -q -- "020 8888 0322" "${TEMP_STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Candidate index.html missing telephone" >&2; exit 1; }
 grep -F -q -- "401 Lordship Lane" "${TEMP_STAGE_DIR}/index.html" || { echo "CRITICAL ERROR: Candidate index.html missing address" >&2; exit 1; }
 grep -F -q -- "--color-petrol" "${TEMP_STAGE_DIR}/styles.css" || { echo "CRITICAL ERROR: Candidate styles.css missing brand variables" >&2; exit 1; }

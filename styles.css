@@ -48,7 +48,7 @@
   /* Sizing & Spacing */
   --container-max: 1280px;
   --container-padding: clamp(1rem, 4vw, 2.5rem);
-  --header-height: 84px;
+  --header-height: 116px;
   --topbar-height: 40px;
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -278,39 +278,47 @@ button {
   align-items: center;
   gap: 0.75rem;
   text-decoration: none;
-  flex-shrink: 1;
+  flex-shrink: 0;
   min-width: 0;
   max-width: 100%;
 }
 
 .brand-logo {
-  height: 48px;
-  width: auto;
-  max-width: 190px;
+  width: 250px;
+  height: auto;
+  max-width: 100%;
   object-fit: contain;
-  flex-shrink: 0;
+  display: block;
 }
 
-.brand-tagline-text {
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid var(--color-border);
-  padding-left: 0.75rem;
-  min-width: 0;
+.brand-logo--drawer {
+  width: 210px;
+  max-width: 80%;
 }
 
-.brand-sub {
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-charcoal-light);
-  font-weight: 600;
+.footer-brand-link {
+  display: inline-flex;
+  text-decoration: none;
+  width: fit-content;
 }
 
-.brand-loc {
-  font-size: 0.7rem;
-  color: var(--color-green);
-  font-weight: 600;
+.footer-logo-panel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-ivory-warm);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.footer-logo {
+  width: 220px;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 /* Primary Desktop Navigation */
@@ -414,10 +422,24 @@ button {
   color: var(--color-petrol-deep);
   border: 1px solid var(--color-border);
   font-weight: 700;
+  min-height: 44px;
 }
 
 .btn-tel:hover {
   background-color: var(--color-ivory-dark);
+}
+
+.btn-whatsapp {
+  background-color: #25d366;
+  color: #0b3819;
+  border: 1px solid #20ba5a;
+  font-weight: 700;
+  min-height: 44px;
+}
+
+.btn-whatsapp:hover {
+  background-color: #20ba5a;
+  color: #041f0d;
 }
 
 /* Mobile Menu Toggle */
@@ -427,6 +449,8 @@ button {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 0.5rem;
+  min-width: 44px;
+  min-height: 44px;
   color: var(--color-petrol);
   align-items: center;
   justify-content: center;
@@ -1405,6 +1429,35 @@ button {
   margin-top: 0.15rem;
 }
 
+.contact-social-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.contact-social-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-petrol-deep);
+  text-decoration: none;
+  min-height: 44px;
+  line-height: 1.2;
+}
+
+.contact-social-item:hover {
+  color: var(--color-brass-dark);
+}
+
+.contact-social-item svg {
+  flex-shrink: 0;
+  color: var(--color-brass-dark);
+}
+
 /* Right: Interactive Enquiry Form Card */
 .enquiry-form-card {
   background-color: var(--color-white);
@@ -1507,6 +1560,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 .form-group-full {
@@ -1526,6 +1580,9 @@ button {
 .form-input,
 .form-select,
 .form-textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   font-size: 0.875rem;
   padding: 0.65rem 0.85rem;
   border: 1px solid var(--color-border);
@@ -1676,14 +1733,6 @@ button {
   gap: 1rem;
 }
 
-.footer-logo {
-  height: 44px;
-  width: auto;
-  max-width: 180px;
-  object-fit: contain;
-  filter: brightness(0) invert(1);
-}
-
 .footer-brand-p {
   font-size: 0.85rem;
   line-height: 1.6;
@@ -1705,6 +1754,64 @@ button {
 
 .footer-contact-summary a:hover {
   color: var(--color-brass-light);
+}
+
+.footer-social-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.footer-social-label {
+  font-size: 0.8rem;
+  color: #8A9099;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.footer-social-links {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.footer-social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #E2DDD5;
+  text-decoration: none;
+  padding: 0.35rem 0.65rem;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  min-height: 44px;
+  min-width: 44px;
+  transition: all var(--transition-fast);
+}
+
+.footer-social-link:hover {
+  color: var(--color-white);
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--color-brass);
+}
+
+.footer-social-link svg {
+  flex-shrink: 0;
+  color: var(--color-brass-light);
+}
+
+.drawer-action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
 }
 
 .footer-col-title {
@@ -1864,6 +1971,18 @@ button {
 /* ==========================================================================
    RESPONSIVE DESIGN BREAKPOINTS
    ========================================================================== */
+@media (max-width: 1399px) {
+  .primary-nav,
+  .header-actions .btn-tel,
+  .header-actions .btn-whatsapp {
+    display: none;
+  }
+
+  .mobile-nav-toggle {
+    display: flex;
+  }
+}
+
 @media (max-width: 1024px) {
   .hero-grid {
     grid-template-columns: 1fr;
@@ -1892,7 +2011,8 @@ button {
   }
 
   .primary-nav,
-  .header-actions .btn-tel {
+  .header-actions .btn-tel,
+  .header-actions .btn-whatsapp {
     display: none;
   }
 
@@ -1903,7 +2023,7 @@ button {
 
 @media (max-width: 768px) {
   :root {
-    --header-height: 70px;
+    --header-height: 100px;
   }
 
   .top-bar {
@@ -1922,13 +2042,10 @@ button {
     display: none;
   }
 
-  .brand-tagline-text {
-    display: none;
-  }
-
   .brand-logo {
-    max-width: 135px;
+    width: 210px;
     height: auto;
+    max-width: 100%;
   }
 
   .header-actions .btn-primary {
@@ -1971,6 +2088,11 @@ button {
 }
 
 @media (max-width: 480px) {
+  .brand-logo {
+    width: 200px;
+    max-width: calc(100vw - 110px);
+  }
+
   .hero-actions {
     flex-direction: column;
     width: 100%;

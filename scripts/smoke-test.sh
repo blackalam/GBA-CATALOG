@@ -226,7 +226,8 @@ check_endpoint "/script.js" "200" "products" "Client catalogue JavaScript delive
 # 5. Products Catalogue Data
 check_endpoint "/data/products.json" "200" "beds-mattresses" "Catalog JSON data delivery & category check"
 
-# 6. Core Web Logo
+# 6. Official Transparent Brand Logo & Legacy Web Logo
+check_endpoint "/assets/gba-logo-official-transparent.png" "200" "" "Official transparent brand logo delivery (gba-logo-official-transparent.png)"
 check_endpoint "/assets/gba-logo-web.png" "200" "" "Brand logo image delivery (gba-logo-web.png)"
 
 # 7. Banner Image

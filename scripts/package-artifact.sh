@@ -535,6 +535,7 @@ REQUIRED_SOURCES=(
   "styles.css"
   "script.js"
   "data/products.json"
+  "assets/gba-logo-official-transparent.png"
   "assets/gba-logo-web.png"
   "assets/gba-logo.png"
   "assets/current-banner.jpg"
@@ -569,6 +570,7 @@ allowed_data_files = {"products.json"}
 allowed_assets_dirs = {".", "placeholders"}
 allowed_assets_files = {
     "current-banner.jpg",
+    "gba-logo-official-transparent.png",
     "gba-logo-web.png",
     "gba-logo.png",
     "placeholders/appliance.svg",
@@ -672,7 +674,7 @@ assert_no_symlinks_in_tree "${STAGE_DIR}" "staged release directory"
 find "${STAGE_DIR}" -type d -exec chmod 755 {} +
 find "${STAGE_DIR}" -type f -exec chmod 644 {} +
 
-# Compute deterministic static payload tree_sha256 over the 17 static payload files
+# Compute deterministic static payload tree_sha256 over the 18 static payload files
 TREE_SHA256="$(python3 - "${STAGE_DIR}" <<'PYEOF'
 import hashlib, os, sys
 
@@ -692,8 +694,8 @@ for dirpath, dirnames, filenames in os.walk(stage, followlinks=False):
                 h.update(chunk)
         records.append(f"{h.hexdigest()}  {rel}")
 records.sort()
-if len(records) != 17:
-    sys.stderr.write(f"ERROR: Expected exactly 17 static payload files for tree_sha256, found {len(records)}\n")
+if len(records) != 18:
+    sys.stderr.write(f"ERROR: Expected exactly 18 static payload files for tree_sha256, found {len(records)}\n")
     sys.exit(1)
 tree_hash = hashlib.sha256(("\n".join(records) + "\n").encode("utf-8")).hexdigest()
 print(tree_hash)
@@ -776,6 +778,7 @@ ALLOWED_FILES = {
     "./checksums.sha256",
     "./data/products.json",
     "./assets/current-banner.jpg",
+    "./assets/gba-logo-official-transparent.png",
     "./assets/gba-logo-web.png",
     "./assets/gba-logo.png",
     "./assets/placeholders/appliance.svg",
