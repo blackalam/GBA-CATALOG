@@ -19,9 +19,23 @@
 #   7. Unsuppressed MySQL verification failures, positive zero-table proof,
 #      and full files + DB restoration when DB deletion has begun and fails
 #   8. Comprehensive post-mutation & finalization recovery across sandbox &
-#      production: injected rsync partial failure, injected chmod failure,
-#      public identity mismatch (/release-metadata.json), HTTP 500 smoke
-#      failure, and atomic final manifest write failure (never truncating in place)
+#      production: preflight node --check availability before any mutation,
+#      injected rsync partial failure, injected successful-copy rsync CSS
+#      mutation detected against retained STAGE_DIR / RELEASE_DIR, injected
+#      chmod failure, public identity mismatch (/release-metadata.json),
+#      HTTP 500 smoke failure, mandatory trusted binding (requiring both
+#      EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT, rejecting any symlink
+#      ancestor such as alias-parent/trusted, and recursively scanning the
+#      complete EXPECTED_ASSET_ROOT tree in preflight before the first HTTP
+#      fetch to reject both unreferenced nested symlinks such as
+#      assets/nested-extra/link and referenced SVG symlinks with zero HTTP
+#      requests), fail-closed smoke-test Content-Type/format negative fixtures
+#      (HTML fallbacks, wrong MIME types & fake bodies for versioned/underlying
+#      SVG, PNG, JPG, CSS, JS, JSON), valid exact-trusted CSS fixtures (quoted
+#      delimiters, string values containing literal '<html>' and
+#      '<!-- example -->', and omitting the optional semicolon on the last
+#      declaration before '}'), and atomic final manifest write failure
+#      (never truncating in place)
 #   9. Shared host-side OS-held flock lock (/home/alibhatt/.gba-deploy.lock):
 #      active lock contention, two concurrent contenders proving only one enters,
 #      automatic OS release on process exit, and fail-closed when flock unavailable
@@ -176,12 +190,13 @@ FAIL_SERVER_PID=""
 SANDBOX_SERVER_PID=""
 STALE_SERVER_PID=""
 FATAL_PHP_SERVER_PID=""
+SMOKE_FIXTURE_SERVER_PID=""
 ORIG_PATH="${PATH}"
 
 cleanup() {
   local exit_code=$?
   export PATH="${ORIG_PATH}"
-  for pid_var in "${SERVER_PID:-}" "${FAIL_SERVER_PID:-}" "${SANDBOX_SERVER_PID:-}" "${STALE_SERVER_PID:-}" "${FATAL_PHP_SERVER_PID:-}"; do
+  for pid_var in "${SERVER_PID:-}" "${FAIL_SERVER_PID:-}" "${SANDBOX_SERVER_PID:-}" "${STALE_SERVER_PID:-}" "${FATAL_PHP_SERVER_PID:-}" "${SMOKE_FIXTURE_SERVER_PID:-}"; do
     if [ -n "${pid_var}" ]; then
       kill "${pid_var}" 2>/dev/null || true
       wait "${pid_var}" 2>/dev/null || true
@@ -536,6 +551,7 @@ SANDBOX_PORT=3889
 FAIL_PORT=3890
 STALE_PORT=3891
 FATAL_PHP_PORT=3892
+SMOKE_FIXTURE_PORT=3893
 
 python3 -m http.server "${TEST_PORT}" --bind 127.0.0.1 --directory "${MOCK_DOCROOT}" >/dev/null 2>&1 &
 SERVER_PID=$!
@@ -614,6 +630,274 @@ class FatalPhpHandler(http.server.BaseHTTPRequestHandler):
 http.server.HTTPServer(('127.0.0.1', port), FatalPhpHandler).serve_forever()
 PYEOF
 FATAL_PHP_SERVER_PID=$!
+
+# Controllable Smoke-Test Asset Fixture Server (serves valid unpacked artifact by default;
+# injects targeted HTML fallbacks, wrong MIME types, or fake bodies based on mode file,
+# and logs every received request to SMOKE_FIXTURE_REQ_LOG so preflight tests can prove zero requests)
+SMOKE_FIXTURE_DIR="${TEST_ENV_DIR}/smoke-fixture-root"
+SMOKE_FIXTURE_MODE_FILE="${TEST_ENV_DIR}/smoke-fixture-mode.txt"
+SMOKE_FIXTURE_REQ_LOG="${TEST_ENV_DIR}/smoke-fixture-requests.log"
+mkdir -p "${SMOKE_FIXTURE_DIR}"
+tar -xzf "${TARBALL}" -C "${SMOKE_FIXTURE_DIR}"
+printf 'valid_app_js\n' > "${SMOKE_FIXTURE_MODE_FILE}"
+: > "${SMOKE_FIXTURE_REQ_LOG}"
+
+python3 - "${SMOKE_FIXTURE_PORT}" "${SMOKE_FIXTURE_DIR}" "${SMOKE_FIXTURE_MODE_FILE}" "${SMOKE_FIXTURE_REQ_LOG}" >/dev/null 2>&1 <<'PYEOF' &
+import http.server, os, struct, sys, zlib
+
+port = int(sys.argv[1])
+root_dir = sys.argv[2]
+mode_file = sys.argv[3]
+req_log_file = sys.argv[4]
+
+MIME_MAP = {
+    ".html": "text/html; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".js": "application/javascript; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+}
+
+def make_png_chunk(chunk_type, data, corrupt_crc=False):
+    crc = zlib.crc32(chunk_type + data) & 0xFFFFFFFF
+    if corrupt_crc:
+        crc ^= 0x00000001
+    return struct.pack(">I", len(data)) + chunk_type + data + struct.pack(">I", crc)
+
+def build_valid_1x1_png():
+    sig = bytes.fromhex("89504e470d0a1a0a")
+    ihdr = make_png_chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0))
+    idat = make_png_chunk(b"IDAT", zlib.compress(b"\x00\x01\x46\x60"))
+    iend = make_png_chunk(b"IEND", b"")
+    return sig + ihdr + idat + iend
+
+class SmokeFixtureHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        try:
+            with open(req_log_file, "a", encoding="utf-8") as rlf:
+                rlf.write(f"{self.path}\n")
+        except Exception:
+            pass
+        try:
+            with open(mode_file, "r", encoding="utf-8") as mf:
+                mode = mf.read().strip()
+        except Exception:
+            mode = "valid_app_js"
+
+        req_target = self.path
+        clean_path = req_target.split("?", 1)[0].split("#", 1)[0]
+        if clean_path in ("", "/"):
+            rel_path = "index.html"
+        else:
+            rel_path = clean_path.lstrip("/")
+
+        disk_path = os.path.join(root_dir, rel_path)
+        if not os.path.isfile(disk_path):
+            self.send_response(404)
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b"Not Found")
+            return
+
+        with open(disk_path, "rb") as f:
+            raw_bytes = f.read()
+
+        _, ext = os.path.splitext(rel_path)
+        ext = ext.lower()
+        content_type = MIME_MAP.get(ext, "application/octet-stream")
+        if mode == "valid_text_js" and ext == ".js":
+            content_type = "text/javascript; charset=utf-8"
+
+        claimed_content_length = None
+        force_close = False
+
+        # Targeted negative fixtures (all returning HTTP 200 OK)
+        if mode == "versioned_svg_html_fallback" and req_target == "/assets/placeholders/wardrobe.svg?v=public-audit-20261020":
+            content_type = "text/html; charset=utf-8"
+            raw_bytes = (
+                "<!DOCTYPE html><html><body><svg>Illustration only \u2014 not a product photograph</svg></body></html>"
+            ).encode("utf-8")
+        elif mode == "versioned_svg_html_body_with_svg_mime" and req_target == "/assets/placeholders/wardrobe.svg?v=public-audit-20261020":
+            content_type = "image/svg+xml"
+            raw_bytes = (
+                "<!DOCTYPE html><html><body><svg>Illustration only \u2014 not a product photograph</svg></body></html>"
+            ).encode("utf-8")
+        elif mode == "versioned_svg_wrong_mime" and req_target == "/assets/placeholders/van.svg?v=public-audit-20261020":
+            content_type = "text/plain; charset=utf-8"
+        elif mode == "versioned_svg_fake_body" and req_target == "/assets/placeholders/van.svg?v=public-audit-20261020":
+            content_type = "image/svg+xml"
+            raw_bytes = b"Furniture removal service - plain text fake body without SVG root"
+        elif mode == "versioned_svg_non_svg_xml_root" and req_target == "/assets/placeholders/van.svg?v=public-audit-20261020":
+            content_type = "image/svg+xml"
+            raw_bytes = b'<?xml version="1.0" encoding="UTF-8"?><g xmlns="http://www.w3.org/2000/svg"><svg>Furniture removal service</svg></g>'
+        elif mode == "underlying_svg_html_fallback" and req_target == "/assets/placeholders/bed-divan.svg":
+            content_type = "text/html; charset=utf-8"
+            raw_bytes = (
+                "<!DOCTYPE html><html><body><svg>Illustration only \u2014 not a product photograph</svg></body></html>"
+            ).encode("utf-8")
+        elif mode == "png_html_fallback" and req_target == "/assets/gba-logo-official-transparent.png":
+            content_type = "text/html; charset=utf-8"
+            raw_bytes = b"<!DOCTYPE html><html><body>Logo HTML Fallback</body></html>"
+        elif mode == "png_wrong_mime" and req_target == "/assets/gba-logo-official-transparent.png":
+            content_type = "image/jpeg"
+        elif mode == "png_fake_body" and req_target == "/assets/gba-logo-official-transparent.png":
+            content_type = "image/png"
+            raw_bytes = b"FAKE_PNG_BODY_WITHOUT_89504E470D0A1A0A_SIGNATURE"
+        elif mode == "png_forged_ihdr_only" and req_target == "/assets/gba-logo-official-transparent.png":
+            content_type = "image/png"
+            raw_bytes = (
+                bytes.fromhex("89504e470d0a1a0a")
+                + make_png_chunk(b"IHDR", struct.pack(">IIBBBBB", 16, 16, 8, 6, 0, 0, 0))
+            )
+        elif mode == "png_truncated_stream" and req_target == "/assets/gba-logo-official-transparent.png":
+            content_type = "image/png"
+            raw_bytes = raw_bytes[: len(raw_bytes) // 2]
+        elif mode == "png_bad_crc" and req_target == "/assets/gba-logo-official-transparent.png":
+            content_type = "image/png"
+            raw_bytes = (
+                bytes.fromhex("89504e470d0a1a0a")
+                + make_png_chunk(b"IHDR", struct.pack(">IIBBBBB", 16, 16, 8, 6, 0, 0, 0), corrupt_crc=True)
+                + make_png_chunk(b"IDAT", zlib.compress(b"\x00" * 65))
+                + make_png_chunk(b"IEND", b"")
+            )
+        elif mode == "png_zero_dimensions" and req_target == "/assets/gba-logo-official-transparent.png":
+            content_type = "image/png"
+            raw_bytes = (
+                bytes.fromhex("89504e470d0a1a0a")
+                + make_png_chunk(b"IHDR", struct.pack(">IIBBBBB", 0, 16, 8, 6, 0, 0, 0))
+                + make_png_chunk(b"IDAT", zlib.compress(b"\x00" * 16))
+                + make_png_chunk(b"IEND", b"")
+            )
+        elif mode == "png_mutated_valid" and req_target == "/assets/gba-logo-official-transparent.png":
+            content_type = "image/png"
+            raw_bytes = build_valid_1x1_png()
+        elif mode == "jpg_html_fallback" and req_target == "/assets/current-banner.jpg":
+            content_type = "text/html; charset=utf-8"
+            raw_bytes = b"<!DOCTYPE html><html><body>Banner HTML Fallback</body></html>"
+        elif mode == "jpg_wrong_mime" and req_target == "/assets/current-banner.jpg":
+            content_type = "image/png"
+        elif mode == "jpg_fake_body" and req_target == "/assets/current-banner.jpg":
+            content_type = "image/jpeg"
+            raw_bytes = b"FAKE_JPEG_BODY_WITHOUT_FFD8FF_SIGNATURE"
+        elif mode == "jpg_ffd8ff00_prefix" and req_target == "/assets/current-banner.jpg":
+            content_type = "image/jpeg"
+            raw_bytes = bytes.fromhex("ffd8ff00")
+        elif mode == "jpg_truncated_stream" and req_target == "/assets/current-banner.jpg":
+            content_type = "image/jpeg"
+            raw_bytes = raw_bytes[:-32]
+        elif mode == "jpg_missing_sos" and req_target == "/assets/current-banner.jpg":
+            content_type = "image/jpeg"
+            raw_bytes = bytes.fromhex("ffd8ffc0000b080010001001011100ffd9")
+        elif mode == "css_html_fallback" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/html; charset=utf-8"
+            raw_bytes = b"<!DOCTYPE html><html><head><style>:root { --color-petrol: #014660; }</style></head><body>Fallback</body></html>"
+        elif mode == "css_wrong_mime" and req_target == "/styles.css":
+            content_type = "text/plain; charset=utf-8"
+        elif mode == "css_fake_html_body" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = b"<!DOCTYPE html><html><body>:root { --color-petrol: #014660; }</body></html>"
+        elif mode == "css_fake_plain_body" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = b"--color-petrol plain text without css block syntax"
+        elif mode == "css_marker_spoofed_unbalanced" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = b":root { --color-petrol: #014660; } .broken-rule { color: #111111;"
+        elif mode == "css_marker_spoofed_malformed" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = b":root { --color-petrol: #014660; invalid_token_without_colon; } GARBAGE_OUTSIDE_RULES"
+        elif mode == "css_marker_spoofed_comment_only" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = b"/* :root { --color-petrol: #014660; } */"
+        elif mode == "css_crossed_rgb_paren_bracket" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = b":root { --color-petrol: #014660; } .bad-rgb { color: rgb([)]; }"
+        elif mode == "css_crossed_bracket_paren" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = b":root { --color-petrol: #014660; } .bad-bracket[(]) { color: #014660; }"
+        elif mode == "css_markup_div_open" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = b":root { --color-petrol: #014660; } <div> .bad-div { color: #014660; }"
+        elif mode == "css_markup_div_close" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = b":root { --color-petrol: #014660; } </div> .bad-div-close { color: #014660; }"
+        elif mode == "css_markup_bang_foo" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = b":root { --color-petrol: #014660; } <!foo> .bad-bang { color: #014660; }"
+        elif mode == "css_markup_pi_foo" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = b":root { --color-petrol: #014660; } <?foo?> .bad-pi { color: #014660; }"
+        elif mode == "versioned_css_mutated_valid" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            raw_bytes = raw_bytes + b"\n.mutated-probe { color: #000000; }\n"
+        elif mode == "js_html_fallback" and req_target == "/script.js?v=public-audit-20261020":
+            content_type = "text/html; charset=utf-8"
+            with open(os.path.join(root_dir, "index.html"), "rb") as hf:
+                raw_bytes = hf.read()
+        elif mode == "js_wrong_mime" and req_target == "/script.js":
+            content_type = "text/plain; charset=utf-8"
+        elif mode == "js_fake_html_body" and req_target == "/script.js?v=public-audit-20261020":
+            content_type = "application/javascript; charset=utf-8"
+            raw_bytes = b"<!DOCTYPE html><html><body>const CATALOGUE_DATA = {}; function x(){}; products v=public-audit-20261020</body></html>"
+        elif mode == "js_fake_plain_body" and req_target == "/script.js?v=public-audit-20261020":
+            content_type = "application/javascript; charset=utf-8"
+            raw_bytes = b"products v=public-audit-20261020 plain text without js syntax"
+        elif mode == "js_invalid_syntax_app_mime" and req_target == "/script.js?v=public-audit-20261020":
+            content_type = "application/javascript; charset=utf-8"
+            raw_bytes = b'const CATALOGUE_DATA = {; function broken() { return "products v=public-audit-20261020"; };'
+        elif mode == "js_invalid_syntax_text_mime" and req_target == "/script.js?v=public-audit-20261020":
+            content_type = "text/javascript; charset=utf-8"
+            raw_bytes = b'const CATALOGUE_DATA = {; function broken() { return "products v=public-audit-20261020"; };'
+        elif mode == "versioned_js_mutated_valid" and req_target == "/script.js?v=public-audit-20261020":
+            content_type = "application/javascript; charset=utf-8"
+            raw_bytes = raw_bytes + b"\nvoid 0;\n"
+        elif mode == "versioned_svg_mutated_valid" and req_target == "/assets/placeholders/wardrobe.svg?v=public-audit-20261020":
+            content_type = "image/svg+xml"
+            raw_bytes = raw_bytes.replace(b"</svg>", b"<g id=\"mutated-probe\"/></svg>")
+        elif mode == "json_wrong_mime" and req_target == "/data/products.json":
+            content_type = "text/html; charset=utf-8"
+        elif mode == "json_fake_body" and req_target == "/data/products.json":
+            content_type = "application/json; charset=utf-8"
+            raw_bytes = b"{not valid json: beds-mattresses v=public-audit-20261020}"
+        elif mode == "json_duplicate_keys" and req_target == "/data/products.json":
+            content_type = "application/json; charset=utf-8"
+            raw_bytes = b'{"categories": [], "categories": [], "products": "beds-mattresses v=public-audit-20261020"}'
+        elif mode == "json_nan_constant" and req_target == "/data/products.json":
+            content_type = "application/json; charset=utf-8"
+            raw_bytes = b'{"categories": [], "products": "beds-mattresses v=public-audit-20261020", "bad": NaN}'
+        elif mode == "incomplete_transfer_css_with_charset" and req_target == "/styles.css?v=public-audit-20261020":
+            content_type = "text/css; charset=utf-8"
+            claimed_content_length = len(raw_bytes) + 4096
+            force_close = True
+        elif mode == "incomplete_transfer_js_with_charset" and req_target == "/script.js?v=public-audit-20261020":
+            content_type = "application/javascript; charset=utf-8"
+            claimed_content_length = len(raw_bytes) + 4096
+            force_close = True
+        elif mode == "incomplete_transfer_metadata_with_charset" and req_target == "/release-metadata.json":
+            content_type = "application/json; charset=utf-8"
+            claimed_content_length = len(raw_bytes) + 1024
+            force_close = True
+
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header(
+            "Content-Length",
+            str(claimed_content_length if claimed_content_length is not None else len(raw_bytes)),
+        )
+        self.end_headers()
+        self.wfile.write(raw_bytes)
+        if force_close:
+            self.wfile.flush()
+            self.close_connection = True
+
+    def log_message(self, format, *args):
+        pass
+
+http.server.HTTPServer(("127.0.0.1", port), SmokeFixtureHandler).serve_forever()
+PYEOF
+SMOKE_FIXTURE_SERVER_PID=$!
 
 sleep 1
 
@@ -824,7 +1108,9 @@ for bad_url in "${INJECT_URLS[@]}"; do
     echo "  ✗ FAIL: rollback.sh accepted malicious URL '${bad_url}'!" >&2
     exit 1
   fi
-  if "${SCRIPT_DIR}/smoke-test.sh" "${bad_url}" 2>/dev/null; then
+  if EXPECTED_METADATA_FILE="${SMOKE_FIXTURE_DIR}/release-metadata.json" \
+     EXPECTED_ASSET_ROOT="${SMOKE_FIXTURE_DIR}" \
+     "${SCRIPT_DIR}/smoke-test.sh" "${bad_url}" 2>/dev/null; then
     echo "  ✗ FAIL: smoke-test.sh accepted malicious URL '${bad_url}'!" >&2
     exit 1
   fi
@@ -1162,6 +1448,153 @@ fi
 [ -s "${MOCK_BACKUPS}/${TEST_REL}_files.tar.gz" ] || { echo "  ✗ FAIL: Recovery archive was deleted after rsync failure!" >&2; exit 1; }
 reset_test_release_state "${TEST_REL}"
 
+# 8a2. Independent Reproduction: Successful-copy rsync that silently mutates destination CSS bytes
+#      Sandbox must smoke against checksum-verified retained STAGE_DIR (not newly written SANDBOX_DIR),
+#      detect the mutated CSS bytes, fail deployment, and restore the previous sandbox state!
+#      Production must continue smoking against immutable checksum-verified RELEASE_DIR and restore DOCROOT.
+MUTATE_CSS_RSYNC_BIN="${TEST_ENV_DIR}/mutate-css-rsync-bin"
+mkdir -p "${MUTATE_CSS_RSYNC_BIN}"
+cat > "${MUTATE_CSS_RSYNC_BIN}/rsync" <<'EOF'
+#!/usr/bin/env bash
+set -eu
+/usr/bin/rsync "$@"
+if [[ "$*" != *"--server"* ]]; then
+  for arg in "$@"; do dest="$arg"; done
+  if [ -f "${dest%/}/styles.css" ]; then
+    printf '\n.rsync-silent-mutation { color: #000000; }\n' >> "${dest%/}/styles.css"
+  fi
+fi
+exit 0
+EOF
+chmod +x "${MUTATE_CSS_RSYNC_BIN}/rsync"
+
+find "${MOCK_SANDBOX}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+printf 'GBA Furniture old' > "${MOCK_SANDBOX}/index.html"
+printf 'ok\n' > "${MOCK_SANDBOX}/old-sentinel"
+MUTATE_SBX_OUT=""
+if MUTATE_SBX_OUT="$(PATH="${MUTATE_CSS_RSYNC_BIN}:${PATH}" "${SCRIPT_DIR}/remote-deploy-sandbox.sh" "${TARBALL}" "http://127.0.0.1:${SANDBOX_PORT}/release-preview" "${TARBALL_HASH}" "${TEST_REL}" "${TEST_GIT_SHA}" 2>&1)"; then
+  echo "  ✗ FAIL: Sandbox deployment succeeded despite silent rsync CSS byte mutation!" >&2
+  exit 1
+fi
+grep -F -q "Trusted byte verification failed for 'styles.css'" <<< "${MUTATE_SBX_OUT}" || {
+  echo "  ✗ FAIL: Sandbox deployment did not detect silent rsync CSS mutation against retained STAGE_DIR:" >&2
+  echo "${MUTATE_SBX_OUT}" >&2
+  exit 1
+}
+[ -f "${MOCK_SANDBOX}/old-sentinel" ] || { echo "  ✗ FAIL: Sandbox old-sentinel was NOT restored after silent rsync CSS mutation!" >&2; exit 1; }
+[ ! -e "${MOCK_SANDBOX}/styles.css" ] || { echo "  ✗ FAIL: Mutated styles.css remained in sandbox after failed deploy!" >&2; exit 1; }
+[ "$(cat "${MOCK_SANDBOX}/index.html")" = "GBA Furniture old" ] || { echo "  ✗ FAIL: Sandbox index.html was NOT restored after silent rsync CSS mutation!" >&2; exit 1; }
+rm -rf "${SANDBOX_RECOVERY_ROOT}/run-"*
+
+populate_mock_wordpress
+printf 'ok\n' > "${MOCK_DOCROOT}/old-sentinel"
+MUTATE_PROD_OUT=""
+if MUTATE_PROD_OUT="$(PATH="${MUTATE_CSS_RSYNC_BIN}:${PATH}" "${SCRIPT_DIR}/remote-deploy-production.sh" "${TEST_REL}" "${TARBALL}" "http://127.0.0.1:${TEST_PORT}" "${TEST_GIT_SHA}" "${TARBALL_HASH}" 2>&1)"; then
+  echo "  ✗ FAIL: Production deployment succeeded despite silent rsync CSS byte mutation!" >&2
+  exit 1
+fi
+grep -F -q "Trusted byte verification failed for 'styles.css'" <<< "${MUTATE_PROD_OUT}" || {
+  echo "  ✗ FAIL: Production deployment did not detect silent rsync CSS mutation against immutable RELEASE_DIR:" >&2
+  echo "${MUTATE_PROD_OUT}" >&2
+  exit 1
+}
+[ -f "${MOCK_DOCROOT}/old-sentinel" ] && [ -f "${MOCK_DOCROOT}/wp-config.php" ] && [ ! -e "${MOCK_DOCROOT}/styles.css" ] || {
+  echo "  ✗ FAIL: Production docroot was NOT restored after silent rsync CSS mutation!" >&2
+  exit 1
+}
+grep -q '"status": "aborted_smoke_failed_docroot_restored"' "${MOCK_BACKUPS}/${TEST_REL}_manifest.json" || {
+  echo "  ✗ FAIL: Production manifest did not record aborted_smoke_failed_docroot_restored after silent rsync CSS mutation!" >&2
+  exit 1
+}
+reset_test_release_state "${TEST_REL}"
+rm -rf "${MUTATE_CSS_RSYNC_BIN}"
+
+# 8a3. Independent Reproduction: Preflight node availability BEFORE any mutation in sandbox and production scripts
+NO_NODE_PATH_BIN="${TEST_ENV_DIR}/no-node-path-bin"
+mkdir -p "${NO_NODE_PATH_BIN}"
+python3 - "${PATH}" "${NO_NODE_PATH_BIN}" <<'PYEOF'
+import os, sys
+path_str, dst_dir = sys.argv[1:3]
+for d in path_str.split(os.pathsep):
+    if not d or not os.path.isdir(d):
+        continue
+    for entry in os.listdir(d):
+        if entry == "node":
+            continue
+        dst = os.path.join(dst_dir, entry)
+        src = os.path.join(d, entry)
+        if not os.path.lexists(dst) and os.path.isfile(src) and os.access(src, os.X_OK):
+            os.symlink(src, dst)
+PYEOF
+
+BROKEN_NODE_BIN="${TEST_ENV_DIR}/broken-node-bin"
+mkdir -p "${BROKEN_NODE_BIN}"
+cat > "${BROKEN_NODE_BIN}/node" <<'EOF'
+#!/usr/bin/env bash
+exit 127
+EOF
+chmod +x "${BROKEN_NODE_BIN}/node"
+
+for node_test_path in "${NO_NODE_PATH_BIN}" "${BROKEN_NODE_BIN}:${PATH}"; do
+  find "${MOCK_SANDBOX}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+  printf 'GBA Furniture old' > "${MOCK_SANDBOX}/index.html"
+  printf 'ok\n' > "${MOCK_SANDBOX}/old-sentinel"
+  NO_NODE_SBX_OUT=""
+  if NO_NODE_SBX_OUT="$(PATH="${node_test_path}" "${SCRIPT_DIR}/remote-deploy-sandbox.sh" "${TARBALL}" "http://127.0.0.1:${SANDBOX_PORT}/release-preview" "${TARBALL_HASH}" "${TEST_REL}" "${TEST_GIT_SHA}" 2>&1)"; then
+    echo "  ✗ FAIL: remote-deploy-sandbox.sh succeeded when node was unavailable!" >&2
+    exit 1
+  fi
+  grep -F -q "Required 'node' runtime" <<< "${NO_NODE_SBX_OUT}" || {
+    echo "  ✗ FAIL: remote-deploy-sandbox.sh did not emit preflight node availability error:" >&2
+    echo "${NO_NODE_SBX_OUT}" >&2
+    exit 1
+  }
+  if grep -F -q "Initiating automatic restoration of previous sandbox state" <<< "${NO_NODE_SBX_OUT}"; then
+    echo "  ✗ FAIL: remote-deploy-sandbox.sh mutated sandbox before checking node availability!" >&2
+    exit 1
+  fi
+  [ -f "${MOCK_SANDBOX}/old-sentinel" ] && [ ! -e "${MOCK_SANDBOX}/styles.css" ] && [ "$(cat "${MOCK_SANDBOX}/index.html")" = "GBA Furniture old" ] || {
+    echo "  ✗ FAIL: Sandbox state was modified when node preflight should have aborted before mutation!" >&2
+    exit 1
+  }
+  LEFTOVER_SBX_RUNS="$(find "${SANDBOX_RECOVERY_ROOT}" -maxdepth 1 -name 'run-*' 2>/dev/null || true)"
+  [ -z "${LEFTOVER_SBX_RUNS}" ] || {
+    echo "  ✗ FAIL: Sandbox created recovery run directory before node preflight!" >&2
+    exit 1
+  }
+
+  populate_mock_wordpress
+  printf 'ok\n' > "${MOCK_DOCROOT}/old-sentinel"
+  : > "${MYSQL_LOG}"
+  NO_NODE_PROD_OUT=""
+  if NO_NODE_PROD_OUT="$(PATH="${node_test_path}" "${SCRIPT_DIR}/remote-deploy-production.sh" "${TEST_REL}" "${TARBALL}" "http://127.0.0.1:${TEST_PORT}" "${TEST_GIT_SHA}" "${TARBALL_HASH}" 2>&1)"; then
+    echo "  ✗ FAIL: remote-deploy-production.sh succeeded when node was unavailable!" >&2
+    exit 1
+  fi
+  grep -F -q "Required 'node' runtime" <<< "${NO_NODE_PROD_OUT}" || {
+    echo "  ✗ FAIL: remote-deploy-production.sh did not emit preflight node availability error:" >&2
+    echo "${NO_NODE_PROD_OUT}" >&2
+    exit 1
+  }
+  if grep -F -q "Initiating automatic restoration of previous production state" <<< "${NO_NODE_PROD_OUT}"; then
+    echo "  ✗ FAIL: remote-deploy-production.sh mutated docroot before checking node availability!" >&2
+    exit 1
+  fi
+  [ -f "${MOCK_DOCROOT}/old-sentinel" ] && [ -f "${MOCK_DOCROOT}/wp-config.php" ] && [ ! -e "${MOCK_DOCROOT}/styles.css" ] || {
+    echo "  ✗ FAIL: Production docroot was modified when node preflight should have aborted before mutation!" >&2
+    exit 1
+  }
+  [ ! -e "${MOCK_BACKUPS}/${TEST_REL}_files.tar.gz" ] && [ ! -e "${MOCK_BACKUPS}/${TEST_REL}_db.sql.gz" ] && [ ! -e "${MOCK_BACKUPS}/${TEST_REL}_manifest.json" ] && [ ! -e "${MOCK_RELEASES}/${TEST_REL}" ] || {
+    echo "  ✗ FAIL: Production created backup/release artifacts before node preflight!" >&2
+    exit 1
+  }
+  [ ! -s "${MYSQL_LOG}" ] || {
+    echo "  ✗ FAIL: Production executed MySQL commands before node preflight!" >&2
+    exit 1
+  }
+done
+rm -rf "${NO_NODE_PATH_BIN}" "${BROKEN_NODE_BIN}"
+
 # 8b. Independent Reproduction: Injected chmod failure after rsync has already mutated target directory
 FAIL_CHMOD_BIN="${TEST_ENV_DIR}/fail-chmod-bin"
 mkdir -p "${FAIL_CHMOD_BIN}"
@@ -1197,7 +1630,7 @@ fi
 [ -f "${MOCK_DOCROOT}/wp-config.php" ] || { echo "  ✗ FAIL: Production wp-config.php was NOT restored after chmod failure!" >&2; exit 1; }
 [ ! -e "${MOCK_DOCROOT}/styles.css" ] || { echo "  ✗ FAIL: Candidate styles.css left in docroot after chmod failure!" >&2; exit 1; }
 reset_test_release_state "${TEST_REL}"
-echo "  ✓ Injected rsync and chmod post-mutation failures automatically restored previous state and preserved recovery backups."
+echo "  ✓ Preflight node checks aborted before mutation, and injected rsync (exit 23 & silent CSS byte mutation against STAGE_DIR/RELEASE_DIR) and chmod post-mutation failures restored previous state."
 
 # 8c. Independent Reproduction: Public Identity Mismatch (stale HTTP server serving old release-metadata.json)
 populate_mock_wordpress
@@ -1232,6 +1665,360 @@ fi
 [ ! -f "${MOCK_DOCROOT}/styles.css" ] || { echo "  ✗ FAIL: Failed candidate styles.css was left behind in docroot!" >&2; exit 1; }
 grep -q '"status": "aborted_smoke_failed_docroot_restored"' "${MOCK_BACKUPS}/${TEST_REL}_manifest.json" || { echo "  ✗ FAIL: Manifest did not record auto-restore status!" >&2; exit 1; }
 reset_test_release_state "${TEST_REL}"
+
+# 8d2. Independent Negative & Positive Smoke-Test Asset Validation Fixtures
+#      Proves mandatory trusted binding (requiring BOTH EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT,
+#      rejecting unbound/partial/mismatched bindings, rejecting any symlink component/ancestor such as
+#      alias-parent/trusted before canonicalization, and recursively scanning the complete
+#      EXPECTED_ASSET_ROOT tree in preflight before the first HTTP fetch to reject both unreferenced
+#      nested symlinks such as assets/nested-extra/link and referenced SVG symlinks with zero requests),
+#      proves valid assets and valid exact-trusted CSS fixtures (quoted delimiters, string values
+#      containing literal '<html>' and '<!-- example -->', and omitting the optional semicolon on the
+#      last declaration before '}') pass, and proves all 43 negative HTTP endpoint fixtures fail closed.
+FIXTURE_TREE_SHA256="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["tree_sha256"])' "${SMOKE_FIXTURE_DIR}/release-metadata.json")"
+
+for valid_mode in "valid_app_js" "valid_text_js"; do
+  printf '%s\n' "${valid_mode}" > "${SMOKE_FIXTURE_MODE_FILE}"
+  EXPECTED_RELEASE_ID="${TEST_REL}" \
+  EXPECTED_GIT_SHA="${TEST_GIT_SHA}" \
+  EXPECTED_TREE_SHA256="${FIXTURE_TREE_SHA256}" \
+  EXPECTED_METADATA_FILE="${SMOKE_FIXTURE_DIR}/release-metadata.json" \
+  EXPECTED_ASSET_ROOT="${SMOKE_FIXTURE_DIR}" \
+    "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" >/dev/null || {
+      echo "  ✗ FAIL: smoke-test.sh rejected valid static assets in mode '${valid_mode}'!" >&2
+      exit 1
+    }
+done
+
+# Verify valid exact-trusted CSS fixtures pass under mandatory trusted mode:
+#   1. Quoted CSS delimiters & comment tokens inside strings / attribute selectors
+#   2. Valid CSS string value containing literal '<html>'
+#   3. Valid CSS string value containing literal '<!-- example -->'
+#   4. Valid CSS rule where the last declaration before '}' omits its optional semicolon
+cp "${SMOKE_FIXTURE_DIR}/styles.css" "${SMOKE_FIXTURE_DIR}/styles.css.orig"
+printf 'valid_app_js\n' > "${SMOKE_FIXTURE_MODE_FILE}"
+
+VALID_EXACT_TRUSTED_CSS_FIXTURES=(
+  $'quoted_delimiters:\n.quoted-probe[data-label="a;b:c{d}"]::after { content: ""; quotes: "“" "”"; }\n.quoted-comment::before { content: "{};/* not a comment */"; }\n'
+  $'string_literal_html_tag:\n.html-string-probe::before { content: "<html>"; }\n'
+  $'string_literal_html_comment:\n.html-comment-string-probe::before { content: "<!-- example -->"; }\n'
+  $'omit_last_semicolon_before_brace:\n.omit-last-semicolon-probe { color: #014660; background-color: #faf8f5 }\n.single-decl-omit-semicolon { color: #014660 }\n'
+  $'quoted_crossed_rgb:\n.quoted-rgb-probe::before { content: "rgb([)]"; }\n'
+  $'quoted_crossed_bracket:\n.quoted-bracket-probe::before { content: "[(])"; }\n'
+  $'quoted_markup_div_open:\n.quoted-div-open-probe::before { content: "<div>"; }\n'
+  $'quoted_markup_div_close:\n.quoted-div-close-probe::before { content: "</div>"; }\n'
+  $'quoted_markup_bang_foo:\n.quoted-bang-foo-probe::before { content: "<!foo>"; }\n'
+  $'quoted_markup_pi_foo:\n.quoted-pi-foo-probe::before { content: "<?foo?>"; }\n'
+  $'comment_crossed_rgb:\n/* rgb([)] */\n.comment-rgb-probe { color: #014660; }\n'
+  $'comment_crossed_bracket:\n/* [(]) */\n.comment-bracket-probe { color: #014660; }\n'
+  $'comment_markup_div_open:\n/* <div> */\n.comment-div-open-probe { color: #014660; }\n'
+  $'comment_markup_div_close:\n/* </div> */\n.comment-div-close-probe { color: #014660; }\n'
+  $'comment_markup_bang_foo:\n/* <!foo> */\n.comment-bang-foo-probe { color: #014660; }\n'
+  $'comment_markup_pi_foo:\n/* <?foo?> */\n.comment-pi-foo-probe { color: #014660; }\n'
+)
+
+for css_fixture_entry in "${VALID_EXACT_TRUSTED_CSS_FIXTURES[@]}"; do
+  css_fixture_name="${css_fixture_entry%%:*}"
+  css_fixture_snippet="${css_fixture_entry#*:}"
+  cp "${SMOKE_FIXTURE_DIR}/styles.css.orig" "${SMOKE_FIXTURE_DIR}/styles.css"
+  printf '%s' "${css_fixture_snippet}" >> "${SMOKE_FIXTURE_DIR}/styles.css"
+  EXPECTED_RELEASE_ID="${TEST_REL}" \
+  EXPECTED_GIT_SHA="${TEST_GIT_SHA}" \
+  EXPECTED_TREE_SHA256="${FIXTURE_TREE_SHA256}" \
+  EXPECTED_METADATA_FILE="${SMOKE_FIXTURE_DIR}/release-metadata.json" \
+  EXPECTED_ASSET_ROOT="${SMOKE_FIXTURE_DIR}" \
+    "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" >/dev/null || {
+      mv "${SMOKE_FIXTURE_DIR}/styles.css.orig" "${SMOKE_FIXTURE_DIR}/styles.css"
+      echo "  ✗ FAIL: smoke-test.sh rejected valid exact-trusted CSS fixture '${css_fixture_name}' under mandatory trusted mode!" >&2
+      exit 1
+    }
+done
+
+INVALID_EXACT_TRUSTED_CSS_FIXTURES=(
+  $'crossed_rgb_paren_bracket|crossed or unbalanced closing parenthesis|\n.bad-rgb-probe { color: rgb([)]; }\n'
+  $'crossed_bracket_paren|crossed or unbalanced closing bracket|\n.bad-bracket-probe[(]) { color: #014660; }\n'
+  $'markup_div_open|CSS body contains HTML/XML markup (fallback rejected)|\n<div> .bad-div-open { color: #014660; }\n'
+  $'markup_div_close|CSS body contains HTML/XML markup (fallback rejected)|\n</div> .bad-div-close { color: #014660; }\n'
+  $'markup_bang_foo|CSS body contains HTML/XML markup (fallback rejected)|\n<!foo> .bad-bang-foo { color: #014660; }\n'
+  $'markup_pi_foo|CSS body contains HTML/XML markup (fallback rejected)|\n<?foo?> .bad-pi-foo { color: #014660; }\n'
+)
+
+for invalid_css_entry in "${INVALID_EXACT_TRUSTED_CSS_FIXTURES[@]}"; do
+  invalid_css_name="${invalid_css_entry%%|*}"
+  invalid_css_rest="${invalid_css_entry#*|}"
+  invalid_css_expected="${invalid_css_rest%%|*}"
+  invalid_css_snippet="${invalid_css_rest#*|}"
+  cp "${SMOKE_FIXTURE_DIR}/styles.css.orig" "${SMOKE_FIXTURE_DIR}/styles.css"
+  printf '%s' "${invalid_css_snippet}" >> "${SMOKE_FIXTURE_DIR}/styles.css"
+  INVALID_CSS_OUT=""
+  if INVALID_CSS_OUT="$(
+    EXPECTED_RELEASE_ID="${TEST_REL}" \
+    EXPECTED_GIT_SHA="${TEST_GIT_SHA}" \
+    EXPECTED_TREE_SHA256="${FIXTURE_TREE_SHA256}" \
+    EXPECTED_METADATA_FILE="${SMOKE_FIXTURE_DIR}/release-metadata.json" \
+    EXPECTED_ASSET_ROOT="${SMOKE_FIXTURE_DIR}" \
+      "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1
+  )"; then
+    mv "${SMOKE_FIXTURE_DIR}/styles.css.orig" "${SMOKE_FIXTURE_DIR}/styles.css"
+    echo "  ✗ FAIL: smoke-test.sh unexpectedly passed invalid exact-trusted CSS fixture '${invalid_css_name}'!" >&2
+    exit 1
+  fi
+  grep -F -q -- "${invalid_css_expected}" <<< "${INVALID_CSS_OUT}" || {
+    mv "${SMOKE_FIXTURE_DIR}/styles.css.orig" "${SMOKE_FIXTURE_DIR}/styles.css"
+    echo "  ✗ FAIL: smoke-test.sh invalid exact-trusted CSS fixture '${invalid_css_name}' did not emit expected diagnostic '${invalid_css_expected}':" >&2
+    echo "${INVALID_CSS_OUT}" >&2
+    exit 1
+  }
+done
+mv "${SMOKE_FIXTURE_DIR}/styles.css.orig" "${SMOKE_FIXTURE_DIR}/styles.css"
+
+# Verify mandatory trusted binding: unbound standalone, missing EXPECTED_ASSET_ROOT, missing EXPECTED_METADATA_FILE, and mismatched paths MUST fail immediately
+UNBOUND_ERR=""
+if UNBOUND_ERR="$("${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1)"; then
+  echo "  ✗ FAIL: smoke-test.sh passed in unbound standalone mode without EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT!" >&2
+  exit 1
+fi
+grep -F -q "Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set" <<< "${UNBOUND_ERR}" || {
+  echo "  ✗ FAIL: smoke-test.sh did not emit mandatory binding error when both vars were absent:" >&2
+  echo "${UNBOUND_ERR}" >&2
+  exit 1
+}
+
+ONLY_META_ERR=""
+if ONLY_META_ERR="$(EXPECTED_METADATA_FILE="${SMOKE_FIXTURE_DIR}/release-metadata.json" "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1)"; then
+  echo "  ✗ FAIL: smoke-test.sh passed when EXPECTED_ASSET_ROOT was omitted!" >&2
+  exit 1
+fi
+grep -F -q "Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set" <<< "${ONLY_META_ERR}" || {
+  echo "  ✗ FAIL: smoke-test.sh did not emit mandatory binding error when EXPECTED_ASSET_ROOT was omitted:" >&2
+  echo "${ONLY_META_ERR}" >&2
+  exit 1
+}
+
+ONLY_ROOT_ERR=""
+if ONLY_ROOT_ERR="$(EXPECTED_ASSET_ROOT="${SMOKE_FIXTURE_DIR}" "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1)"; then
+  echo "  ✗ FAIL: smoke-test.sh passed when EXPECTED_METADATA_FILE was omitted!" >&2
+  exit 1
+fi
+grep -F -q "Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set" <<< "${ONLY_ROOT_ERR}" || {
+  echo "  ✗ FAIL: smoke-test.sh did not emit mandatory binding error when EXPECTED_METADATA_FILE was omitted:" >&2
+  echo "${ONLY_ROOT_ERR}" >&2
+  exit 1
+}
+
+OTHER_TRUSTED_DIR="${TEST_ENV_DIR}/other-trusted-dir"
+mkdir -p "${OTHER_TRUSTED_DIR}"
+cp "${SMOKE_FIXTURE_DIR}/release-metadata.json" "${OTHER_TRUSTED_DIR}/release-metadata.json"
+MISMATCH_BIND_ERR=""
+if MISMATCH_BIND_ERR="$(
+  EXPECTED_METADATA_FILE="${OTHER_TRUSTED_DIR}/release-metadata.json" \
+  EXPECTED_ASSET_ROOT="${SMOKE_FIXTURE_DIR}" \
+    "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1
+)"; then
+  echo "  ✗ FAIL: smoke-test.sh passed when EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT were mismatched!" >&2
+  exit 1
+fi
+grep -F -q "mismatch" <<< "${MISMATCH_BIND_ERR}" || {
+  echo "  ✗ FAIL: smoke-test.sh did not emit mismatch diagnostic for mismatched EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT:" >&2
+  echo "${MISMATCH_BIND_ERR}" >&2
+  exit 1
+}
+rm -rf "${OTHER_TRUSTED_DIR}"
+
+# Regression: Symlink ancestor rejection before canonicalization (alias-parent/trusted where final component is a real directory/file)
+REAL_TRUSTED_PARENT="${TEST_ENV_DIR}/real-trusted-parent"
+REAL_TRUSTED_DIR="${REAL_TRUSTED_PARENT}/trusted"
+ALIAS_PARENT="${TEST_ENV_DIR}/alias-parent"
+mkdir -p "${REAL_TRUSTED_DIR}"
+cp -R "${SMOKE_FIXTURE_DIR}/." "${REAL_TRUSTED_DIR}/"
+ln -s "${REAL_TRUSTED_PARENT}" "${ALIAS_PARENT}"
+
+for sym_anc_case in "both_alias" "meta_alias_only" "root_alias_only"; do
+  if [ "${sym_anc_case}" = "both_alias" ]; then
+    TEST_META_ARG="${ALIAS_PARENT}/trusted/release-metadata.json"
+    TEST_ROOT_ARG="${ALIAS_PARENT}/trusted"
+  elif [ "${sym_anc_case}" = "meta_alias_only" ]; then
+    TEST_META_ARG="${ALIAS_PARENT}/trusted/release-metadata.json"
+    TEST_ROOT_ARG="${REAL_TRUSTED_DIR}"
+  else
+    TEST_META_ARG="${REAL_TRUSTED_DIR}/release-metadata.json"
+    TEST_ROOT_ARG="${ALIAS_PARENT}/trusted"
+  fi
+  : > "${SMOKE_FIXTURE_REQ_LOG}"
+  SYM_ANC_ERR=""
+  if SYM_ANC_ERR="$(
+    EXPECTED_METADATA_FILE="${TEST_META_ARG}" \
+    EXPECTED_ASSET_ROOT="${TEST_ROOT_ARG}" \
+      "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1
+  )"; then
+    echo "  ✗ FAIL: smoke-test.sh accepted symlink ancestor in alias-parent/trusted (${sym_anc_case})!" >&2
+    exit 1
+  fi
+  grep -F -q "path component or ancestor is a symlink" <<< "${SYM_ANC_ERR}" || {
+    echo "  ✗ FAIL: smoke-test.sh did not report symlink ancestor for alias-parent/trusted (${sym_anc_case}):" >&2
+    echo "${SYM_ANC_ERR}" >&2
+    exit 1
+  }
+  if [ -s "${SMOKE_FIXTURE_REQ_LOG}" ]; then
+    echo "  ✗ FAIL: smoke-test.sh made HTTP request(s) before rejecting symlink ancestor (${sym_anc_case}):" >&2
+    cat "${SMOKE_FIXTURE_REQ_LOG}" >&2
+    exit 1
+  fi
+done
+
+# Regression: Unreferenced nested symlink assets/nested-extra/link pointing outside EXPECTED_ASSET_ROOT
+# Must fail preflight with nonzero exit BEFORE the fixture server gets any request
+OUTSIDE_SYMLINK_TARGET="${TEST_ENV_DIR}/outside-symlink-target.txt"
+printf 'outside-secret\n' > "${OUTSIDE_SYMLINK_TARGET}"
+mkdir -p "${REAL_TRUSTED_DIR}/assets/nested-extra"
+ln -s "${OUTSIDE_SYMLINK_TARGET}" "${REAL_TRUSTED_DIR}/assets/nested-extra/link"
+: > "${SMOKE_FIXTURE_REQ_LOG}"
+UNREF_NESTED_SYM_ERR=""
+if UNREF_NESTED_SYM_ERR="$(
+  EXPECTED_METADATA_FILE="${REAL_TRUSTED_DIR}/release-metadata.json" \
+  EXPECTED_ASSET_ROOT="${REAL_TRUSTED_DIR}" \
+    "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1
+)"; then
+  echo "  ✗ FAIL: smoke-test.sh accepted unreferenced nested symlink assets/nested-extra/link pointing outside EXPECTED_ASSET_ROOT!" >&2
+  exit 1
+fi
+grep -F -q "Trusted asset path 'assets/nested-extra/link' traverses symlink" <<< "${UNREF_NESTED_SYM_ERR}" || {
+  echo "  ✗ FAIL: smoke-test.sh did not emit preflight symlink diagnostic for assets/nested-extra/link:" >&2
+  echo "${UNREF_NESTED_SYM_ERR}" >&2
+  exit 1
+}
+if [ -s "${SMOKE_FIXTURE_REQ_LOG}" ]; then
+  echo "  ✗ FAIL: smoke-test.sh made HTTP request(s) before rejecting unreferenced nested symlink assets/nested-extra/link:" >&2
+  cat "${SMOKE_FIXTURE_REQ_LOG}" >&2
+  exit 1
+fi
+rm -rf "${REAL_TRUSTED_DIR}/assets/nested-extra" "${OUTSIDE_SYMLINK_TARGET}"
+
+# Regression: Referenced SVG symlink inside canonical trusted root must also fail preflight with zero requests
+mv "${REAL_TRUSTED_DIR}/assets/placeholders/wardrobe.svg" "${REAL_TRUSTED_DIR}/assets/placeholders/wardrobe.svg.real"
+ln -s "${REAL_TRUSTED_DIR}/assets/placeholders/wardrobe.svg.real" "${REAL_TRUSTED_DIR}/assets/placeholders/wardrobe.svg"
+: > "${SMOKE_FIXTURE_REQ_LOG}"
+NESTED_SYM_ERR=""
+if NESTED_SYM_ERR="$(
+  EXPECTED_METADATA_FILE="${REAL_TRUSTED_DIR}/release-metadata.json" \
+  EXPECTED_ASSET_ROOT="${REAL_TRUSTED_DIR}" \
+    "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1
+)"; then
+  echo "  ✗ FAIL: smoke-test.sh accepted nested trusted asset symlink inside EXPECTED_ASSET_ROOT!" >&2
+  exit 1
+fi
+grep -F -q "Trusted asset path 'assets/placeholders/wardrobe.svg' traverses symlink" <<< "${NESTED_SYM_ERR}" || {
+  echo "  ✗ FAIL: smoke-test.sh did not emit nested trusted asset symlink diagnostic:" >&2
+  echo "${NESTED_SYM_ERR}" >&2
+  exit 1
+}
+if [ -s "${SMOKE_FIXTURE_REQ_LOG}" ]; then
+  echo "  ✗ FAIL: smoke-test.sh made HTTP request(s) before rejecting referenced SVG symlink assets/placeholders/wardrobe.svg:" >&2
+  cat "${SMOKE_FIXTURE_REQ_LOG}" >&2
+  exit 1
+fi
+rm -rf "${ALIAS_PARENT}" "${REAL_TRUSTED_PARENT}"
+
+NEGATIVE_SMOKE_FIXTURES=(
+  "versioned_svg_html_fallback:Expected Content-Type 'image/svg+xml'"
+  "versioned_svg_html_body_with_svg_mime:SVG body contains HTML document tags (HTML fallback rejected)"
+  "versioned_svg_wrong_mime:Expected Content-Type 'image/svg+xml'"
+  "versioned_svg_fake_body:SVG body must start with <svg"
+  "versioned_svg_non_svg_xml_root:Expected XML root local-name 'svg'"
+  "underlying_svg_html_fallback:Expected Content-Type 'image/svg+xml'"
+  "png_html_fallback:Expected Content-Type 'image/png'"
+  "png_wrong_mime:Expected Content-Type 'image/png'"
+  "png_fake_body:Invalid PNG binary signature"
+  "png_forged_ihdr_only:Incomplete PNG structure"
+  "png_truncated_stream:Invalid PNG structure: truncated chunk"
+  "png_bad_crc:Invalid PNG chunk CRC"
+  "png_zero_dimensions:Invalid PNG IHDR dimensions"
+  "jpg_html_fallback:Expected Content-Type 'image/jpeg'"
+  "jpg_wrong_mime:Expected Content-Type 'image/jpeg'"
+  "jpg_fake_body:Invalid JPEG SOI binary signature"
+  "jpg_ffd8ff00_prefix:Invalid JPEG marker 0xff00"
+  "jpg_truncated_stream:Truncated JPEG"
+  "jpg_missing_sos:Incomplete JPEG structure"
+  "css_html_fallback:Expected Content-Type 'text/css'"
+  "css_wrong_mime:Expected Content-Type 'text/css'"
+  "css_fake_html_body:CSS body starts with markup '<' (HTML/XML fallback rejected)"
+  "css_fake_plain_body:CSS body missing expected stylesheet rule structure"
+  "css_marker_spoofed_unbalanced:CSS body missing expected stylesheet rule structure (unbalanced braces"
+  "css_marker_spoofed_malformed:CSS body missing expected stylesheet rule structure"
+  "css_marker_spoofed_comment_only:CSS body missing expected stylesheet rule structure"
+  "css_crossed_rgb_paren_bracket:CSS body missing expected stylesheet rule structure (crossed or unbalanced closing parenthesis ')')"
+  "css_crossed_bracket_paren:CSS body missing expected stylesheet rule structure (crossed or unbalanced closing bracket ']')"
+  "css_markup_div_open:CSS body contains HTML/XML markup (fallback rejected)"
+  "css_markup_div_close:CSS body contains HTML/XML markup (fallback rejected)"
+  "css_markup_bang_foo:CSS body contains HTML/XML markup (fallback rejected)"
+  "css_markup_pi_foo:CSS body contains HTML/XML markup (fallback rejected)"
+  "js_html_fallback:Expected Content-Type 'application/javascript' or 'text/javascript'"
+  "js_wrong_mime:Expected Content-Type 'application/javascript' or 'text/javascript'"
+  "js_fake_html_body:JavaScript body starts with markup '<' (HTML/XML fallback rejected)"
+  "js_fake_plain_body:JavaScript body missing expected script structure"
+  "js_invalid_syntax_app_mime:node --check syntax check failed"
+  "js_invalid_syntax_text_mime:node --check syntax check failed"
+  "json_wrong_mime:Expected Content-Type 'application/json'"
+  "json_fake_body:Invalid JSON body"
+  "json_duplicate_keys:Duplicate JSON key"
+  "json_nan_constant:Invalid JSON constant"
+  "incomplete_transfer_css_with_charset:curl transfer failed (exit 18)"
+  "incomplete_transfer_js_with_charset:curl transfer failed (exit 18)"
+  "incomplete_transfer_metadata_with_charset:curl transfer failed (exit 18)"
+  "versioned_css_mutated_valid:Trusted byte verification failed for 'styles.css'"
+  "versioned_js_mutated_valid:Trusted byte verification failed for 'script.js'"
+  "versioned_svg_mutated_valid:Trusted byte verification failed for 'assets/placeholders/wardrobe.svg'"
+  "png_mutated_valid:Trusted byte verification failed for 'assets/gba-logo-official-transparent.png'"
+)
+
+for fixture_spec in "${NEGATIVE_SMOKE_FIXTURES[@]}"; do
+  fault_mode="${fixture_spec%%:*}"
+  expected_err="${fixture_spec#*:}"
+  printf '%s\n' "${fault_mode}" > "${SMOKE_FIXTURE_MODE_FILE}"
+  SMOKE_NEG_OUT=""
+  if SMOKE_NEG_OUT="$(
+    EXPECTED_RELEASE_ID="${TEST_REL}" \
+    EXPECTED_GIT_SHA="${TEST_GIT_SHA}" \
+    EXPECTED_TREE_SHA256="${FIXTURE_TREE_SHA256}" \
+    EXPECTED_METADATA_FILE="${SMOKE_FIXTURE_DIR}/release-metadata.json" \
+    EXPECTED_ASSET_ROOT="${SMOKE_FIXTURE_DIR}" \
+      "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1
+  )"; then
+    echo "  ✗ FAIL: smoke-test.sh unexpectedly passed negative asset fixture '${fault_mode}'!" >&2
+    exit 1
+  fi
+  grep -F -q -- "${expected_err}" <<< "${SMOKE_NEG_OUT}" || {
+    echo "  ✗ FAIL: smoke-test.sh negative fixture '${fault_mode}' did not emit expected diagnostic '${expected_err}':" >&2
+    echo "${SMOKE_NEG_OUT}" >&2
+    exit 1
+  }
+done
+
+# Verify production cutover aborts and auto-restores WordPress docroot on versioned fallback, versioned mutated response, and incomplete transfer
+for cutover_abort_mode in \
+  "versioned_svg_html_fallback" \
+  "versioned_css_mutated_valid" \
+  "versioned_js_mutated_valid" \
+  "versioned_svg_mutated_valid" \
+  "incomplete_transfer_css_with_charset"; do
+  printf '%s\n' "${cutover_abort_mode}" > "${SMOKE_FIXTURE_MODE_FILE}"
+  populate_mock_wordpress
+  if "${SCRIPT_DIR}/remote-deploy-production.sh" "${TEST_REL}" "${TARBALL}" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" "${TEST_GIT_SHA}" "${TARBALL_HASH}" 2>/dev/null; then
+    echo "  ✗ FAIL: Production deployment succeeded when public endpoint served '${cutover_abort_mode}'!" >&2
+    exit 1
+  fi
+  [ -f "${MOCK_DOCROOT}/wp-config.php" ] && [ ! -f "${MOCK_DOCROOT}/styles.css" ] || {
+    echo "  ✗ FAIL: Production docroot was NOT restored after '${cutover_abort_mode}' smoke failure!" >&2
+    exit 1
+  }
+  grep -q '"status": "aborted_smoke_failed_docroot_restored"' "${MOCK_BACKUPS}/${TEST_REL}_manifest.json" || {
+    echo "  ✗ FAIL: Manifest did not record auto-restore status after '${cutover_abort_mode}'!" >&2
+    exit 1
+  }
+  reset_test_release_state "${TEST_REL}"
+done
+printf 'valid_app_js\n' > "${SMOKE_FIXTURE_MODE_FILE}"
+echo "  ✓ Mandatory trusted binding (both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT, alias-parent/trusted symlink ancestor & recursive preflight symlink rejection before first HTTP fetch), valid exact-trusted CSS fixtures, and 43 negative HTTP endpoint fixtures verified."
 
 # 8e. Independent Reproduction: Final Manifest Atomic Write Failure After DB Deletion
 #     Proves pre-cutover manifest is NEVER truncated in place and both files + DB are restored!

@@ -6,7 +6,8 @@
 #   ./scripts/remote-deploy-production.sh <RELEASE_ID> <TARBALL_PATH> [PRODUCTION_URL] [GIT_SHA] [ARTIFACT_SHA256]
 #
 # Process:
-#   1. Strict Input, URL & Canonical Realpath Guards (Error-Checked Symlink Scan)
+#   1. Strict Input, URL, Runtime Preflight ('node --check' before any mutation)
+#      & Canonical Realpath Guards (Error-Checked Symlink Scan)
 #   2. Host-Side Shared OS-Held Lock (/home/alibhatt/.gba-deploy.lock) via
 #      nonblocking flock on a canonical regular file with stable fd & separate
 #      atomic owner metadata
@@ -17,7 +18,8 @@
 #      Docroot with Pre-Cutover Tree Digest
 #   6. Cutover with Comprehensive Trap-Driven Transaction Recovery Active Until
 #      ALL DB Cleanup and Final Manifest Writes Complete
-#   7. Public Smoke Test Proving Exact Deployed Release Identity (/release-metadata.json)
+#   7. Public Smoke Test Bound to Immutable Checksum-Verified RELEASE_DIR
+#      (Proving Exact Deployed Bytes & /release-metadata.json Identity)
 #   8. Destructive Database Cleanup with Unsuppressed Positive Zero-Table Proof
 #      (Restores both original WordPress files and database if DB deletion has
 #      begun and any later step fails)
@@ -88,6 +90,12 @@ fi
 
 if [ -L "${TARBALL_PATH}" ] || [ ! -f "${TARBALL_PATH}" ]; then
   echo "CRITICAL ERROR: Release tarball not found or is a symlink at '${TARBALL_PATH}'" >&2
+  exit 1
+fi
+
+# Preflight node availability (with working 'node --check') before any directory creation, lock, backup, or mutation
+if ! command -v node >/dev/null 2>&1 || ! printf 'void 0;\n' | node --check >/dev/null 2>&1; then
+  echo "CRITICAL ERROR: Required 'node' runtime (with working 'node --check' for smoke verification) is unavailable on PATH! Aborting before any mutation." >&2
   exit 1
 fi
 
@@ -984,7 +992,9 @@ fi
 ARTIFACT_SHA256="${ACTUAL_TARBALL_SHA256}"
 
 echo "[Step 1/6] Extracting artifact into staging and verifying candidate integrity before cutover..."
-TEMP_STAGE_DIR="$(mktemp -d)"
+RAW_TEMP_STAGE_DIR="$(mktemp -d)"
+TEMP_STAGE_DIR="$(cd -P -- "${RAW_TEMP_STAGE_DIR}" && pwd -P)"
+TEMP_STAGE_DIR="$(guard_and_canonicalize_dir "${TEMP_STAGE_DIR}" "TEMP_STAGE_DIR" "0" "1")"
 
 tar -xzf "${TARBALL_PATH}" -C "${TEMP_STAGE_DIR}"
 find "${TEMP_STAGE_DIR}" -name '._*' -type f -delete 2>/dev/null || true
@@ -1339,6 +1349,18 @@ find "${RELEASE_DIR}" -type f -exec chmod 644 {} +
 
 verify_static_tree_allowlist "${RELEASE_DIR}" "RELEASE_DIR"
 
+(
+  cd "${RELEASE_DIR}"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum -c checksums.sha256 >/dev/null
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 -c checksums.sha256 >/dev/null
+  else
+    echo "ERROR: Neither sha256sum nor shasum available to verify checksums in RELEASE_DIR." >&2
+    exit 1
+  fi
+)
+
 for f in "${REQUIRED_STATIC[@]}"; do
   if [ ! -s "${RELEASE_DIR}/${f}" ] || [ -L "${RELEASE_DIR}/${f}" ]; then
     echo "CRITICAL ERROR: Staged candidate file '${RELEASE_DIR}/${f}' missing or invalid before cutover!" >&2
@@ -1378,6 +1400,7 @@ if [ -f "${SMOKE_TEST_SCRIPT}" ]; then
        EXPECTED_GIT_SHA="${GIT_SHA}" \
        EXPECTED_TREE_SHA256="${META_TREE_SHA256}" \
        EXPECTED_METADATA_FILE="${RELEASE_DIR}/release-metadata.json" \
+       EXPECTED_ASSET_ROOT="${RELEASE_DIR}" \
        bash "${SMOKE_TEST_SCRIPT}" "${PRODUCTION_URL}"; then
     SMOKE_PASSED=0
   fi

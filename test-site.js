@@ -128,6 +128,35 @@ assert(allPricesValid, `All ${totalVariants} product variants and ${totalAddons}
 assert(startingPricesMatchMin, 'Every product startingPrice matches its minimum variant price');
 
 // Extract embedded CATALOGUE_DATA from script.js and verify exact synchronisation with data/products.json
+const EXPECTED_CACHE_BUST_QUERY = '?v=public-audit-20261020';
+function resolveAssetPathname(assetUrl) {
+  return new URL(String(assetUrl || ''), 'http://127.0.0.1/').pathname.replace(/^\/+/, '');
+}
+
+assert(
+  html.includes('href="styles.css?v=public-audit-20261020"') && !html.includes('href="styles.css"'),
+  'index.html references cache-busted stylesheet styles.css?v=public-audit-20261020'
+);
+assert(
+  html.includes('src="script.js?v=public-audit-20261020"') && !html.includes('src="script.js"'),
+  'index.html references cache-busted script script.js?v=public-audit-20261020'
+);
+
+const allJsonPlaceholdersVersionedAndExist =
+  Array.isArray(data.products) &&
+  data.products.length === 26 &&
+  data.products.every(p => {
+    if (typeof p.placeholder !== 'string' || !p.placeholder.endsWith(EXPECTED_CACHE_BUST_QUERY)) {
+      return false;
+    }
+    const resolvedPath = resolveAssetPathname(p.placeholder);
+    return svgFiles.includes(resolvedPath) && fs.existsSync(path.join(__dirname, resolvedPath));
+  });
+assert(
+  allJsonPlaceholdersVersionedAndExist,
+  `Every product placeholder URL in data/products.json ends with ${EXPECTED_CACHE_BUST_QUERY} and resolves its URL pathname to an existing SVG file`
+);
+
 const catalogueDataMatch = js.match(/const\s+CATALOGUE_DATA\s*=\s*(\{[\s\S]*?\n  \});/);
 assert(Boolean(catalogueDataMatch), 'Embedded CATALOGUE_DATA object found in script.js');
 if (catalogueDataMatch) {
@@ -149,7 +178,125 @@ if (catalogueDataMatch) {
       JSON.stringify(embeddedData.products) === JSON.stringify(data.products),
     'Embedded CATALOGUE_DATA.products matches data/products.json products (all 26 products and 81 variants) exactly'
   );
+  const allEmbeddedPlaceholdersVersionedAndExist =
+    Array.isArray(embeddedData.products) &&
+    embeddedData.products.length === 26 &&
+    embeddedData.products.every(p => {
+      if (typeof p.placeholder !== 'string' || !p.placeholder.endsWith(EXPECTED_CACHE_BUST_QUERY)) {
+        return false;
+      }
+      const resolvedPath = resolveAssetPathname(p.placeholder);
+      return svgFiles.includes(resolvedPath) && fs.existsSync(path.join(__dirname, resolvedPath));
+    });
+  assert(
+    allEmbeddedPlaceholdersVersionedAndExist,
+    `Every product placeholder URL in embedded CATALOGUE_DATA (script.js) ends with ${EXPECTED_CACHE_BUST_QUERY} and resolves its URL pathname to an existing SVG file`
+  );
 }
+
+const resolvedPlaceholderPaths = Array.from(new Set(data.products.map(p => resolveAssetPathname(p.placeholder)))).sort();
+assert(
+  JSON.stringify(resolvedPlaceholderPaths) === JSON.stringify([...svgFiles].sort()),
+  'Resolved product placeholder URL pathnames cover all 10 underlying SVG files in assets/placeholders/'
+);
+
+const { spawnSync } = require('child_process');
+const smokeTestSh = fs.readFileSync(path.join(__dirname, 'scripts/smoke-test.sh'), 'utf8');
+const remoteDeploySandboxSh = fs.readFileSync(path.join(__dirname, 'scripts/remote-deploy-sandbox.sh'), 'utf8');
+const remoteDeployProdSh = fs.readFileSync(path.join(__dirname, 'scripts/remote-deploy-production.sh'), 'utf8');
+const cssValidatorMatch = smokeTestSh.match(/def validate_css_stylesheet\(text\):[\s\S]*?\n    return clean\n/);
+const cssValidatorBody = cssValidatorMatch ? cssValidatorMatch[0] : '';
+const cssValidatorFixturesOk = (() => {
+  if (!cssValidatorBody) return false;
+  const pyRunner = `
+import re, sys
+
+def fail(msg):
+    raise ValueError(msg)
+
+${cssValidatorBody}
+
+base = ":root { --color-petrol: #014660; }\\n"
+must_fail = [
+    base + ".bad { color: rgb([)]; }",
+    base + ".bad[(]) { color: #014660; }",
+    base + "<div> .bad { color: #014660; }",
+    base + "</div> .bad { color: #014660; }",
+    base + "<!foo> .bad { color: #014660; }",
+    base + "<?foo?> .bad { color: #014660; }",
+]
+for sample in must_fail:
+    try:
+        validate_css_stylesheet(sample)
+    except ValueError:
+        pass
+    else:
+        sys.stderr.write(f"Expected failure for {sample!r}\\n")
+        sys.exit(1)
+
+must_pass = [
+    base + '.ok::before { content: "rgb([)]"; }',
+    base + '.ok::before { content: "[(])"; }',
+    base + '.ok::before { content: "<div>"; }',
+    base + '.ok::before { content: "</div>"; }',
+    base + '.ok::before { content: "<!foo>"; }',
+    base + '.ok::before { content: "<?foo?>"; }',
+    base + '/* rgb([)] */ .ok { color: #014660; }',
+    base + '/* [(]) */ .ok { color: #014660; }',
+    base + '/* <div> */ .ok { color: #014660; }',
+    base + '/* </div> */ .ok { color: #014660; }',
+    base + '/* <!foo> */ .ok { color: #014660; }',
+    base + '/* <?foo?> */ .ok { color: #014660; }',
+]
+for sample in must_pass:
+    validate_css_stylesheet(sample)
+`;
+  const res = spawnSync('python3', ['-c', pyRunner], { encoding: 'utf8' });
+  return res.status === 0;
+})();
+assert(
+  smokeTestSh.includes('%{http_code}\\t%{content_type}') &&
+    !smokeTestSh.includes("printf '000\\t'") &&
+    smokeTestSh.includes('|| curl_rc=$?') &&
+    smokeTestSh.includes('[ "${curl_rc}" -ne 0 ]') &&
+    smokeTestSh.includes(
+      'Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set'
+    ) &&
+    smokeTestSh.includes('validate_no_symlink_ancestors') &&
+    smokeTestSh.includes('validate_no_nested_symlinks') &&
+    smokeTestSh.includes('outside_strings_and_comments') &&
+    !smokeTestSh.includes('validate_declarations') &&
+    Boolean(cssValidatorBody) &&
+    cssValidatorBody.includes('delimiter_stack = []') &&
+    cssValidatorBody.includes('bool(delimiter_stack)') &&
+    cssValidatorBody.includes('not delimiter_stack') &&
+    cssValidatorBody.includes('r"<\\s*(?:/\\s*)?(?:[A-Za-z][A-Za-z0-9:_-]*\\b|[!?])"') &&
+    !cssValidatorBody.includes('paren_depth') &&
+    !cssValidatorBody.includes('bracket_depth') &&
+    !cssValidatorBody.includes('!doctype\\b|html\\b') &&
+    !cssValidatorBody.includes('svg\\b') &&
+    cssValidatorFixturesOk &&
+    smokeTestSh.includes("media_type != \"text/css\"") &&
+    smokeTestSh.includes("(\"application/javascript\", \"text/javascript\")") &&
+    smokeTestSh.includes('["node", "--check"]') &&
+    smokeTestSh.includes('input=raw_bytes') &&
+    smokeTestSh.includes("media_type != \"application/json\"") &&
+    smokeTestSh.includes("media_type != \"image/svg+xml\"") &&
+    smokeTestSh.includes("media_type != \"image/png\"") &&
+    smokeTestSh.includes("89504e470d0a1a0a") &&
+    smokeTestSh.includes("zlib.crc32") &&
+    smokeTestSh.includes("media_type != \"image/jpeg\"") &&
+    smokeTestSh.includes("ffd8ff") &&
+    smokeTestSh.includes("ET.fromstring(raw_bytes)") &&
+    smokeTestSh.includes("Trusted byte verification failed") &&
+    remoteDeploySandboxSh.includes('EXPECTED_METADATA_FILE="${STAGE_DIR}/release-metadata.json"') &&
+    remoteDeploySandboxSh.includes('EXPECTED_ASSET_ROOT="${STAGE_DIR}"') &&
+    remoteDeploySandboxSh.includes('node --check') &&
+    remoteDeployProdSh.includes('EXPECTED_METADATA_FILE="${RELEASE_DIR}/release-metadata.json"') &&
+    remoteDeployProdSh.includes('EXPECTED_ASSET_ROOT="${RELEASE_DIR}"') &&
+    remoteDeployProdSh.includes('node --check'),
+  'scripts/smoke-test.sh and deploy scripts enforce mandatory trusted asset binding (STAGE_DIR/RELEASE_DIR), ancestor symlink rejection, preflight node --check, separate curl exit capture, fail-closed Content-Type & format checks, and exact trusted-byte verification'
+);
 
 // Check specific key catalogue items, names, collections, and variant labels
 const oxford = data.products.find(p => p.id === 'oxford-divan-bed');
@@ -1683,7 +1830,7 @@ assert(
 // 7. Local HTTP Server Delivery Test
 console.log('\n7. Checking Local HTTP Server Delivery:');
 const server = http.createServer((req, res) => {
-  const urlPath = req.url.split('?')[0];
+  const urlPath = new URL(req.url, 'http://127.0.0.1').pathname;
   let filePath = path.join(__dirname, urlPath === '/' ? 'index.html' : urlPath);
 
   if (!fs.existsSync(filePath)) {
@@ -1712,14 +1859,38 @@ server.listen(0, '127.0.0.1', () => {
   const port = server.address().port;
   console.log(`  Local test HTTP server running on port ${port}`);
 
+  const uniqueVersionedPlaceholders = Array.from(new Set(data.products.map(p => `/${p.placeholder}`)));
   const endpointsToTest = [
-    { path: '/', status: 200, type: 'text/html' },
-    { path: '/styles.css', status: 200, type: 'text/css' },
-    { path: '/script.js', status: 200, type: 'application/javascript' },
-    { path: '/data/products.json', status: 200, type: 'application/json' },
-    { path: '/assets/gba-logo-official-transparent.png', status: 200, type: 'image/png' },
-    { path: '/assets/current-banner.jpg', status: 200, type: 'image/jpeg' },
-    { path: '/assets/placeholders/bed-divan.svg', status: 200, type: 'image/svg+xml' }
+    { path: '/', status: 200, type: 'text/html', checkBody: (buf) => buf.toString('utf8').includes('<!DOCTYPE html>') && buf.toString('utf8').includes('GBA Furniture') },
+    { path: '/styles.css', status: 200, type: 'text/css', checkBody: (buf) => !buf.toString('utf8').trimStart().startsWith('<') && buf.toString('utf8').includes('--color-petrol') },
+    { path: '/styles.css?v=public-audit-20261020', status: 200, type: 'text/css', checkBody: (buf) => !buf.toString('utf8').trimStart().startsWith('<') && buf.toString('utf8').includes('--color-petrol') },
+    { path: '/script.js', status: 200, type: 'application/javascript', checkBody: (buf) => !buf.toString('utf8').trimStart().startsWith('<') && buf.toString('utf8').includes('CATALOGUE_DATA') },
+    { path: '/script.js?v=public-audit-20261020', status: 200, type: 'application/javascript', checkBody: (buf) => !buf.toString('utf8').trimStart().startsWith('<') && buf.toString('utf8').includes('v=public-audit-20261020') },
+    { path: '/data/products.json', status: 200, type: 'application/json', checkBody: (buf) => { try { const j = JSON.parse(buf.toString('utf8')); return Array.isArray(j.products) && j.products.length === 26; } catch (_e) { return false; } } },
+    { path: '/assets/gba-logo-official-transparent.png', status: 200, type: 'image/png', checkBody: (buf) => buf.length >= 24 && buf.subarray(0, 8).toString('hex') === '89504e470d0a1a0a' },
+    { path: '/assets/gba-logo-web.png', status: 200, type: 'image/png', checkBody: (buf) => buf.length >= 24 && buf.subarray(0, 8).toString('hex') === '89504e470d0a1a0a' },
+    { path: '/assets/current-banner.jpg', status: 200, type: 'image/jpeg', checkBody: (buf) => buf.length >= 4 && buf.subarray(0, 3).toString('hex') === 'ffd8ff' },
+    ...svgFiles.map(file => ({
+      path: `/${file}`,
+      status: 200,
+      type: 'image/svg+xml',
+      checkBody: (buf) => {
+        const s = buf.toString('utf8').trim();
+        const marker = path.basename(file) === 'van.svg' ? 'Furniture removal service' : 'Illustration only — not a product photograph';
+        return s.startsWith('<svg') && s.endsWith('</svg>') && !s.toLowerCase().includes('<html') && s.includes(marker);
+      }
+    })),
+    ...uniqueVersionedPlaceholders.map(placeholderPath => ({
+      path: placeholderPath,
+      status: 200,
+      type: 'image/svg+xml',
+      checkBody: (buf) => {
+        const s = buf.toString('utf8').trim();
+        const cleanFile = new URL(placeholderPath, 'http://127.0.0.1').pathname;
+        const marker = path.basename(cleanFile) === 'van.svg' ? 'Furniture removal service' : 'Illustration only — not a product photograph';
+        return s.startsWith('<svg') && s.endsWith('</svg>') && !s.toLowerCase().includes('<html') && s.includes(marker);
+      }
+    }))
   ];
 
   let completedRequests = 0;
@@ -1730,8 +1901,11 @@ server.listen(0, '127.0.0.1', () => {
       const ct = res.headers['content-type'] || '';
       assert(ct.includes(ep.type), `HTTP GET ${ep.path} returned content-type containing '${ep.type}'`);
 
-      res.on('data', () => {});
+      const chunks = [];
+      res.on('data', (chunk) => { chunks.push(chunk); });
       res.on('end', () => {
+        const bodyBuf = Buffer.concat(chunks);
+        assert(ep.checkBody(bodyBuf), `HTTP GET ${ep.path} returned valid ${ep.type} format/signature and expected marker`);
         completedRequests++;
         if (completedRequests === endpointsToTest.length) {
           server.close(() => {
