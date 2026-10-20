@@ -196,7 +196,7 @@ The release scaffolding and website can be tested completely locally without req
 # 1. Validate bash syntax of all release scripts
 bash -n scripts/*.sh
 
-# 2. Run catalogue content & DOM verification suite (127 checks)
+# 2. Run catalogue content & DOM verification suite (294 checks)
 node test-site.js
 
 # 3. Run release scaffolding test suite (11 test groups including all independent security reproductions)

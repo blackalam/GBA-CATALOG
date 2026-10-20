@@ -182,9 +182,9 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding-top: 0.45rem;
-  padding-bottom: 0.45rem;
+  gap: 0.75rem 1rem;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
   flex-wrap: wrap;
   min-width: 0;
   max-width: 100%;
@@ -220,7 +220,8 @@ button {
 .top-bar-links {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.75rem 1.25rem;
+  flex-wrap: wrap;
   min-width: 0;
   max-width: 100%;
 }
@@ -231,6 +232,9 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.25rem 0.35rem;
   transition: color var(--transition-fast);
 }
 
@@ -291,9 +295,14 @@ button {
   display: block;
 }
 
-.brand-logo--drawer {
-  width: 210px;
-  max-width: 80%;
+.brand-logo--drawer,
+.mobile-drawer-header .brand-logo--drawer {
+  width: min(175px, calc(100% - 56px));
+  max-width: calc(100% - 56px);
+  min-width: 0;
+  height: auto;
+  flex: 0 1 auto;
+  object-fit: contain;
 }
 
 .footer-brand-link {
@@ -326,10 +335,14 @@ button {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  flex-shrink: 0;
   min-width: 0;
 }
 
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--color-charcoal);
@@ -355,11 +368,18 @@ button {
   min-width: 0;
 }
 
+.header-actions .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  min-height: 44px;
+  min-width: 44px;
   font-size: 0.875rem;
   font-weight: 600;
   padding: 0.65rem 1.25rem;
@@ -415,6 +435,8 @@ button {
 .btn-sm {
   font-size: 0.8125rem;
   padding: 0.45rem 0.85rem;
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .btn-tel {
@@ -423,6 +445,7 @@ button {
   border: 1px solid var(--color-border);
   font-weight: 700;
   min-height: 44px;
+  min-width: 44px;
 }
 
 .btn-tel:hover {
@@ -435,6 +458,7 @@ button {
   border: 1px solid #20ba5a;
   font-weight: 700;
   min-height: 44px;
+  min-width: 44px;
 }
 
 .btn-whatsapp:hover {
@@ -454,11 +478,23 @@ button {
   color: var(--color-petrol);
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .mobile-nav-toggle svg {
   width: 22px;
   height: 22px;
+}
+
+/* Collapsed Header State (Active when controls cannot fit without overflow/overlap) */
+.site-header.is-collapsed .primary-nav,
+.site-header.is-collapsed .header-actions .btn-tel,
+.site-header.is-collapsed .header-actions .btn-whatsapp {
+  display: none;
+}
+
+.site-header.is-collapsed .mobile-nav-toggle {
+  display: flex;
 }
 
 /* ==========================================================================
@@ -470,6 +506,7 @@ button {
   right: 0;
   bottom: 0;
   width: min(85vw, 360px);
+  max-width: 100vw;
   background-color: var(--color-ivory);
   box-shadow: -4px 0 30px rgba(0, 0, 0, 0.25);
   z-index: 2000;
@@ -478,12 +515,17 @@ button {
   transform: translateX(100%);
   transition: transform var(--transition-normal);
   visibility: hidden;
+  overflow-x: hidden;
   border-left: 1px solid var(--color-border);
+}
+
+.mobile-drawer.is-open,
+.mobile-drawer.is-open * {
+  visibility: visible;
 }
 
 .mobile-drawer.is-open {
   transform: translateX(0);
-  visibility: visible;
 }
 
 .mobile-drawer-backdrop {
@@ -506,19 +548,25 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--color-border);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .mobile-drawer-close {
   background: transparent;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: 0.4rem;
+  padding: 0.5rem;
+  min-width: 44px;
+  min-height: 44px;
   color: var(--color-charcoal);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .mobile-drawer-nav {
@@ -528,6 +576,8 @@ button {
   gap: 0.5rem;
   overflow-y: auto;
   flex-grow: 1;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .mobile-nav-item {
@@ -536,15 +586,20 @@ button {
   color: var(--color-charcoal);
   text-decoration: none;
   padding: 0.75rem 1rem;
+  min-height: 44px;
   border-radius: var(--radius-sm);
   transition: background-color var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .mobile-nav-item:hover,
-.mobile-nav-item:focus {
+.mobile-nav-item:focus,
+.mobile-nav-item.is-active {
   background-color: var(--color-ivory-warm);
   color: var(--color-petrol);
 }
@@ -556,6 +611,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* ==========================================================================
@@ -883,9 +940,11 @@ button {
 
 .category-tiles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
   gap: 0.85rem;
   margin-bottom: 2rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .category-tile {
@@ -901,9 +960,13 @@ button {
   gap: 0.6rem;
   transition: all var(--transition-fast);
   color: var(--color-charcoal);
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
 }
 
-.category-tile:hover {
+.category-tile:hover,
+.category-tile.is-active {
   border-color: var(--color-brass);
   background-color: var(--color-ivory-warm);
   transform: translateY(-2px);
@@ -941,6 +1004,7 @@ button {
    ========================================================================== */
 .catalogue-section {
   padding-bottom: clamp(4rem, 7vw, 6rem);
+  scroll-margin-top: calc(var(--header-height) + 0.5rem);
 }
 
 .catalogue-controls-wrapper {
@@ -963,6 +1027,8 @@ button {
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Category Filter Pills */
@@ -974,6 +1040,8 @@ button {
   padding-bottom: 4px;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .filter-pills-scroll::-webkit-scrollbar {
@@ -986,6 +1054,10 @@ button {
 
 .filter-pill {
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   font-size: 0.825rem;
   font-weight: 600;
   padding: 0.45rem 0.95rem;
@@ -994,6 +1066,7 @@ button {
   background-color: var(--color-white);
   color: var(--color-charcoal);
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .filter-pill:hover {
@@ -1010,13 +1083,17 @@ button {
 /* Search Box */
 .catalogue-search-box {
   position: relative;
-  min-width: 240px;
+  min-width: min(240px, 100%);
   max-width: 320px;
+  width: 100%;
   flex-grow: 1;
 }
 
 .catalogue-search-input {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
   font-size: 0.85rem;
   padding: 0.5rem 0.75rem 0.5rem 2.25rem;
   border: 1px solid var(--color-border);
@@ -1048,9 +1125,13 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-bottom: 1.5rem;
   font-size: 0.85rem;
   color: var(--color-charcoal-muted);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .catalogue-active-filter {
@@ -1063,8 +1144,10 @@ button {
    ========================================================================== */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 1.75rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .product-card {
@@ -1076,6 +1159,8 @@ button {
   flex-direction: column;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
   position: relative;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .product-card:hover {
@@ -1151,6 +1236,8 @@ button {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .product-collection-eyebrow {
@@ -1168,6 +1255,7 @@ button {
   color: var(--color-petrol-deep);
   line-height: 1.25;
   margin-bottom: 0.5rem;
+  overflow-wrap: break-word;
 }
 
 .product-card-desc {
@@ -1176,6 +1264,7 @@ button {
   line-height: 1.5;
   margin-bottom: 1rem;
   flex-grow: 1;
+  overflow-wrap: break-word;
 }
 
 /* Specification / Notes Strip */
@@ -1187,11 +1276,14 @@ button {
   margin-bottom: 1rem;
   color: var(--color-charcoal);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  overflow-wrap: break-word;
 }
 
 /* Variant Selector Box */
 .variant-selector-wrapper {
   margin-bottom: 1rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .variant-label {
@@ -1206,6 +1298,9 @@ button {
 
 .variant-select {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
   font-size: 0.825rem;
   padding: 0.45rem 0.65rem;
   border: 1px solid var(--color-border);
@@ -1213,6 +1308,9 @@ button {
   background-color: var(--color-white);
   color: var(--color-charcoal);
   cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   transition: border-color var(--transition-fast);
 }
 
@@ -1221,11 +1319,31 @@ button {
   outline: none;
 }
 
+.variant-selected-label,
+.form-select-selected-label {
+  margin-top: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.775rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-petrol-deep);
+  background-color: var(--color-ivory);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+  max-width: 100%;
+}
+
 /* Add-ons List */
 .product-addons-wrapper {
   margin-bottom: 1.25rem;
   padding-top: 0.75rem;
   border-top: 1px dashed var(--color-border);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .product-addons-title {
@@ -1248,12 +1366,14 @@ button {
   font-size: 0.775rem;
   display: flex;
   justify-content: space-between;
+  gap: 0.5rem;
   color: var(--color-charcoal);
 }
 
 .product-addon-price {
   font-weight: 600;
   color: var(--color-petrol);
+  flex-shrink: 0;
 }
 
 /* Product Card Actions */
@@ -1297,7 +1417,7 @@ button {
   border-bottom: 1px solid var(--color-border);
   padding-top: clamp(3.5rem, 6vw, 5.5rem);
   padding-bottom: clamp(3.5rem, 6vw, 5.5rem);
-  scroll-margin-top: 60px;
+  scroll-margin-top: calc(var(--header-height) + 1rem);
 }
 
 .showroom-grid {
@@ -1305,6 +1425,13 @@ button {
   grid-template-columns: 0.95fr 1.05fr;
   gap: clamp(2rem, 5vw, 4rem);
   align-items: start;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.showroom-grid > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Left: Showroom Information */
@@ -1312,18 +1439,22 @@ button {
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .showroom-intro h2 {
   font-size: clamp(2rem, 3.5vw, 2.85rem);
   color: var(--color-petrol-deep);
   margin-bottom: 0.75rem;
+  overflow-wrap: break-word;
 }
 
 .showroom-intro p {
   font-size: 1rem;
   color: var(--color-charcoal-muted);
   line-height: 1.6;
+  overflow-wrap: break-word;
 }
 
 /* Direct Ordering Protocol Banner */
@@ -1334,6 +1465,8 @@ button {
   border-radius: var(--radius-sm);
   padding: 1.25rem;
   box-shadow: var(--shadow-sm);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .direct-order-notice h4 {
@@ -1351,6 +1484,7 @@ button {
   width: 18px;
   height: 18px;
   fill: var(--color-green);
+  flex-shrink: 0;
 }
 
 .direct-order-notice p {
@@ -1364,6 +1498,8 @@ button {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .contact-card {
@@ -1375,6 +1511,8 @@ button {
   align-items: flex-start;
   gap: 1rem;
   transition: border-color var(--transition-fast);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .contact-card:hover {
@@ -1401,6 +1539,9 @@ button {
 .contact-card-text {
   display: flex;
   flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .contact-card-label {
@@ -1409,7 +1550,7 @@ button {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-charcoal-light);
-  margin-bottom: 0.15rem;
+  margin-bottom: 0.05rem;
 }
 
 .contact-card-val {
@@ -1417,6 +1558,19 @@ button {
   font-weight: 700;
   color: var(--color-petrol-deep);
   text-decoration: none;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+a.contact-card-val {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.25rem 0;
+  line-height: 1.3;
 }
 
 .contact-card-val:hover {
@@ -1426,7 +1580,8 @@ button {
 .contact-card-sub {
   font-size: 0.775rem;
   color: var(--color-charcoal-muted);
-  margin-top: 0.15rem;
+  margin-top: 0.05rem;
+  overflow-wrap: break-word;
 }
 
 .contact-social-links {
@@ -1435,18 +1590,25 @@ button {
   gap: 0.5rem;
   margin-top: 0.25rem;
   margin-bottom: 0.25rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .contact-social-item {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--color-petrol-deep);
   text-decoration: none;
   min-height: 44px;
+  min-width: 44px;
   line-height: 1.2;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .contact-social-item:hover {
@@ -1463,26 +1625,35 @@ button {
   background-color: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: clamp(1.5rem, 3.5vw, 2.5rem);
+  padding: clamp(1.25rem, 3.5vw, 2.5rem);
   box-shadow: var(--shadow-lg);
   position: relative;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  overflow: hidden;
+  scroll-margin-top: calc(var(--header-height) + 1rem);
 }
 
 .enquiry-card-header {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--color-border);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .enquiry-card-header h3 {
   font-size: 1.5rem;
   color: var(--color-petrol-deep);
   margin-bottom: 0.25rem;
+  overflow-wrap: break-word;
 }
 
 .enquiry-card-header p {
   font-size: 0.85rem;
   color: var(--color-charcoal-muted);
+  overflow-wrap: break-word;
 }
 
 /* Highlighted Selection Banner */
@@ -1495,8 +1666,12 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
   transition: all var(--transition-normal);
+  min-width: 0;
+  max-width: 100%;
+  scroll-margin-top: calc(var(--header-height) + 1rem);
 }
 
 .selected-product-banner.is-highlighted {
@@ -1513,6 +1688,9 @@ button {
 .selected-product-info {
   display: flex;
   flex-direction: column;
+  flex: 1 1 180px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .selected-badge-label {
@@ -1527,6 +1705,10 @@ button {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-petrol-deep);
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .selected-badge-price {
@@ -1542,6 +1724,12 @@ button {
   text-decoration: underline;
   cursor: pointer;
   white-space: nowrap;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.4rem 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .selected-badge-clear:hover {
@@ -1549,11 +1737,35 @@ button {
 }
 
 /* Form Layout */
+#enquiryForm {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
+.form-error-summary {
+  background-color: #fff5f5;
+  border: 1px solid #f0b4b4;
+  border-left: 4px solid #c92a2a;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #8b1e1e;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   margin-bottom: 1rem;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
 }
 
 .form-group {
@@ -1561,6 +1773,24 @@ button {
   flex-direction: column;
   gap: 0.35rem;
   min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
+.form-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
+.form-fieldset legend.form-label {
+  padding: 0;
+  margin-bottom: 0.35rem;
+  display: block;
+  width: 100%;
 }
 
 .form-group-full {
@@ -1571,10 +1801,17 @@ button {
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-charcoal);
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .form-label span.req {
   color: #c92a2a;
+}
+
+.form-label span.req[hidden] {
+  display: none;
 }
 
 .form-input,
@@ -1583,6 +1820,7 @@ button {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  min-height: 44px;
   font-size: 0.875rem;
   padding: 0.65rem 0.85rem;
   border: 1px solid var(--color-border);
@@ -1590,6 +1828,31 @@ button {
   background-color: var(--color-white);
   color: var(--color-charcoal);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-select {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.form-input.is-invalid,
+.form-select.is-invalid,
+.form-textarea.is-invalid,
+.form-input[aria-invalid="true"],
+.form-select[aria-invalid="true"],
+.form-textarea[aria-invalid="true"] {
+  border-color: #c92a2a;
+  background-color: #fffafa;
+}
+
+.form-field-error {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: #b42318;
+  margin-top: 0.15rem;
+  line-height: 1.35;
+  overflow-wrap: break-word;
 }
 
 .form-input:focus,
@@ -1607,18 +1870,42 @@ button {
 
 .form-radio-group {
   display: flex;
-  gap: 1.25rem;
+  gap: 0.65rem;
   flex-wrap: wrap;
   padding-top: 0.25rem;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
 }
 
 .form-radio-label {
   font-size: 0.8125rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-ivory);
   cursor: pointer;
   color: var(--color-charcoal);
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+.form-radio-label input[type="radio"] {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-petrol);
+}
+
+.form-radio-label span {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .form-submit-row {
@@ -1626,10 +1913,13 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .form-submit-row .btn {
   width: 100%;
+  max-width: 100%;
   padding: 0.85rem;
   font-size: 1rem;
 }
@@ -1642,11 +1932,80 @@ button {
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .form-security-note svg {
   width: 14px;
   height: 14px;
+  flex-shrink: 0;
+}
+
+.form-security-note span {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.enquiry-feedback-box {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background-color: var(--color-ivory);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.enquiry-feedback-title {
+  color: var(--color-petrol-deep);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.enquiry-feedback-desc {
+  font-size: 0.85rem;
+  color: var(--color-charcoal-muted);
+  margin-bottom: 0.75rem;
+  overflow-wrap: break-word;
+}
+
+.enquiry-summary-pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-family: monospace;
+  font-size: 0.8rem;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  padding: 0.75rem;
+  border-radius: 4px;
+  color: var(--color-charcoal);
+  margin-bottom: 1rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.enquiry-feedback-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.enquiry-feedback-actions .btn {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+.copy-feedback-msg {
+  font-size: 0.8rem;
+  color: var(--color-charcoal-muted);
+  margin-top: 0.5rem;
+  margin-bottom: 0;
 }
 
 /* Confirmation Success Notification */
@@ -1743,13 +2102,30 @@ button {
 .footer-contact-summary {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.15rem;
   font-size: 0.825rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.footer-contact-summary > div {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .footer-contact-summary a {
   color: #E2DDD5;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.25rem 0.15rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .footer-contact-summary a:hover {
@@ -1827,7 +2203,7 @@ button {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.35rem;
 }
 
 .footer-links-list a,
@@ -1837,9 +2213,15 @@ button {
   text-decoration: none;
   transition: color var(--transition-fast);
   text-align: left;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.25rem 0;
 }
 
 .footer-links-list a:hover,
+.footer-links-list a.is-active,
 .footer-links-list button:hover {
   color: var(--color-white);
 }
@@ -1871,7 +2253,10 @@ button {
 .back-to-top-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
+  min-height: 44px;
+  min-width: 44px;
   font-size: 0.8rem;
   color: #E2DDD5;
   text-decoration: none;
@@ -1923,10 +2308,11 @@ button {
   border-radius: var(--radius-md);
   max-width: 640px;
   width: 100%;
+  min-width: 0;
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: var(--shadow-lg);
-  padding: clamp(1.5rem, 3vw, 2.25rem);
+  padding: clamp(1.25rem, 3vw, 2.25rem);
   z-index: 1;
 }
 
@@ -1934,25 +2320,33 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   margin-bottom: 1.25rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--color-border);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .policy-modal-title {
   font-size: 1.35rem;
   color: var(--color-petrol-deep);
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .policy-modal-close {
   background: transparent;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: 0.35rem;
+  padding: 0.5rem;
+  min-width: 44px;
+  min-height: 44px;
   color: var(--color-charcoal);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .policy-modal-content {
@@ -1962,6 +2356,9 @@ button {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .policy-modal-content strong {
@@ -2075,6 +2472,7 @@ button {
   }
 
   .catalogue-search-box {
+    min-width: 0;
     max-width: 100%;
   }
 
@@ -2093,6 +2491,27 @@ button {
     max-width: calc(100vw - 110px);
   }
 
+  .mobile-drawer-header {
+    padding: 1rem 1rem;
+    gap: 0.65rem;
+  }
+
+  .mobile-drawer-header .brand-logo--drawer {
+    width: min(160px, calc(100% - 56px));
+    max-width: calc(100% - 56px);
+  }
+
+  .mobile-drawer-nav,
+  .mobile-drawer-footer {
+    padding: 1rem;
+  }
+
+  .mobile-drawer-footer .btn {
+    white-space: normal;
+    text-align: center;
+    padding: 0.65rem 0.75rem;
+  }
+
   .hero-actions {
     flex-direction: column;
     width: 100%;
@@ -2105,6 +2524,60 @@ button {
   .product-grid {
     grid-template-columns: 1fr;
   }
+
+  .enquiry-form-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .contact-card {
+    padding: 0.85rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .form-radio-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .form-radio-label {
+    width: 100%;
+  }
+
+  .selected-product-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .selected-product-banner > div,
+  .selected-product-info {
+    flex: 0 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .selected-badge-clear {
+    align-self: flex-start;
+    padding-left: 0;
+  }
+
+  .enquiry-feedback-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .enquiry-feedback-actions .btn {
+    width: 100%;
+  }
+
+  .policy-modal {
+    padding: 0.75rem;
+  }
+
+  .policy-modal-box {
+    padding: 1.25rem 1rem;
+  }
 }
 
 /* ==========================================================================
@@ -2114,7 +2587,8 @@ button {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 
