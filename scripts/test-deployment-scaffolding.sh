@@ -1509,7 +1509,7 @@ grep -q '"status": "aborted_smoke_failed_docroot_restored"' "${MOCK_BACKUPS}/${T
 reset_test_release_state "${TEST_REL}"
 rm -rf "${MUTATE_CSS_RSYNC_BIN}"
 
-# 8a3. Independent Reproduction: Preflight node availability BEFORE any mutation in sandbox and production scripts
+# 8a3. Independent Reproduction: Trusted No-Node Deployment/Smoke Success vs Untrusted/Standalone No-Node Failure
 NO_NODE_PATH_BIN="${TEST_ENV_DIR}/no-node-path-bin"
 mkdir -p "${NO_NODE_PATH_BIN}"
 python3 - "${PATH}" "${NO_NODE_PATH_BIN}" <<'PYEOF'
@@ -1535,63 +1535,102 @@ exit 127
 EOF
 chmod +x "${BROKEN_NODE_BIN}/node"
 
-for node_test_path in "${NO_NODE_PATH_BIN}" "${BROKEN_NODE_BIN}:${PATH}"; do
+printf 'valid_app_js\n' > "${SMOKE_FIXTURE_MODE_FILE}"
+FIXTURE_TREE_SHA256_PRE="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["tree_sha256"])' "${SMOKE_FIXTURE_DIR}/release-metadata.json")"
+
+for node_test_path in "${NO_NODE_PATH_BIN}" "${BROKEN_NODE_BIN}:${NO_NODE_PATH_BIN}"; do
+  # 1. Trusted no-node sandbox deployment MUST succeed (trusted bytes syntax-checked in CI & bound via STAGE_DIR)
   find "${MOCK_SANDBOX}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
   printf 'GBA Furniture old' > "${MOCK_SANDBOX}/index.html"
   printf 'ok\n' > "${MOCK_SANDBOX}/old-sentinel"
-  NO_NODE_SBX_OUT=""
-  if NO_NODE_SBX_OUT="$(PATH="${node_test_path}" "${SCRIPT_DIR}/remote-deploy-sandbox.sh" "${TARBALL}" "http://127.0.0.1:${SANDBOX_PORT}/release-preview" "${TARBALL_HASH}" "${TEST_REL}" "${TEST_GIT_SHA}" 2>&1)"; then
-    echo "  ✗ FAIL: remote-deploy-sandbox.sh succeeded when node was unavailable!" >&2
+  if ! PATH="${node_test_path}" "${SCRIPT_DIR}/remote-deploy-sandbox.sh" "${TARBALL}" "http://127.0.0.1:${SANDBOX_PORT}/release-preview" "${TARBALL_HASH}" "${TEST_REL}" "${TEST_GIT_SHA}" >/dev/null; then
+    echo "  ✗ FAIL: remote-deploy-sandbox.sh failed when remote node was unavailable despite trusted asset binding!" >&2
     exit 1
   fi
-  grep -F -q "Required 'node' runtime" <<< "${NO_NODE_SBX_OUT}" || {
-    echo "  ✗ FAIL: remote-deploy-sandbox.sh did not emit preflight node availability error:" >&2
-    echo "${NO_NODE_SBX_OUT}" >&2
-    exit 1
-  }
-  if grep -F -q "Initiating automatic restoration of previous sandbox state" <<< "${NO_NODE_SBX_OUT}"; then
-    echo "  ✗ FAIL: remote-deploy-sandbox.sh mutated sandbox before checking node availability!" >&2
-    exit 1
-  fi
-  [ -f "${MOCK_SANDBOX}/old-sentinel" ] && [ ! -e "${MOCK_SANDBOX}/styles.css" ] && [ "$(cat "${MOCK_SANDBOX}/index.html")" = "GBA Furniture old" ] || {
-    echo "  ✗ FAIL: Sandbox state was modified when node preflight should have aborted before mutation!" >&2
+  [ ! -e "${MOCK_SANDBOX}/old-sentinel" ] && [ -f "${MOCK_SANDBOX}/script.js" ] && [ -f "${MOCK_SANDBOX}/release-metadata.json" ] || {
+    echo "  ✗ FAIL: Sandbox state was not updated during trusted no-node sandbox deployment!" >&2
     exit 1
   }
   LEFTOVER_SBX_RUNS="$(find "${SANDBOX_RECOVERY_ROOT}" -maxdepth 1 -name 'run-*' 2>/dev/null || true)"
   [ -z "${LEFTOVER_SBX_RUNS}" ] || {
-    echo "  ✗ FAIL: Sandbox created recovery run directory before node preflight!" >&2
+    echo "  ✗ FAIL: Sandbox left recovery run directory behind after successful trusted no-node deploy!" >&2
     exit 1
   }
 
+  # 2. Trusted no-node production deployment MUST succeed (trusted bytes syntax-checked in CI & bound via RELEASE_DIR)
   populate_mock_wordpress
   printf 'ok\n' > "${MOCK_DOCROOT}/old-sentinel"
   : > "${MYSQL_LOG}"
-  NO_NODE_PROD_OUT=""
-  if NO_NODE_PROD_OUT="$(PATH="${node_test_path}" "${SCRIPT_DIR}/remote-deploy-production.sh" "${TEST_REL}" "${TARBALL}" "http://127.0.0.1:${TEST_PORT}" "${TEST_GIT_SHA}" "${TARBALL_HASH}" 2>&1)"; then
-    echo "  ✗ FAIL: remote-deploy-production.sh succeeded when node was unavailable!" >&2
+  if ! PATH="${node_test_path}" "${SCRIPT_DIR}/remote-deploy-production.sh" "${TEST_REL}" "${TARBALL}" "http://127.0.0.1:${TEST_PORT}" "${TEST_GIT_SHA}" "${TARBALL_HASH}" >/dev/null; then
+    echo "  ✗ FAIL: remote-deploy-production.sh failed when remote node was unavailable despite trusted asset binding!" >&2
     exit 1
   fi
-  grep -F -q "Required 'node' runtime" <<< "${NO_NODE_PROD_OUT}" || {
-    echo "  ✗ FAIL: remote-deploy-production.sh did not emit preflight node availability error:" >&2
-    echo "${NO_NODE_PROD_OUT}" >&2
+  [ ! -e "${MOCK_DOCROOT}/old-sentinel" ] && [ ! -e "${MOCK_DOCROOT}/wp-config.php" ] && [ -f "${MOCK_DOCROOT}/script.js" ] || {
+    echo "  ✗ FAIL: Production docroot was not updated during trusted no-node production deployment!" >&2
     exit 1
   }
-  if grep -F -q "Initiating automatic restoration of previous production state" <<< "${NO_NODE_PROD_OUT}"; then
-    echo "  ✗ FAIL: remote-deploy-production.sh mutated docroot before checking node availability!" >&2
+  grep -q '"status": "production_live_db_purged"' "${MOCK_BACKUPS}/${TEST_REL}_manifest.json" && grep -q '"smoke_test_status": "passed"' "${MOCK_BACKUPS}/${TEST_REL}_manifest.json" || {
+    echo "  ✗ FAIL: Production manifest did not record production_live_db_purged / smoke_test_status passed during trusted no-node production deployment!" >&2
+    exit 1
+  }
+  reset_test_release_state "${TEST_REL}"
+
+  # 3. Trusted no-node direct smoke-test.sh MUST succeed with TRUSTED_ASSET_ROOT (and EXPECTED_ASSET_ROOT)
+  printf 'valid_app_js\n' > "${SMOKE_FIXTURE_MODE_FILE}"
+  if ! PATH="${node_test_path}" \
+       SMOKE_DEPLOYMENT_MODE="1" \
+       EXPECTED_RELEASE_ID="${TEST_REL}" \
+       EXPECTED_GIT_SHA="${TEST_GIT_SHA}" \
+       EXPECTED_TREE_SHA256="${FIXTURE_TREE_SHA256_PRE}" \
+       EXPECTED_METADATA_FILE="${SMOKE_FIXTURE_DIR}/release-metadata.json" \
+       TRUSTED_ASSET_ROOT="${SMOKE_FIXTURE_DIR}" \
+       "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" >/dev/null; then
+    echo "  ✗ FAIL: smoke-test.sh in trusted mode (TRUSTED_ASSET_ROOT) failed when node was unavailable!" >&2
     exit 1
   fi
-  [ -f "${MOCK_DOCROOT}/old-sentinel" ] && [ -f "${MOCK_DOCROOT}/wp-config.php" ] && [ ! -e "${MOCK_DOCROOT}/styles.css" ] || {
-    echo "  ✗ FAIL: Production docroot was modified when node preflight should have aborted before mutation!" >&2
+
+  # 4. Trusted no-node MUST still reject invalid or mutated JS via exact byte-size/SHA256 binding
+  for bad_js_mode in "js_invalid_syntax_app_mime" "versioned_js_mutated_valid"; do
+    printf '%s\n' "${bad_js_mode}" > "${SMOKE_FIXTURE_MODE_FILE}"
+    TRUSTED_NONODE_BAD_JS_OUT=""
+    if TRUSTED_NONODE_BAD_JS_OUT="$(
+      PATH="${node_test_path}" \
+      SMOKE_DEPLOYMENT_MODE="1" \
+      EXPECTED_RELEASE_ID="${TEST_REL}" \
+      EXPECTED_GIT_SHA="${TEST_GIT_SHA}" \
+      EXPECTED_TREE_SHA256="${FIXTURE_TREE_SHA256_PRE}" \
+      EXPECTED_METADATA_FILE="${SMOKE_FIXTURE_DIR}/release-metadata.json" \
+      TRUSTED_ASSET_ROOT="${SMOKE_FIXTURE_DIR}" \
+        "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1
+    )"; then
+      echo "  ✗ FAIL: Trusted no-node smoke-test.sh accepted '${bad_js_mode}'!" >&2
+      exit 1
+    fi
+    grep -F -q "Trusted byte verification failed for 'script.js'" <<< "${TRUSTED_NONODE_BAD_JS_OUT}" || {
+      echo "  ✗ FAIL: Trusted no-node smoke-test.sh did not report trusted byte mismatch for '${bad_js_mode}':" >&2
+      echo "${TRUSTED_NONODE_BAD_JS_OUT}" >&2
+      exit 1
+    }
+  done
+  printf 'valid_app_js\n' > "${SMOKE_FIXTURE_MODE_FILE}"
+
+  # 5. Untrusted / standalone no-node MUST fail in preflight before any HTTP fetch
+  : > "${SMOKE_FIXTURE_REQ_LOG}"
+  UNTRUSTED_NONODE_OUT=""
+  if UNTRUSTED_NONODE_OUT="$(PATH="${node_test_path}" "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1)"; then
+    echo "  ✗ FAIL: Untrusted/standalone smoke-test.sh succeeded when node was unavailable!" >&2
+    exit 1
+  fi
+  grep -F -q "Required 'node' runtime (with working 'node --check') is unavailable on PATH" <<< "${UNTRUSTED_NONODE_OUT}" || {
+    echo "  ✗ FAIL: Untrusted/standalone smoke-test.sh did not emit preflight node availability error:" >&2
+    echo "${UNTRUSTED_NONODE_OUT}" >&2
     exit 1
   }
-  [ ! -e "${MOCK_BACKUPS}/${TEST_REL}_files.tar.gz" ] && [ ! -e "${MOCK_BACKUPS}/${TEST_REL}_db.sql.gz" ] && [ ! -e "${MOCK_BACKUPS}/${TEST_REL}_manifest.json" ] && [ ! -e "${MOCK_RELEASES}/${TEST_REL}" ] || {
-    echo "  ✗ FAIL: Production created backup/release artifacts before node preflight!" >&2
+  if [ -s "${SMOKE_FIXTURE_REQ_LOG}" ]; then
+    echo "  ✗ FAIL: Untrusted/standalone smoke-test.sh made HTTP request(s) before rejecting missing node runtime:" >&2
+    cat "${SMOKE_FIXTURE_REQ_LOG}" >&2
     exit 1
-  }
-  [ ! -s "${MYSQL_LOG}" ] || {
-    echo "  ✗ FAIL: Production executed MySQL commands before node preflight!" >&2
-    exit 1
-  }
+  fi
 done
 rm -rf "${NO_NODE_PATH_BIN}" "${BROKEN_NODE_BIN}"
 
@@ -1772,21 +1811,48 @@ for invalid_css_entry in "${INVALID_EXACT_TRUSTED_CSS_FIXTURES[@]}"; do
 done
 mv "${SMOKE_FIXTURE_DIR}/styles.css.orig" "${SMOKE_FIXTURE_DIR}/styles.css"
 
-# Verify mandatory trusted binding: unbound standalone, missing EXPECTED_ASSET_ROOT, missing EXPECTED_METADATA_FILE, and mismatched paths MUST fail immediately
-UNBOUND_ERR=""
-if UNBOUND_ERR="$("${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1)"; then
-  echo "  ✗ FAIL: smoke-test.sh passed in unbound standalone mode without EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT!" >&2
-  exit 1
-fi
-grep -F -q "Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set" <<< "${UNBOUND_ERR}" || {
-  echo "  ✗ FAIL: smoke-test.sh did not emit mandatory binding error when both vars were absent:" >&2
-  echo "${UNBOUND_ERR}" >&2
+# Verify untrusted/standalone mode with working node passes valid JS and rejects invalid JS via node --check,
+# and verify deployment mode (SMOKE_DEPLOYMENT_MODE=1) & partial/mismatched trusted bindings fail immediately in preflight.
+printf 'valid_app_js\n' > "${SMOKE_FIXTURE_MODE_FILE}"
+"${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" >/dev/null || {
+  echo "  ✗ FAIL: Untrusted/standalone smoke-test.sh with working node rejected valid static assets!" >&2
   exit 1
 }
 
+for untrusted_bad_js in "js_invalid_syntax_app_mime" "js_invalid_syntax_text_mime"; do
+  printf '%s\n' "${untrusted_bad_js}" > "${SMOKE_FIXTURE_MODE_FILE}"
+  UNTRUSTED_BAD_JS_OUT=""
+  if UNTRUSTED_BAD_JS_OUT="$("${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1)"; then
+    echo "  ✗ FAIL: Untrusted/standalone smoke-test.sh accepted invalid JS in mode '${untrusted_bad_js}'!" >&2
+    exit 1
+  fi
+  grep -F -q "node --check syntax check failed" <<< "${UNTRUSTED_BAD_JS_OUT}" || {
+    echo "  ✗ FAIL: Untrusted/standalone smoke-test.sh did not reject invalid JS via node --check in mode '${untrusted_bad_js}':" >&2
+    echo "${UNTRUSTED_BAD_JS_OUT}" >&2
+    exit 1
+  }
+done
+printf 'valid_app_js\n' > "${SMOKE_FIXTURE_MODE_FILE}"
+
+: > "${SMOKE_FIXTURE_REQ_LOG}"
+UNBOUND_ERR=""
+if UNBOUND_ERR="$(SMOKE_DEPLOYMENT_MODE="1" "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1)"; then
+  echo "  ✗ FAIL: smoke-test.sh passed in SMOKE_DEPLOYMENT_MODE=1 without EXPECTED_METADATA_FILE and TRUSTED_ASSET_ROOT!" >&2
+  exit 1
+fi
+grep -F -q "Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set" <<< "${UNBOUND_ERR}" || {
+  echo "  ✗ FAIL: smoke-test.sh did not emit mandatory binding error when both vars were absent in deployment mode:" >&2
+  echo "${UNBOUND_ERR}" >&2
+  exit 1
+}
+if [ -s "${SMOKE_FIXTURE_REQ_LOG}" ]; then
+  echo "  ✗ FAIL: smoke-test.sh made HTTP request(s) before rejecting missing deployment-mode bindings!" >&2
+  exit 1
+fi
+
 ONLY_META_ERR=""
 if ONLY_META_ERR="$(EXPECTED_METADATA_FILE="${SMOKE_FIXTURE_DIR}/release-metadata.json" "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1)"; then
-  echo "  ✗ FAIL: smoke-test.sh passed when EXPECTED_ASSET_ROOT was omitted!" >&2
+  echo "  ✗ FAIL: smoke-test.sh passed when EXPECTED_ASSET_ROOT / TRUSTED_ASSET_ROOT was omitted!" >&2
   exit 1
 fi
 grep -F -q "Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set" <<< "${ONLY_META_ERR}" || {
@@ -1795,16 +1861,18 @@ grep -F -q "Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE
   exit 1
 }
 
-ONLY_ROOT_ERR=""
-if ONLY_ROOT_ERR="$(EXPECTED_ASSET_ROOT="${SMOKE_FIXTURE_DIR}" "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1)"; then
-  echo "  ✗ FAIL: smoke-test.sh passed when EXPECTED_METADATA_FILE was omitted!" >&2
-  exit 1
-fi
-grep -F -q "Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set" <<< "${ONLY_ROOT_ERR}" || {
-  echo "  ✗ FAIL: smoke-test.sh did not emit mandatory binding error when EXPECTED_METADATA_FILE was omitted:" >&2
-  echo "${ONLY_ROOT_ERR}" >&2
-  exit 1
-}
+for only_root_var in "EXPECTED_ASSET_ROOT" "TRUSTED_ASSET_ROOT"; do
+  ONLY_ROOT_ERR=""
+  if ONLY_ROOT_ERR="$(env "${only_root_var}=${SMOKE_FIXTURE_DIR}" "${SCRIPT_DIR}/smoke-test.sh" "http://127.0.0.1:${SMOKE_FIXTURE_PORT}" 2>&1)"; then
+    echo "  ✗ FAIL: smoke-test.sh passed when EXPECTED_METADATA_FILE was omitted (${only_root_var} set)!" >&2
+    exit 1
+  fi
+  grep -F -q "Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set" <<< "${ONLY_ROOT_ERR}" || {
+    echo "  ✗ FAIL: smoke-test.sh did not emit mandatory binding error when EXPECTED_METADATA_FILE was omitted (${only_root_var} set):" >&2
+    echo "${ONLY_ROOT_ERR}" >&2
+    exit 1
+  }
+done
 
 OTHER_TRUSTED_DIR="${TEST_ENV_DIR}/other-trusted-dir"
 mkdir -p "${OTHER_TRUSTED_DIR}"

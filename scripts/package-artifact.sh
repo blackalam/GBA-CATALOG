@@ -674,6 +674,12 @@ assert_no_symlinks_in_tree "${STAGE_DIR}" "staged release directory"
 find "${STAGE_DIR}" -type d -exec chmod 755 {} +
 find "${STAGE_DIR}" -type f -exec chmod 644 {} +
 
+# Verify staged script.js syntax via node --check in CI/packaging before sealing tree_sha256 & checksums
+if ! command -v node >/dev/null 2>&1 || ! node --check < "${STAGE_DIR}/script.js" >/dev/null 2>&1; then
+  echo "ERROR: Staged script.js failed JavaScript syntax verification (node --check) during artifact packaging!" >&2
+  exit 1
+fi
+
 # Compute deterministic static payload tree_sha256 over the 18 static payload files
 TREE_SHA256="$(python3 - "${STAGE_DIR}" <<'PYEOF'
 import hashlib, os, sys

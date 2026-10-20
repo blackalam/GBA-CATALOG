@@ -3,14 +3,19 @@
 # GBA Furniture — Public HTTP Smoke Test Suite
 #
 # Usage:
-#   EXPECTED_METADATA_FILE=<PATH> EXPECTED_ASSET_ROOT=<DIR> \
+#   Deployment / Trusted Mode (mandatory in remote-deploy-sandbox.sh & remote-deploy-production.sh):
+#     SMOKE_DEPLOYMENT_MODE=1 EXPECTED_METADATA_FILE=<PATH> TRUSTED_ASSET_ROOT=<DIR> \
+#       ./scripts/smoke-test.sh <BASE_URL> [CURL_EXTRA_ARGS...]
+#     (EXPECTED_ASSET_ROOT=<DIR> is also accepted as an alias for TRUSTED_ASSET_ROOT)
+#
+#   Untrusted / Standalone Mode (requires a working 'node --check' binary on PATH):
 #     ./scripts/smoke-test.sh <BASE_URL> [CURL_EXTRA_ARGS...]
 #
-# Mandatory Trusted Bindings (required for all runs; always supplied by deploy scripts):
+# Trusted Bindings (mandatory in deployment mode; always supplied by deploy scripts):
 #   EXPECTED_METADATA_FILE — Canonical symlink-free path to checksum-verified
-#                            release-metadata.json (<EXPECTED_ASSET_ROOT>/release-metadata.json)
-#   EXPECTED_ASSET_ROOT    — Canonical symlink-free path to checksum-verified
-#                            staged/release asset root for authoritative exact
+#                            release-metadata.json (<TRUSTED_ASSET_ROOT>/release-metadata.json)
+#   TRUSTED_ASSET_ROOT     — Canonical symlink-free path to checksum-verified
+#   (or EXPECTED_ASSET_ROOT) staged/release asset root for authoritative exact
 #                            byte-length & SHA256 verification across every
 #                            local public endpoint (underlying & versioned)
 #
@@ -21,13 +26,20 @@
 #
 # Enforces:
 #   - Strict URL format validation before making requests.
-#   - Mandatory preflight & per-endpoint validation of EXPECTED_METADATA_FILE and
-#     EXPECTED_ASSET_ROOT: fails immediately before the first HTTP fetch when either is
-#     absent or mismatched, if ANY existing path component/ancestor is a symlink before
-#     canonicalization, or if the recursive lstat/find scan of the complete
-#     EXPECTED_ASSET_ROOT tree encounters any symlink anywhere (including unreferenced
-#     nested files/directories, without following it).
-#   - Preflight verification that 'node --check' is available on PATH.
+#   - In deployment/trusted mode, mandatory preflight & per-endpoint validation of
+#     EXPECTED_METADATA_FILE and TRUSTED_ASSET_ROOT (EXPECTED_ASSET_ROOT): fails
+#     immediately before the first HTTP fetch when either is absent or mismatched, if ANY
+#     existing path component/ancestor is a symlink before canonicalization, or if the
+#     recursive lstat/find scan of the complete trusted asset root tree encounters any
+#     symlink anywhere (including unreferenced nested files/directories, without following it).
+#   - JavaScript verification:
+#       * In deployment/trusted mode with mandatory EXPECTED_METADATA_FILE and
+#         TRUSTED_ASSET_ROOT (EXPECTED_ASSET_ROOT) exact byte-size and SHA256 binding,
+#         allows JS validation without a remote 'node' binary because trusted bytes were
+#         syntax-checked in CI (and still runs 'node --check' as defense-in-depth when
+#         'node' is available on PATH).
+#       * In untrusted/standalone mode, strictly requires a working 'node --check' binary
+#         in preflight before any HTTP fetch and rejects invalid JS syntax.
 #   - Separate curl exit status capture for every endpoint and /release-metadata.json
 #     fetch (never swallowing nonzero exit codes such as incomplete transfer 18
 #     or concatenating fallback strings into curl metadata).
@@ -76,20 +88,37 @@ if [[ ! "${BASE_URL}" =~ ^https?://[a-zA-Z0-9.-]+(:[0-9]{1,5})?(/[a-zA-Z0-9._/-]
   exit 1
 fi
 
-# Require BOTH EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT, reject any symlink component/ancestor before canonicalization,
-# and recursively scan the complete EXPECTED_ASSET_ROOT tree with lstat/find semantics before the first HTTP fetch
-if [ -z "${EXPECTED_METADATA_FILE:-}" ] || [ -z "${EXPECTED_ASSET_ROOT:-}" ]; then
-  echo "CRITICAL ERROR: Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set." >&2
-  exit 1
+# Support TRUSTED_ASSET_ROOT and EXPECTED_ASSET_ROOT interchangeably.
+# Deployment/trusted mode is active when SMOKE_DEPLOYMENT_MODE=1 or when any trusted binding var is set.
+RESOLVED_ASSET_ROOT="${TRUSTED_ASSET_ROOT:-${EXPECTED_ASSET_ROOT:-}}"
+TRUSTED_MODE=0
+if [ "${SMOKE_DEPLOYMENT_MODE:-0}" = "1" ] || [ -n "${EXPECTED_METADATA_FILE:-}" ] || [ -n "${TRUSTED_ASSET_ROOT:-}" ] || [ -n "${EXPECTED_ASSET_ROOT:-}" ]; then
+  TRUSTED_MODE=1
 fi
 
-BINDING_PREFLIGHT_ERR=""
-if ! BINDING_PREFLIGHT_ERR="$(
-  python3 - "${EXPECTED_METADATA_FILE}" "${EXPECTED_ASSET_ROOT}" 2>&1 <<'PYEOF'
+HAS_WORKING_NODE=0
+if command -v node >/dev/null 2>&1 && printf 'void 0;\n' | node --check >/dev/null 2>&1; then
+  HAS_WORKING_NODE=1
+fi
+
+# In deployment/trusted mode, require BOTH EXPECTED_METADATA_FILE and TRUSTED_ASSET_ROOT (or EXPECTED_ASSET_ROOT),
+# reject any symlink component/ancestor before canonicalization, and recursively scan the complete
+# trusted asset root tree with lstat/find semantics before the first HTTP fetch.
+if [ "${TRUSTED_MODE}" -eq 1 ]; then
+  if [ -z "${EXPECTED_METADATA_FILE:-}" ] || [ -z "${RESOLVED_ASSET_ROOT:-}" ]; then
+    echo "CRITICAL ERROR: Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set (or TRUSTED_ASSET_ROOT)." >&2
+    exit 1
+  fi
+
+  BINDING_PREFLIGHT_ERR=""
+  if ! BINDING_PREFLIGHT_ERR="$(
+    python3 - "${EXPECTED_METADATA_FILE}" "${RESOLVED_ASSET_ROOT}" "${TRUSTED_ASSET_ROOT:-}" "${EXPECTED_ASSET_ROOT:-}" 2>&1 <<'PYEOF'
 import os, stat, sys
 
 meta_file_arg = os.fsencode(sys.argv[1]).decode("utf-8", errors="surrogateescape").strip()
 asset_root_arg = os.fsencode(sys.argv[2]).decode("utf-8", errors="surrogateescape").strip()
+trusted_root_arg = os.fsencode(sys.argv[3]).decode("utf-8", errors="surrogateescape").strip()
+expected_root_arg = os.fsencode(sys.argv[4]).decode("utf-8", errors="surrogateescape").strip()
 
 def validate_no_symlink_ancestors(raw_path, label):
     if not raw_path or "\x00" in raw_path:
@@ -171,6 +200,13 @@ try:
     canon_root = validate_no_symlink_ancestors(asset_root_arg, "EXPECTED_ASSET_ROOT")
     if os.path.islink(canon_root) or not os.path.isdir(canon_root):
         raise ValueError(f"EXPECTED_ASSET_ROOT is not a directory: {asset_root_arg!r}")
+    if trusted_root_arg and expected_root_arg:
+        canon_trusted = validate_no_symlink_ancestors(trusted_root_arg, "TRUSTED_ASSET_ROOT")
+        canon_expected = validate_no_symlink_ancestors(expected_root_arg, "EXPECTED_ASSET_ROOT")
+        if canon_trusted != canon_expected:
+            raise ValueError(
+                f"TRUSTED_ASSET_ROOT ({canon_trusted!r}) and EXPECTED_ASSET_ROOT ({canon_expected!r}) mismatch"
+            )
     expected_meta = os.path.join(canon_root, "release-metadata.json")
     if canon_meta != expected_meta:
         raise ValueError(
@@ -178,18 +214,23 @@ try:
             f"(expected {expected_meta!r})"
         )
     validate_no_nested_symlinks(canon_root)
+    trusted_js = os.path.join(canon_root, "script.js")
+    if os.path.islink(trusted_js) or not os.path.isfile(trusted_js) or os.path.getsize(trusted_js) <= 0:
+        raise ValueError(f"Trusted script.js is missing, empty, or a symlink at {trusted_js!r}")
 except Exception as exc:
     sys.stderr.write(str(exc))
     sys.exit(1)
 PYEOF
-)"; then
-  echo "CRITICAL ERROR: ${BINDING_PREFLIGHT_ERR}" >&2
-  exit 1
-fi
-
-if ! command -v node >/dev/null 2>&1 || ! printf 'void 0;\n' | node --check >/dev/null 2>&1; then
-  echo "CRITICAL ERROR: Required 'node' runtime (with working 'node --check') is unavailable on PATH!" >&2
-  exit 1
+  )"; then
+    echo "CRITICAL ERROR: ${BINDING_PREFLIGHT_ERR}" >&2
+    exit 1
+  fi
+else
+  # Untrusted / standalone mode: strictly require a working 'node --check' binary on PATH before any HTTP fetch
+  if [ "${HAS_WORKING_NODE}" -ne 1 ]; then
+    echo "CRITICAL ERROR: Required 'node' runtime (with working 'node --check') is unavailable on PATH for untrusted/standalone smoke verification! Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set (or TRUSTED_ASSET_ROOT) for trusted no-node verification." >&2
+    exit 1
+  fi
 fi
 
 echo "================================================================================"
@@ -303,6 +344,10 @@ check_endpoint() {
       "${content_check}" \
       "${endpoint}" \
       "${EXPECTED_METADATA_FILE:-}" \
+      "${RESOLVED_ASSET_ROOT:-}" \
+      "${TRUSTED_MODE}" \
+      "${HAS_WORKING_NODE}" \
+      "${TRUSTED_ASSET_ROOT:-}" \
       "${EXPECTED_ASSET_ROOT:-}" 2>&1 <<'PYEOF'
 import hashlib, json, os, re, stat, struct, subprocess, sys, xml.etree.ElementTree as ET, zlib
 
@@ -314,6 +359,10 @@ content_check = content_check_bytes.decode("utf-8", errors="replace")
 raw_endpoint = os.fsencode(sys.argv[5]).decode("utf-8", errors="surrogateescape")
 exp_meta_file = os.fsencode(sys.argv[6]).decode("utf-8", errors="surrogateescape").strip()
 exp_asset_root = os.fsencode(sys.argv[7]).decode("utf-8", errors="surrogateescape").strip()
+trusted_mode = sys.argv[8].strip() == "1"
+has_working_node = sys.argv[9].strip() == "1"
+trusted_root_arg = os.fsencode(sys.argv[10]).decode("utf-8", errors="surrogateescape").strip()
+expected_root_arg = os.fsencode(sys.argv[11]).decode("utf-8", errors="surrogateescape").strip()
 
 def resolve_local_public_relpath(ep):
     if "\x00" in ep or "\\" in ep:
@@ -413,6 +462,13 @@ def load_trusted_file(rel_path, meta_file_arg, asset_root_arg):
     canon_root = validate_no_symlink_ancestors(asset_root_arg, "EXPECTED_ASSET_ROOT")
     if os.path.islink(canon_root) or not os.path.isdir(canon_root):
         raise ValueError(f"EXPECTED_ASSET_ROOT is not a directory: {asset_root_arg!r}")
+    if trusted_root_arg and expected_root_arg:
+        canon_trusted = validate_no_symlink_ancestors(trusted_root_arg, "TRUSTED_ASSET_ROOT")
+        canon_expected = validate_no_symlink_ancestors(expected_root_arg, "EXPECTED_ASSET_ROOT")
+        if canon_trusted != canon_expected:
+            raise ValueError(
+                f"TRUSTED_ASSET_ROOT ({canon_trusted!r}) and EXPECTED_ASSET_ROOT ({canon_expected!r}) mismatch"
+            )
     expected_meta = os.path.join(canon_root, "release-metadata.json")
     if canon_meta != expected_meta:
         raise ValueError(
@@ -437,7 +493,10 @@ def load_trusted_file(rel_path, meta_file_arg, asset_root_arg):
 
 try:
     rel_path = resolve_local_public_relpath(raw_endpoint)
-    trusted_bytes, trusted_len, trusted_sha256 = load_trusted_file(rel_path, exp_meta_file, exp_asset_root)
+    if trusted_mode:
+        trusted_bytes, trusted_len, trusted_sha256 = load_trusted_file(rel_path, exp_meta_file, exp_asset_root)
+    else:
+        trusted_bytes, trusted_len, trusted_sha256 = None, None, None
 except Exception as exc:
     sys.stderr.write(str(exc))
     sys.exit(1)
@@ -449,7 +508,7 @@ fetched_len = len(raw_bytes)
 fetched_sha256 = hashlib.sha256(raw_bytes).hexdigest()
 
 def fail(msg):
-    if fetched_len != trusted_len or fetched_sha256 != trusted_sha256:
+    if trusted_mode and (fetched_len != trusted_len or fetched_sha256 != trusted_sha256):
         msg = (
             f"{msg} [trusted byte mismatch for '{rel_path}': "
             f"expected len={trusted_len} sha256={trusted_sha256}, "
@@ -936,22 +995,30 @@ elif asset_kind == "js":
         )
     text = decode_utf8(raw_bytes, "JavaScript")
     reject_html_document(text, "JavaScript", forbid_svg_tag=False)
-    try:
-        js_proc = subprocess.run(
-            ["node", "--check"],
-            input=raw_bytes,
-            capture_output=True,
-            timeout=10,
-        )
-    except Exception as exc:
-        fail(f"JavaScript syntax check (node --check) execution failed: {exc}")
-    if js_proc.returncode != 0:
-        err_text = (js_proc.stderr or js_proc.stdout or b"").decode("utf-8", errors="replace")
-        err_lines = [ln.strip() for ln in err_text.splitlines() if ln.strip()]
-        detail = err_lines[0] if err_lines else f"exit {js_proc.returncode}"
-        fail(
-            f"JavaScript body missing expected script structure (node --check syntax check failed: {detail})"
-        )
+    if not trusted_mode or has_working_node:
+        try:
+            js_proc = subprocess.run(
+                ["node", "--check"],
+                input=raw_bytes,
+                capture_output=True,
+                timeout=10,
+            )
+        except Exception as exc:
+            fail(f"JavaScript syntax check (node --check) execution failed: {exc}")
+        if js_proc.returncode != 0:
+            err_text = (js_proc.stderr or js_proc.stdout or b"").decode("utf-8", errors="replace")
+            err_lines = [ln.strip() for ln in err_text.splitlines() if ln.strip()]
+            detail = err_lines[0] if err_lines else f"exit {js_proc.returncode}"
+            fail(
+                f"JavaScript body missing expected script structure (node --check syntax check failed: {detail})"
+            )
+    else:
+        if fetched_len != trusted_len or fetched_sha256 != trusted_sha256 or raw_bytes != trusted_bytes:
+            fail(
+                f"Trusted byte verification failed for '{rel_path}': "
+                f"expected len={trusted_len} sha256={trusted_sha256}, "
+                f"got len={fetched_len} sha256={fetched_sha256}"
+            )
     if not ("CATALOGUE_DATA" in text and "function" in text and "{" in text and "}" in text and ";" in text):
         fail("JavaScript body missing expected script structure (CATALOGUE_DATA / function)")
     if not content_check:
@@ -1035,7 +1102,7 @@ elif asset_kind in ("jpeg", "jpg"):
 else:
     fail(f"Fail-closed: unsupported or missing asset validation kind '{asset_kind}'")
 
-if fetched_len != trusted_len or fetched_sha256 != trusted_sha256 or raw_bytes != trusted_bytes:
+if trusted_mode and (fetched_len != trusted_len or fetched_sha256 != trusted_sha256 or raw_bytes != trusted_bytes):
     sys.stderr.write(
         f"Trusted byte verification failed for '{rel_path}': "
         f"expected len={trusted_len} sha256={trusted_sha256}, "
@@ -1107,11 +1174,26 @@ check_release_identity() {
       "${EXPECTED_GIT_SHA:-}" \
       "${EXPECTED_TREE_SHA256:-}" \
       "${EXPECTED_METADATA_FILE:-}" \
-      "${EXPECTED_ASSET_ROOT:-}" \
-      "${content_type}" 2>&1 <<'PYEOF'
+      "${RESOLVED_ASSET_ROOT:-}" \
+      "${content_type}" \
+      "${TRUSTED_MODE}" \
+      "${TRUSTED_ASSET_ROOT:-}" \
+      "${EXPECTED_ASSET_ROOT:-}" 2>&1 <<'PYEOF'
 import hashlib, json, os, re, stat, sys
 
-fetched_path, exp_rel, exp_sha, exp_tree, exp_meta_file, exp_asset_root, raw_ct = sys.argv[1:8]
+(
+    fetched_path,
+    exp_rel,
+    exp_sha,
+    exp_tree,
+    exp_meta_file,
+    exp_asset_root,
+    raw_ct,
+    trusted_mode_str,
+    trusted_root_arg,
+    expected_root_arg,
+) = sys.argv[1:11]
+trusted_mode = trusted_mode_str.strip() == "1"
 
 def validate_no_symlink_ancestors(raw_path, label):
     if not raw_path or "\x00" in raw_path:
@@ -1182,23 +1264,32 @@ def validate_no_nested_symlinks(canon_root):
             if stat.S_ISDIR(st.st_mode) and not stat.S_ISLNK(st.st_mode):
                 stack.append(entry_path)
 
-if not exp_meta_file or not exp_asset_root:
-    raise ValueError(
-        "Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set"
-    )
-canon_meta = validate_no_symlink_ancestors(exp_meta_file, "EXPECTED_METADATA_FILE")
-if os.path.islink(canon_meta) or not os.path.isfile(canon_meta):
-    raise ValueError(f"EXPECTED_METADATA_FILE is not a regular file: {exp_meta_file!r}")
-canon_root = validate_no_symlink_ancestors(exp_asset_root, "EXPECTED_ASSET_ROOT")
-if os.path.islink(canon_root) or not os.path.isdir(canon_root):
-    raise ValueError(f"EXPECTED_ASSET_ROOT is not a directory: {exp_asset_root!r}")
-expected_meta_path = os.path.join(canon_root, "release-metadata.json")
-if canon_meta != expected_meta_path:
-    raise ValueError(
-        f"EXPECTED_METADATA_FILE ({canon_meta!r}) and EXPECTED_ASSET_ROOT ({canon_root!r}) mismatch "
-        f"(expected {expected_meta_path!r})"
-    )
-validate_no_nested_symlinks(canon_root)
+canon_meta = None
+if trusted_mode:
+    if not exp_meta_file or not exp_asset_root:
+        raise ValueError(
+            "Mandatory trusted asset binding missing: both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT must be set"
+        )
+    canon_meta = validate_no_symlink_ancestors(exp_meta_file, "EXPECTED_METADATA_FILE")
+    if os.path.islink(canon_meta) or not os.path.isfile(canon_meta):
+        raise ValueError(f"EXPECTED_METADATA_FILE is not a regular file: {exp_meta_file!r}")
+    canon_root = validate_no_symlink_ancestors(exp_asset_root, "EXPECTED_ASSET_ROOT")
+    if os.path.islink(canon_root) or not os.path.isdir(canon_root):
+        raise ValueError(f"EXPECTED_ASSET_ROOT is not a directory: {exp_asset_root!r}")
+    if trusted_root_arg and expected_root_arg:
+        canon_trusted = validate_no_symlink_ancestors(trusted_root_arg, "TRUSTED_ASSET_ROOT")
+        canon_expected = validate_no_symlink_ancestors(expected_root_arg, "EXPECTED_ASSET_ROOT")
+        if canon_trusted != canon_expected:
+            raise ValueError(
+                f"TRUSTED_ASSET_ROOT ({canon_trusted!r}) and EXPECTED_ASSET_ROOT ({canon_expected!r}) mismatch"
+            )
+    expected_meta_path = os.path.join(canon_root, "release-metadata.json")
+    if canon_meta != expected_meta_path:
+        raise ValueError(
+            f"EXPECTED_METADATA_FILE ({canon_meta!r}) and EXPECTED_ASSET_ROOT ({canon_root!r}) mismatch "
+            f"(expected {expected_meta_path!r})"
+        )
+    validate_no_nested_symlinks(canon_root)
 
 media_type = raw_ct.split(";", 1)[0].strip().lower()
 if media_type != "application/json":
@@ -1245,16 +1336,17 @@ if exp_sha and exp_sha != "unspecified" and git_sha != exp_sha:
 if exp_tree and tree_sha != exp_tree:
     raise ValueError(f"Public tree_sha256 mismatch: expected {exp_tree!r}, got {tree_sha!r}")
 
-with open(canon_meta, "rb") as ef:
-    exp_bytes = ef.read()
-exp_len = len(exp_bytes)
-exp_hash = hashlib.sha256(exp_bytes).hexdigest()
-exp_meta = json.loads(exp_bytes.decode("utf-8"), object_pairs_hook=no_dups, parse_constant=no_constants)
-if fetched_len != exp_len or fetched_hash != exp_hash or fetched_bytes != exp_bytes or meta != exp_meta:
-    raise ValueError(
-        f"Public /release-metadata.json byte/hash/content mismatch against deployed candidate "
-        f"(expected len={exp_len} sha256={exp_hash}, fetched len={fetched_len} sha256={fetched_hash})"
-    )
+if trusted_mode:
+    with open(canon_meta, "rb") as ef:
+        exp_bytes = ef.read()
+    exp_len = len(exp_bytes)
+    exp_hash = hashlib.sha256(exp_bytes).hexdigest()
+    exp_meta = json.loads(exp_bytes.decode("utf-8"), object_pairs_hook=no_dups, parse_constant=no_constants)
+    if fetched_len != exp_len or fetched_hash != exp_hash or fetched_bytes != exp_bytes or meta != exp_meta:
+        raise ValueError(
+            f"Public /release-metadata.json byte/hash/content mismatch against deployed candidate "
+            f"(expected len={exp_len} sha256={exp_hash}, fetched len={fetched_len} sha256={fetched_hash})"
+        )
 PYEOF
   )"; then
     echo "  ✗ FAIL: ${desc} -> Public release identity verification failed (${identity_err}) at ${url}" >&2
