@@ -58,7 +58,7 @@
       "collection": "Divan Beds",
       "description": "Choose an Oxford base-and-mattress set or a replacement mattress. Drawers and headboards are priced separately.",
       "startingPrice": 95,
-      "placeholder": "assets/placeholders/bed-divan.svg",
+      "placeholder": "assets/placeholders/bed-divan.svg?v=public-audit-20261020",
       "variants": [
         { "id": "oxford-set-3ft", "label": "3ft Single — Set (Base & Mattress)", "price": 130 },
         { "id": "oxford-set-4ft", "label": "4ft / 4ft6 — Set (Base & Mattress)", "price": 170 },
@@ -82,7 +82,7 @@
       "collection": "Divan Beds",
       "description": "Choose a Silk Ortho base-and-mattress set or a replacement mattress. Drawers and headboards are priced separately.",
       "startingPrice": 120,
-      "placeholder": "assets/placeholders/bed-divan.svg",
+      "placeholder": "assets/placeholders/bed-divan.svg?v=public-audit-20261020",
       "variants": [
         { "id": "silk-set-3ft", "label": "3ft Single — Set (Base & Mattress)", "price": 155 },
         { "id": "silk-set-4ft", "label": "4ft / 4ft6 — Set (Base & Mattress)", "price": 200 },
@@ -106,7 +106,7 @@
       "collection": "Divan Beds",
       "description": "Choose a Foam Divan Bed base-and-mattress set or a replacement mattress. Drawers and headboards are priced separately.",
       "startingPrice": 120,
-      "placeholder": "assets/placeholders/bed-divan.svg",
+      "placeholder": "assets/placeholders/bed-divan.svg?v=public-audit-20261020",
       "variants": [
         { "id": "foam-set-3ft", "label": "3ft Single — Set (Base & Mattress)", "price": 155 },
         { "id": "foam-set-4ft", "label": "4ft / 4ft6 — Set (Base & Mattress)", "price": 200 },
@@ -130,7 +130,7 @@
       "collection": "Budget Range",
       "description": "Budget Range two-door wardrobe, with a choice of models with or without two drawers.",
       "startingPrice": 95,
-      "placeholder": "assets/placeholders/wardrobe.svg",
+      "placeholder": "assets/placeholders/wardrobe.svg?v=public-audit-20261020",
       "variants": [
         { "id": "budget-2door-plain", "label": "2-Door Wardrobe", "price": 95 },
         { "id": "budget-2door-2draw", "label": "2-Door Wardrobe with 2 Drawers", "price": 120 }
@@ -147,7 +147,7 @@
       "collection": "Budget Range",
       "description": "Budget Range three-door wardrobe, with a choice of models with or without two drawers.",
       "startingPrice": 170,
-      "placeholder": "assets/placeholders/wardrobe.svg",
+      "placeholder": "assets/placeholders/wardrobe.svg?v=public-audit-20261020",
       "variants": [
         { "id": "budget-3door-plain", "label": "3-Door Wardrobe", "price": 170 },
         { "id": "budget-3door-2draw", "label": "3-Door Wardrobe with 2 Drawers", "price": 195 }
@@ -164,7 +164,7 @@
       "collection": "Budget Range",
       "description": "Choose a three-drawer bedside unit or a four-drawer chest from the Budget Range.",
       "startingPrice": 40,
-      "placeholder": "assets/placeholders/chest.svg",
+      "placeholder": "assets/placeholders/chest.svg?v=public-audit-20261020",
       "variants": [
         { "id": "budget-bedside-3draw", "label": "3-Drawer Bedside Unit", "price": 40 },
         { "id": "budget-chest-4draw", "label": "4-Drawer Chest", "price": 70 }
@@ -179,7 +179,7 @@
       "collection": "AB Range",
       "description": "AB Range two-door wardrobe, with a choice of models with or without two drawers.",
       "startingPrice": 150,
-      "placeholder": "assets/placeholders/wardrobe.svg",
+      "placeholder": "assets/placeholders/wardrobe.svg?v=public-audit-20261020",
       "variants": [
         { "id": "ab-2door-plain", "label": "2-Door Wardrobe", "price": 150 },
         { "id": "ab-2door-2draw", "label": "2-Door Wardrobe with 2 Drawers", "price": 180 }
@@ -196,7 +196,7 @@
       "collection": "AB Range",
       "description": "AB Range three-door wardrobe, with a choice of models with or without two drawers.",
       "startingPrice": 250,
-      "placeholder": "assets/placeholders/wardrobe.svg",
+      "placeholder": "assets/placeholders/wardrobe.svg?v=public-audit-20261020",
       "variants": [
         { "id": "ab-3door-plain", "label": "3-Door Wardrobe", "price": 250 },
         { "id": "ab-3door-2draw", "label": "3-Door Wardrobe with 2 Drawers", "price": 280 }
@@ -213,7 +213,7 @@
       "collection": "AB Range",
       "description": "Choose a three-drawer bedside unit, four-drawer chest or five-drawer chest from the AB Range.",
       "startingPrice": 55,
-      "placeholder": "assets/placeholders/chest.svg",
+      "placeholder": "assets/placeholders/chest.svg?v=public-audit-20261020",
       "variants": [
         { "id": "ab-bedside-3draw", "label": "3-Drawer Bedside Unit", "price": 55 },
         { "id": "ab-chest-4draw", "label": "4-Drawer Chest", "price": 120 },
@@ -229,7 +229,7 @@
       "collection": "Bed Frames",
       "description": "Chester Metal Bed frame with 3ft and 4ft / 4ft6 size options.",
       "startingPrice": 110,
-      "placeholder": "assets/placeholders/bed-frame.svg",
+      "placeholder": "assets/placeholders/bed-frame.svg?v=public-audit-20261020",
       "variants": [
         { "id": "chester-3ft", "label": "3ft Single Frame", "price": 110 },
         { "id": "chester-4ft", "label": "4ft / 4ft6 Frame", "price": 130 }
@@ -244,7 +244,7 @@
       "collection": "Bed Frames",
       "description": "Jersey Metal Bed frame with 3ft, 4ft / 4ft6 and 5ft size options.",
       "startingPrice": 180,
-      "placeholder": "assets/placeholders/bed-frame.svg",
+      "placeholder": "assets/placeholders/bed-frame.svg?v=public-audit-20261020",
       "variants": [
         { "id": "jersey-3ft", "label": "3ft Single Frame", "price": 180 },
         { "id": "jersey-4ft", "label": "4ft / 4ft6 Frame", "price": 200 },
@@ -260,7 +260,7 @@
       "collection": "Bed Frames",
       "description": "Colorado Wooden Bed frame with 3ft, 4ft / 4ft6 and 5ft size options.",
       "startingPrice": 150,
-      "placeholder": "assets/placeholders/bed-frame.svg",
+      "placeholder": "assets/placeholders/bed-frame.svg?v=public-audit-20261020",
       "variants": [
         { "id": "colorado-3ft", "label": "3ft Single Frame", "price": 150 },
         { "id": "colorado-4ft", "label": "4ft / 4ft6 Frame", "price": 180 },
@@ -276,7 +276,7 @@
       "collection": "Bed Frames",
       "description": "Storage bed with 3ft, 4ft / 4ft6 and 5ft size options.",
       "startingPrice": 240,
-      "placeholder": "assets/placeholders/bed-frame.svg",
+      "placeholder": "assets/placeholders/bed-frame.svg?v=public-audit-20261020",
       "variants": [
         { "id": "storage-3ft", "label": "3ft Single Storage Bed", "price": 240 },
         { "id": "storage-4ft", "label": "4ft / 4ft6 Storage Bed", "price": 270 },
@@ -292,7 +292,7 @@
       "collection": "Bunk Beds",
       "description": "Metal Bunk Bed with Single / Single and Trio Sleeper options.",
       "startingPrice": 250,
-      "placeholder": "assets/placeholders/bunk.svg",
+      "placeholder": "assets/placeholders/bunk.svg?v=public-audit-20261020",
       "variants": [
         { "id": "metal-bunk-single", "label": "Single / Single", "price": 250 },
         { "id": "metal-bunk-trio", "label": "Trio Sleeper", "price": 290 }
@@ -307,7 +307,7 @@
       "collection": "Bunk Beds",
       "description": "Wooden Bunk Bed with Single / Single and Trio Sleeper options.",
       "startingPrice": 320,
-      "placeholder": "assets/placeholders/bunk.svg",
+      "placeholder": "assets/placeholders/bunk.svg?v=public-audit-20261020",
       "variants": [
         { "id": "wooden-bunk-single", "label": "Single / Single", "price": 320 },
         { "id": "wooden-bunk-trio", "label": "Trio Sleeper", "price": 390 }
@@ -322,7 +322,7 @@
       "collection": "Dining Furniture",
       "description": "Choose a dining set or individual tables and chairs from the Budget Dining Range.",
       "startingPrice": 30,
-      "placeholder": "assets/placeholders/dining-table.svg",
+      "placeholder": "assets/placeholders/dining-table.svg?v=public-audit-20261020",
       "variants": [
         { "id": "budget-dining-chair", "label": "Individual Dining Chair", "price": 30 },
         { "id": "budget-dining-tbl-sm", "label": "Small Dining Table", "price": 80 },
@@ -342,7 +342,7 @@
       "collection": "Dining Furniture",
       "description": "Choose a dining set or individual tables and chairs from the Wooden Dining Range.",
       "startingPrice": 50,
-      "placeholder": "assets/placeholders/dining-table.svg",
+      "placeholder": "assets/placeholders/dining-table.svg?v=public-audit-20261020",
       "variants": [
         { "id": "wood-dining-chair", "label": "Individual Dining Chair", "price": 50 },
         { "id": "wood-dining-tbl-sm", "label": "Small Dining Table", "price": 120 },
@@ -362,7 +362,7 @@
       "collection": "Sofas & Sofa Beds",
       "description": "Box Sofa options include a one-seater, two-seater, three-seater and a three-plus-two-seater combination.",
       "startingPrice": 170,
-      "placeholder": "assets/placeholders/sofa.svg",
+      "placeholder": "assets/placeholders/sofa.svg?v=public-audit-20261020",
       "variants": [
         { "id": "box-sofa-1s", "label": "1-Seater", "price": 170 },
         { "id": "box-sofa-2s", "label": "2-Seater", "price": 220 },
@@ -379,7 +379,7 @@
       "collection": "Sofas & Sofa Beds",
       "description": "Choose a Dylan two-seater, three-seater or three-plus-two-seater combination.",
       "startingPrice": 240,
-      "placeholder": "assets/placeholders/sofa.svg",
+      "placeholder": "assets/placeholders/sofa.svg?v=public-audit-20261020",
       "variants": [
         { "id": "dylan-sofa-2s", "label": "2-Seater", "price": 240 },
         { "id": "dylan-sofa-3s", "label": "3-Seater", "price": 290 },
@@ -395,7 +395,7 @@
       "collection": "Sofas & Sofa Beds",
       "description": "Turkish Sofa Bed options include a two-seater, three-seater and a three-plus-two-seater combination.",
       "startingPrice": 320,
-      "placeholder": "assets/placeholders/sofa.svg",
+      "placeholder": "assets/placeholders/sofa.svg?v=public-audit-20261020",
       "variants": [
         { "id": "turkish-sb-2s", "label": "2-Seater", "price": 320 },
         { "id": "turkish-sb-3s", "label": "3-Seater", "price": 350 },
@@ -411,7 +411,7 @@
       "collection": "Sofas & Sofa Beds",
       "description": "Choose a two-seater or three-seater ClickClac Sofa Bed.",
       "startingPrice": 170,
-      "placeholder": "assets/placeholders/sofa.svg",
+      "placeholder": "assets/placeholders/sofa.svg?v=public-audit-20261020",
       "variants": [
         { "id": "clickclack-2s", "label": "2-Seater", "price": 170 },
         { "id": "clickclack-3s", "label": "3-Seater", "price": 190 }
@@ -426,7 +426,7 @@
       "collection": "Living Room Furniture",
       "description": "A coffee table for your rental property’s living room.",
       "startingPrice": 40,
-      "placeholder": "assets/placeholders/coffee-table.svg",
+      "placeholder": "assets/placeholders/coffee-table.svg?v=public-audit-20261020",
       "variants": [
         { "id": "coffee-table-std", "label": "Coffee Table", "price": 40 }
       ],
@@ -440,7 +440,7 @@
       "collection": "Appliances",
       "description": "Enquire about a fridge/freezer for your property.",
       "startingPrice": 420,
-      "placeholder": "assets/placeholders/appliance.svg",
+      "placeholder": "assets/placeholders/appliance.svg?v=public-audit-20261020",
       "variants": [
         { "id": "app-fridge-freezer", "label": "Fridge/Freezer", "price": 420 }
       ],
@@ -454,7 +454,7 @@
       "collection": "Appliances",
       "description": "Enquire about under-counter refrigeration for your property.",
       "startingPrice": 290,
-      "placeholder": "assets/placeholders/appliance.svg",
+      "placeholder": "assets/placeholders/appliance.svg?v=public-audit-20261020",
       "variants": [
         { "id": "app-undercounter", "label": "Under Counter Fridge/Freezer", "price": 290 }
       ],
@@ -468,7 +468,7 @@
       "collection": "Appliances",
       "description": "Enquire about a washing machine for your property.",
       "startingPrice": 360,
-      "placeholder": "assets/placeholders/appliance.svg",
+      "placeholder": "assets/placeholders/appliance.svg?v=public-audit-20261020",
       "variants": [
         { "id": "app-washer", "label": "Washing Machine", "price": 360 }
       ],
@@ -482,7 +482,7 @@
       "collection": "Removal Services",
       "description": "Removal options for chests of drawers, single and double divan beds, sofas and wardrobes.",
       "startingPrice": 20,
-      "placeholder": "assets/placeholders/van.svg",
+      "placeholder": "assets/placeholders/van.svg?v=public-audit-20261020",
       "variants": [
         { "id": "rem-chest", "label": "Chest of Drawers", "price": 20 },
         { "id": "rem-bed-single", "label": "Single Divan Bed", "price": 25 },
