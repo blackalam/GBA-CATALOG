@@ -34,7 +34,7 @@ gba-furniture-website/
 ├── styles.css                      # Custom responsive CSS with custom properties & reduced-motion support
 ├── script.js                       # Vanilla JS catalogue rendering, variant switching, enquiry prefill & mailto
 ├── serve.js                        # Zero-dependency local development server (Node.js)
-├── test-site.js                    # Automated verification test suite (127 checks)
+├── test-site.js                    # Automated verification test suite (294 checks)
 ├── generate-placeholders.js        # Generator script for vector SVG placeholders
 ├── data/
 │   └── products.json               # Structured catalogue data sourced from reference price list

@@ -4,14 +4,14 @@
       "id": "beds-mattresses",
       "name": "Beds & Mattresses",
       "shortName": "Beds",
-      "tagline": "Divan sets and mattresses from the supplied price list",
+      "tagline": "Divan bed sets and replacement mattresses for rental properties",
       "icon": "bed"
     },
     {
       "id": "bedroom-storage",
       "name": "Bedroom Storage",
       "shortName": "Storage",
-      "tagline": "Wardrobes, drawer chests and bedside units in Budget and AB ranges",
+      "tagline": "Wardrobes, chests of drawers and bedside units in the Budget and AB ranges",
       "icon": "wardrobe"
     },
     {
@@ -23,30 +23,30 @@
     },
     {
       "id": "dining",
-      "name": "Dining Sets & Tables",
+      "name": "Dining Furniture",
       "shortName": "Dining",
-      "tagline": "Dining sets, individual tables and chairs in Budget and Wooden ranges",
+      "tagline": "Dining sets, individual tables and chairs in the Budget and Wooden ranges",
       "icon": "dining"
     },
     {
       "id": "sofas-living",
       "name": "Sofas & Living Room",
       "shortName": "Sofas & Living",
-      "tagline": "Sofa suites, sofa beds and coffee tables from the price list",
+      "tagline": "Sofas, sofa beds and coffee tables for rental living rooms",
       "icon": "sofa"
     },
     {
       "id": "appliances",
       "name": "Appliances",
       "shortName": "Appliances",
-      "tagline": "Refrigeration and laundry appliances listed on store sheet",
+      "tagline": "Fridge/freezer and washing machine options for your property",
       "icon": "appliance"
     },
     {
       "id": "removals",
-      "name": "Removal Services",
+      "name": "Furniture Removals",
       "shortName": "Removals",
-      "tagline": "Item removal charges listed on the supplied price sheet",
+      "tagline": "Removal prices for divan beds, sofas, wardrobes and chests of drawers",
       "icon": "van"
     }
   ],
@@ -56,241 +56,241 @@
       "name": "Oxford Divan Bed",
       "category": "beds-mattresses",
       "collection": "Divan Beds",
-      "description": "Oxford divan bed available as a full set (base and mattress) or mattress only, based on supplied store price list. Contact store to confirm specifications and availability.",
+      "description": "Choose an Oxford base-and-mattress set or a replacement mattress. Drawers and headboards are priced separately.",
       "startingPrice": 95,
       "placeholder": "assets/placeholders/bed-divan.svg",
       "variants": [
         { "id": "oxford-set-3ft", "label": "3ft Single — Set (Base & Mattress)", "price": 130 },
-        { "id": "oxford-set-4ft", "label": "4ft / 4ft6 Double — Set (Base & Mattress)", "price": 170 },
+        { "id": "oxford-set-4ft", "label": "4ft / 4ft6 — Set (Base & Mattress)", "price": 170 },
         { "id": "oxford-set-5ft", "label": "5ft King — Set (Base & Mattress)", "price": 200 },
-        { "id": "oxford-matt-3ft", "label": "3ft Single — Matt Only", "price": 95 },
-        { "id": "oxford-matt-4ft", "label": "4ft / 4ft6 Double — Matt Only", "price": 125 },
-        { "id": "oxford-matt-5ft", "label": "5ft King — Matt Only", "price": 155 }
+        { "id": "oxford-matt-3ft", "label": "3ft Single — Mattress Only", "price": 95 },
+        { "id": "oxford-matt-4ft", "label": "4ft / 4ft6 — Mattress Only", "price": 125 },
+        { "id": "oxford-matt-5ft", "label": "5ft King — Mattress Only", "price": 155 }
       ],
       "addons": [
-        { "name": "Drawer Add-on", "price": 35, "unit": "per drawer" },
+        { "name": "Drawer", "price": 35, "unit": "per drawer" },
         { "name": "Headboard (3ft Single)", "price": 25, "unit": "each" },
-        { "name": "Headboard (4ft / 4ft6 Double)", "price": 35, "unit": "each" },
+        { "name": "Headboard (4ft / 4ft6)", "price": 35, "unit": "each" },
         { "name": "Headboard (5ft King)", "price": 45, "unit": "each" }
       ],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm current stock and details."
+      "specNotes": ""
     },
     {
       "id": "silk-ortho-divan-bed",
       "name": "Silk Ortho Divan Bed",
       "category": "beds-mattresses",
       "collection": "Divan Beds",
-      "description": "Silk Ortho divan bed available as a full set (base and mattress) or mattress only, based on supplied store price list. Contact store to confirm specifications and availability.",
+      "description": "Choose a Silk Ortho base-and-mattress set or a replacement mattress. Drawers and headboards are priced separately.",
       "startingPrice": 120,
       "placeholder": "assets/placeholders/bed-divan.svg",
       "variants": [
         { "id": "silk-set-3ft", "label": "3ft Single — Set (Base & Mattress)", "price": 155 },
-        { "id": "silk-set-4ft", "label": "4ft / 4ft6 Double — Set (Base & Mattress)", "price": 200 },
+        { "id": "silk-set-4ft", "label": "4ft / 4ft6 — Set (Base & Mattress)", "price": 200 },
         { "id": "silk-set-5ft", "label": "5ft King — Set (Base & Mattress)", "price": 240 },
-        { "id": "silk-matt-3ft", "label": "3ft Single — Matt Only", "price": 120 },
-        { "id": "silk-matt-4ft", "label": "4ft / 4ft6 Double — Matt Only", "price": 150 },
-        { "id": "silk-matt-5ft", "label": "5ft King — Matt Only", "price": 195 }
+        { "id": "silk-matt-3ft", "label": "3ft Single — Mattress Only", "price": 120 },
+        { "id": "silk-matt-4ft", "label": "4ft / 4ft6 — Mattress Only", "price": 150 },
+        { "id": "silk-matt-5ft", "label": "5ft King — Mattress Only", "price": 195 }
       ],
       "addons": [
-        { "name": "Drawer Add-on", "price": 35, "unit": "per drawer" },
+        { "name": "Drawer", "price": 35, "unit": "per drawer" },
         { "name": "Headboard (3ft Single)", "price": 25, "unit": "each" },
-        { "name": "Headboard (4ft / 4ft6 Double)", "price": 35, "unit": "each" },
+        { "name": "Headboard (4ft / 4ft6)", "price": 35, "unit": "each" },
         { "name": "Headboard (5ft King)", "price": 45, "unit": "each" }
       ],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm current stock and details."
+      "specNotes": ""
     },
     {
       "id": "foam-divan-bed",
       "name": "Foam Divan Bed",
       "category": "beds-mattresses",
       "collection": "Divan Beds",
-      "description": "Foam divan bed available as a full set (base and mattress) or mattress only, based on supplied store price list. Contact store to confirm specifications and availability.",
+      "description": "Choose a Foam Divan Bed base-and-mattress set or a replacement mattress. Drawers and headboards are priced separately.",
       "startingPrice": 120,
       "placeholder": "assets/placeholders/bed-divan.svg",
       "variants": [
         { "id": "foam-set-3ft", "label": "3ft Single — Set (Base & Mattress)", "price": 155 },
-        { "id": "foam-set-4ft", "label": "4ft / 4ft6 Double — Set (Base & Mattress)", "price": 200 },
+        { "id": "foam-set-4ft", "label": "4ft / 4ft6 — Set (Base & Mattress)", "price": 200 },
         { "id": "foam-set-5ft", "label": "5ft King — Set (Base & Mattress)", "price": 240 },
-        { "id": "foam-matt-3ft", "label": "3ft Single — Matt Only", "price": 120 },
-        { "id": "foam-matt-4ft", "label": "4ft / 4ft6 Double — Matt Only", "price": 150 },
-        { "id": "foam-matt-5ft", "label": "5ft King — Matt Only", "price": 195 }
+        { "id": "foam-matt-3ft", "label": "3ft Single — Mattress Only", "price": 120 },
+        { "id": "foam-matt-4ft", "label": "4ft / 4ft6 — Mattress Only", "price": 150 },
+        { "id": "foam-matt-5ft", "label": "5ft King — Mattress Only", "price": 195 }
       ],
       "addons": [
-        { "name": "Drawer Add-on", "price": 35, "unit": "per drawer" },
+        { "name": "Drawer", "price": 35, "unit": "per drawer" },
         { "name": "Headboard (3ft Single)", "price": 25, "unit": "each" },
-        { "name": "Headboard (4ft / 4ft6 Double)", "price": 35, "unit": "each" },
+        { "name": "Headboard (4ft / 4ft6)", "price": 35, "unit": "each" },
         { "name": "Headboard (5ft King)", "price": 45, "unit": "each" }
       ],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm current stock and details."
+      "specNotes": ""
     },
     {
       "id": "budget-wardrobe-2door",
-      "name": "Budget 2 Door Wardrobe",
+      "name": "Budget 2-Door Wardrobe",
       "category": "bedroom-storage",
       "collection": "Budget Range",
-      "description": "Two-door wardrobe from the budget bedroom storage list. Available in standard 2-door or 2-door 2-drawer configuration.",
+      "description": "Budget Range two-door wardrobe, with a choice of models with or without two drawers.",
       "startingPrice": 95,
       "placeholder": "assets/placeholders/wardrobe.svg",
       "variants": [
-        { "id": "budget-2door-plain", "label": "2 Door Wardrobe", "price": 95 },
-        { "id": "budget-2door-2draw", "label": "2 Door 2 Drawer Wardrobe", "price": 120 }
+        { "id": "budget-2door-plain", "label": "2-Door Wardrobe", "price": 95 },
+        { "id": "budget-2door-2draw", "label": "2-Door Wardrobe with 2 Drawers", "price": 120 }
       ],
       "addons": [
-        { "name": "Mirror on Wardrobe", "price": 20, "unit": "optional" }
+        { "name": "Wardrobe Mirror", "price": 20, "unit": "optional" }
       ],
-      "specNotes": "Price list note: 'Color can vary' (colours may vary by batch; confirm with store)."
+      "specNotes": "Colours may vary. Ask us about the current colour options."
     },
     {
       "id": "budget-wardrobe-3door",
-      "name": "Budget 3 Door Wardrobe",
+      "name": "Budget 3-Door Wardrobe",
       "category": "bedroom-storage",
       "collection": "Budget Range",
-      "description": "Three-door wardrobe from the budget bedroom storage list. Available in standard 3-door or 3-door 2-drawer configuration.",
+      "description": "Budget Range three-door wardrobe, with a choice of models with or without two drawers.",
       "startingPrice": 170,
       "placeholder": "assets/placeholders/wardrobe.svg",
       "variants": [
-        { "id": "budget-3door-plain", "label": "3 Door Wardrobe", "price": 170 },
-        { "id": "budget-3door-2draw", "label": "3 Door 2 Drawer Wardrobe", "price": 195 }
+        { "id": "budget-3door-plain", "label": "3-Door Wardrobe", "price": 170 },
+        { "id": "budget-3door-2draw", "label": "3-Door Wardrobe with 2 Drawers", "price": 195 }
       ],
       "addons": [
-        { "name": "Mirror on Wardrobe", "price": 20, "unit": "optional" }
+        { "name": "Wardrobe Mirror", "price": 20, "unit": "optional" }
       ],
-      "specNotes": "Price list note: 'Color can vary' (colours may vary by batch; confirm with store)."
+      "specNotes": "Colours may vary. Ask us about the current colour options."
     },
     {
       "id": "budget-chests-bedside",
-      "name": "Budget Chest & Bedside",
+      "name": "Budget Chests & Bedside Units",
       "category": "bedroom-storage",
       "collection": "Budget Range",
-      "description": "Drawer storage items from the budget bedroom storage list.",
+      "description": "Choose a three-drawer bedside unit or a four-drawer chest from the Budget Range.",
       "startingPrice": 40,
       "placeholder": "assets/placeholders/chest.svg",
       "variants": [
-        { "id": "budget-bedside-3draw", "label": "3 Drawer Bedside", "price": 40 },
-        { "id": "budget-chest-4draw", "label": "4 Chest Drawer (4-Drawer Chest)", "price": 70 }
+        { "id": "budget-bedside-3draw", "label": "3-Drawer Bedside Unit", "price": 40 },
+        { "id": "budget-chest-4draw", "label": "4-Drawer Chest", "price": 70 }
       ],
       "addons": [],
-      "specNotes": "Price list note: 'Color can vary' (colours may vary by batch; confirm with store)."
+      "specNotes": "Colours may vary. Ask us about the current colour options."
     },
     {
       "id": "ab-wardrobe-2door",
-      "name": "AB Range 2 Door Wardrobe",
+      "name": "AB Range 2-Door Wardrobe",
       "category": "bedroom-storage",
       "collection": "AB Range",
-      "description": "Two-door wardrobe from the AB storage range. Available in standard 2-door or 2-door 2-drawer configuration.",
+      "description": "AB Range two-door wardrobe, with a choice of models with or without two drawers.",
       "startingPrice": 150,
       "placeholder": "assets/placeholders/wardrobe.svg",
       "variants": [
-        { "id": "ab-2door-plain", "label": "2 Door Wardrobe", "price": 150 },
-        { "id": "ab-2door-2draw", "label": "2 Door 2 Drawer Wardrobe", "price": 180 }
+        { "id": "ab-2door-plain", "label": "2-Door Wardrobe", "price": 150 },
+        { "id": "ab-2door-2draw", "label": "2-Door Wardrobe with 2 Drawers", "price": 180 }
       ],
       "addons": [
-        { "name": "Mirror on Wardrobe", "price": 35, "unit": "optional" }
+        { "name": "Wardrobe Mirror", "price": 35, "unit": "optional" }
       ],
-      "specNotes": "Finishes listed on price sheet: White, Oak, Grey, Walnut, Black (confirm availability with store)."
+      "specNotes": "Finish options: white, oak, grey, walnut and black. Ask us which finishes are currently available."
     },
     {
       "id": "ab-wardrobe-3door",
-      "name": "AB Range 3 Door Wardrobe",
+      "name": "AB Range 3-Door Wardrobe",
       "category": "bedroom-storage",
       "collection": "AB Range",
-      "description": "Three-door wardrobe from the AB storage range. Available in standard 3-door or 3-door 2-drawer configuration.",
+      "description": "AB Range three-door wardrobe, with a choice of models with or without two drawers.",
       "startingPrice": 250,
       "placeholder": "assets/placeholders/wardrobe.svg",
       "variants": [
-        { "id": "ab-3door-plain", "label": "3 Door Wardrobe", "price": 250 },
-        { "id": "ab-3door-2draw", "label": "3 Door 2 Drawer Wardrobe", "price": 280 }
+        { "id": "ab-3door-plain", "label": "3-Door Wardrobe", "price": 250 },
+        { "id": "ab-3door-2draw", "label": "3-Door Wardrobe with 2 Drawers", "price": 280 }
       ],
       "addons": [
-        { "name": "Mirror on Wardrobe", "price": 35, "unit": "optional" }
+        { "name": "Wardrobe Mirror", "price": 35, "unit": "optional" }
       ],
-      "specNotes": "Finishes listed on price sheet: White, Oak, Grey, Walnut, Black (confirm availability with store)."
+      "specNotes": "Finish options: white, oak, grey, walnut and black. Ask us which finishes are currently available."
     },
     {
       "id": "ab-chests-bedside",
-      "name": "AB Range Chests & Bedside",
+      "name": "AB Range Chests & Bedside Units",
       "category": "bedroom-storage",
       "collection": "AB Range",
-      "description": "Chests of drawers and bedside units from the AB storage range.",
+      "description": "Choose a three-drawer bedside unit, four-drawer chest or five-drawer chest from the AB Range.",
       "startingPrice": 55,
       "placeholder": "assets/placeholders/chest.svg",
       "variants": [
-        { "id": "ab-bedside-3draw", "label": "3 Drawer Bedside", "price": 55 },
-        { "id": "ab-chest-4draw", "label": "4 Chest Drawer (4-Drawer Chest)", "price": 120 },
-        { "id": "ab-chest-5draw", "label": "5 Chest Drawer (5-Drawer Chest)", "price": 140 }
+        { "id": "ab-bedside-3draw", "label": "3-Drawer Bedside Unit", "price": 55 },
+        { "id": "ab-chest-4draw", "label": "4-Drawer Chest", "price": 120 },
+        { "id": "ab-chest-5draw", "label": "5-Drawer Chest", "price": 140 }
       ],
       "addons": [],
-      "specNotes": "Finishes listed on price sheet: White, Oak, Grey, Walnut, Black (confirm availability with store)."
+      "specNotes": "Finish options: white, oak, grey, walnut and black. Ask us which finishes are currently available."
     },
     {
       "id": "chester-metal-bed",
       "name": "Chester Metal Bed",
       "category": "bed-frames-bunks",
       "collection": "Bed Frames",
-      "description": "Chester metal bed frame listed on store price sheet. Available in 3ft and 4ft/4ft6 sizes.",
+      "description": "Chester Metal Bed frame with 3ft and 4ft / 4ft6 size options.",
       "startingPrice": 110,
       "placeholder": "assets/placeholders/bed-frame.svg",
       "variants": [
         { "id": "chester-3ft", "label": "3ft Single Frame", "price": 110 },
-        { "id": "chester-4ft", "label": "4ft / 4ft6 Double Frame", "price": 130 }
+        { "id": "chester-4ft", "label": "4ft / 4ft6 Frame", "price": 130 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm dimensions and details."
+      "specNotes": "Ask us for the frame dimensions before ordering."
     },
     {
       "id": "jersey-metal-bed",
       "name": "Jersey Metal Bed",
       "category": "bed-frames-bunks",
       "collection": "Bed Frames",
-      "description": "Jersey metal bed frame listed on store price sheet. Available in 3ft, 4ft/4ft6, and 5ft sizes.",
+      "description": "Jersey Metal Bed frame with 3ft, 4ft / 4ft6 and 5ft size options.",
       "startingPrice": 180,
       "placeholder": "assets/placeholders/bed-frame.svg",
       "variants": [
         { "id": "jersey-3ft", "label": "3ft Single Frame", "price": 180 },
-        { "id": "jersey-4ft", "label": "4ft / 4ft6 Double Frame", "price": 200 },
+        { "id": "jersey-4ft", "label": "4ft / 4ft6 Frame", "price": 200 },
         { "id": "jersey-5ft", "label": "5ft King Frame", "price": 220 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm dimensions and details."
+      "specNotes": "Ask us for the frame dimensions before ordering."
     },
     {
       "id": "colorado-wooden-bed",
       "name": "Colorado Wooden Bed",
       "category": "bed-frames-bunks",
       "collection": "Bed Frames",
-      "description": "Wooden bed frame listed on store price sheet (listed as Colarado Wooden Bed). Available in 3ft, 4ft/4ft6, and 5ft sizes.",
+      "description": "Colorado Wooden Bed frame with 3ft, 4ft / 4ft6 and 5ft size options.",
       "startingPrice": 150,
       "placeholder": "assets/placeholders/bed-frame.svg",
       "variants": [
         { "id": "colorado-3ft", "label": "3ft Single Frame", "price": 150 },
-        { "id": "colorado-4ft", "label": "4ft / 4ft6 Double Frame", "price": 180 },
+        { "id": "colorado-4ft", "label": "4ft / 4ft6 Frame", "price": 180 },
         { "id": "colorado-5ft", "label": "5ft King Frame", "price": 200 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm dimensions and details."
+      "specNotes": "Ask us for the frame dimensions before ordering."
     },
     {
       "id": "storage-bed-frame",
       "name": "PVC / Fabric Storage Bed",
       "category": "bed-frames-bunks",
       "collection": "Bed Frames",
-      "description": "Storage bed listed as 'pvc/fabric storage' on store price sheet. Available in 3ft, 4ft/4ft6, and 5ft sizes.",
+      "description": "Storage bed with 3ft, 4ft / 4ft6 and 5ft size options.",
       "startingPrice": 240,
       "placeholder": "assets/placeholders/bed-frame.svg",
       "variants": [
         { "id": "storage-3ft", "label": "3ft Single Storage Bed", "price": 240 },
-        { "id": "storage-4ft", "label": "4ft / 4ft6 Double Storage Bed", "price": 270 },
+        { "id": "storage-4ft", "label": "4ft / 4ft6 Storage Bed", "price": 270 },
         { "id": "storage-5ft", "label": "5ft King Storage Bed", "price": 290 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm covering options (PVC/fabric) and dimensions."
+      "specNotes": "Ask us about PVC or fabric covering options and the bed’s dimensions."
     },
     {
       "id": "metal-bunk-bed",
       "name": "Metal Bunk Bed",
       "category": "bed-frames-bunks",
-      "collection": "Bunk Bed",
-      "description": "Metal bunk bed listed on store price sheet. Available in Single / Single and Trio Sleeper options.",
+      "collection": "Bunk Beds",
+      "description": "Metal Bunk Bed with Single / Single and Trio Sleeper options.",
       "startingPrice": 250,
       "placeholder": "assets/placeholders/bunk.svg",
       "variants": [
@@ -298,14 +298,14 @@
         { "id": "metal-bunk-trio", "label": "Trio Sleeper", "price": 290 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm dimensions and specifications."
+      "specNotes": "Ask us for dimensions and details of your chosen bunk-bed option."
     },
     {
       "id": "wooden-bunk-bed",
       "name": "Wooden Bunk Bed",
       "category": "bed-frames-bunks",
-      "collection": "Bunk Bed",
-      "description": "Wooden bunk bed listed on store price sheet. Available in Single / Single and Trio Sleeper options.",
+      "collection": "Bunk Beds",
+      "description": "Wooden Bunk Bed with Single / Single and Trio Sleeper options.",
       "startingPrice": 320,
       "placeholder": "assets/placeholders/bunk.svg",
       "variants": [
@@ -313,185 +313,185 @@
         { "id": "wooden-bunk-trio", "label": "Trio Sleeper", "price": 390 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm dimensions and specifications."
+      "specNotes": "Ask us for dimensions and details of your chosen bunk-bed option."
     },
     {
       "id": "budget-dining-range",
       "name": "Budget Dining Range",
       "category": "dining",
-      "collection": "Dining Set",
-      "description": "Dining sets and individual tables and chairs from the Budget Range section of the price list.",
+      "collection": "Dining Furniture",
+      "description": "Choose a dining set or individual tables and chairs from the Budget Dining Range.",
       "startingPrice": 30,
       "placeholder": "assets/placeholders/dining-table.svg",
       "variants": [
-        { "id": "budget-dining-chair", "label": "Dining Chair (Individual)", "price": 30 },
-        { "id": "budget-dining-tbl-sm", "label": "Dining Table Small", "price": 80 },
-        { "id": "budget-dining-tbl-md", "label": "Dining Table Medium", "price": 105 },
-        { "id": "budget-dining-tbl-lg", "label": "Dining Table Large", "price": 140 },
+        { "id": "budget-dining-chair", "label": "Individual Dining Chair", "price": 30 },
+        { "id": "budget-dining-tbl-sm", "label": "Small Dining Table", "price": 80 },
+        { "id": "budget-dining-tbl-md", "label": "Medium Dining Table", "price": 105 },
+        { "id": "budget-dining-tbl-lg", "label": "Large Dining Table", "price": 140 },
         { "id": "budget-dining-set-2", "label": "Dining Set of 2", "price": 150 },
         { "id": "budget-dining-set-4", "label": "Dining Set of 4", "price": 190 },
         { "id": "budget-dining-set-6", "label": "Dining Set of 6", "price": 240 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm dimensions and details."
+      "specNotes": "Ask us to confirm the items included in your chosen set and the table dimensions."
     },
     {
       "id": "wooden-dining-range",
       "name": "Wooden Dining Range",
       "category": "dining",
-      "collection": "Dining Set",
-      "description": "Dining sets and individual tables and chairs from the Wooden Range section of the price list.",
+      "collection": "Dining Furniture",
+      "description": "Choose a dining set or individual tables and chairs from the Wooden Dining Range.",
       "startingPrice": 50,
       "placeholder": "assets/placeholders/dining-table.svg",
       "variants": [
-        { "id": "wood-dining-chair", "label": "Dining Chair (Individual)", "price": 50 },
-        { "id": "wood-dining-tbl-sm", "label": "Dining Table Small", "price": 120 },
-        { "id": "wood-dining-tbl-md", "label": "Dining Table Medium", "price": 150 },
-        { "id": "wood-dining-tbl-lg", "label": "Dining Table Large", "price": 190 },
+        { "id": "wood-dining-chair", "label": "Individual Dining Chair", "price": 50 },
+        { "id": "wood-dining-tbl-sm", "label": "Small Dining Table", "price": 120 },
+        { "id": "wood-dining-tbl-md", "label": "Medium Dining Table", "price": 150 },
+        { "id": "wood-dining-tbl-lg", "label": "Large Dining Table", "price": 190 },
         { "id": "wood-dining-set-2", "label": "Dining Set of 2", "price": 180 },
         { "id": "wood-dining-set-4", "label": "Dining Set of 4", "price": 250 },
         { "id": "wood-dining-set-6", "label": "Dining Set of 6", "price": 360 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm dimensions and details."
+      "specNotes": "Ask us to confirm the items included in your chosen set and the table dimensions."
     },
     {
       "id": "box-sofa-suite",
       "name": "Box Sofa",
       "category": "sofas-living",
-      "collection": "Living Room Sofa",
-      "description": "Box sofa options listed on store price sheet. Available in 1 Seater, 2 Seater, 3 Seater, and 3+2 Seater options.",
+      "collection": "Sofas & Sofa Beds",
+      "description": "Box Sofa options include a one-seater, two-seater, three-seater and a three-plus-two-seater combination.",
       "startingPrice": 170,
       "placeholder": "assets/placeholders/sofa.svg",
       "variants": [
-        { "id": "box-sofa-1s", "label": "1 Seater", "price": 170 },
-        { "id": "box-sofa-2s", "label": "2 Seater", "price": 220 },
-        { "id": "box-sofa-3s", "label": "3 Seater", "price": 270 },
-        { "id": "box-sofa-combo", "label": "3+2 Seater", "price": 420 }
+        { "id": "box-sofa-1s", "label": "1-Seater", "price": 170 },
+        { "id": "box-sofa-2s", "label": "2-Seater", "price": 220 },
+        { "id": "box-sofa-3s", "label": "3-Seater", "price": 270 },
+        { "id": "box-sofa-combo", "label": "3 + 2-Seater Combination", "price": 420 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm available colours and dimensions."
+      "specNotes": "Ask us about current colours and the dimensions of your chosen option."
     },
     {
       "id": "dylan-sofa-suite",
       "name": "Dylan Sofa Suite",
       "category": "sofas-living",
-      "collection": "Living Room Sofa",
-      "description": "Dylan sofa suite options listed on store price sheet. Available in 2 Seater, 3 Seater, and 3+2 Seater options.",
+      "collection": "Sofas & Sofa Beds",
+      "description": "Choose a Dylan two-seater, three-seater or three-plus-two-seater combination.",
       "startingPrice": 240,
       "placeholder": "assets/placeholders/sofa.svg",
       "variants": [
-        { "id": "dylan-sofa-2s", "label": "2 Seater", "price": 240 },
-        { "id": "dylan-sofa-3s", "label": "3 Seater", "price": 290 },
-        { "id": "dylan-sofa-combo", "label": "3+2 Seater", "price": 480 }
+        { "id": "dylan-sofa-2s", "label": "2-Seater", "price": 240 },
+        { "id": "dylan-sofa-3s", "label": "3-Seater", "price": 290 },
+        { "id": "dylan-sofa-combo", "label": "3 + 2-Seater Combination", "price": 480 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm available colours and dimensions."
+      "specNotes": "Ask us about current colours and the dimensions of your chosen option."
     },
     {
       "id": "turkish-sofa-bed",
       "name": "Turkish Sofa Bed",
       "category": "sofas-living",
-      "collection": "Living Room Sofa",
-      "description": "Turkish sofa bed options listed on store price sheet. Available in 2 Seater, 3 Seater, and 3+2 Seater options.",
+      "collection": "Sofas & Sofa Beds",
+      "description": "Turkish Sofa Bed options include a two-seater, three-seater and a three-plus-two-seater combination.",
       "startingPrice": 320,
       "placeholder": "assets/placeholders/sofa.svg",
       "variants": [
-        { "id": "turkish-sb-2s", "label": "2 Seater", "price": 320 },
-        { "id": "turkish-sb-3s", "label": "3 Seater", "price": 350 },
-        { "id": "turkish-sb-combo", "label": "3+2 Seater", "price": 650 }
+        { "id": "turkish-sb-2s", "label": "2-Seater", "price": 320 },
+        { "id": "turkish-sb-3s", "label": "3-Seater", "price": 350 },
+        { "id": "turkish-sb-combo", "label": "3 + 2-Seater Combination", "price": 650 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm available colours and dimensions."
+      "specNotes": "Ask us about current colours and the dimensions of your chosen option."
     },
     {
       "id": "click-clack-sofa-bed",
       "name": "ClickClac Sofa Bed",
       "category": "sofas-living",
-      "collection": "Living Room Sofa",
-      "description": "Sofa bed listed as 'ClickClac Sofa Bed' on store price sheet. Available in 2 Seater and 3 Seater options.",
+      "collection": "Sofas & Sofa Beds",
+      "description": "Choose a two-seater or three-seater ClickClac Sofa Bed.",
       "startingPrice": 170,
       "placeholder": "assets/placeholders/sofa.svg",
       "variants": [
-        { "id": "clickclack-2s", "label": "2 Seater", "price": 170 },
-        { "id": "clickclack-3s", "label": "3 Seater", "price": 190 }
+        { "id": "clickclack-2s", "label": "2-Seater", "price": 170 },
+        { "id": "clickclack-3s", "label": "3-Seater", "price": 190 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm available colours and dimensions."
+      "specNotes": "Ask us about current colours and the dimensions of your chosen option."
     },
     {
       "id": "living-coffee-table",
       "name": "Coffee Table",
       "category": "sofas-living",
-      "collection": "Living Room Other",
-      "description": "Coffee table listed under 'Living Room Other' on store price sheet.",
+      "collection": "Living Room Furniture",
+      "description": "A coffee table for your rental property’s living room.",
       "startingPrice": 40,
       "placeholder": "assets/placeholders/coffee-table.svg",
       "variants": [
         { "id": "coffee-table-std", "label": "Coffee Table", "price": 40 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm finish and dimensions."
+      "specNotes": "Ask us about the finish and table dimensions."
     },
     {
       "id": "fridge-freezer-tall",
       "name": "Fridge/Freezer",
       "category": "appliances",
       "collection": "Appliances",
-      "description": "Fridge/Freezer listed under 'Applicances' on store price sheet.",
+      "description": "Enquire about a fridge/freezer for your property.",
       "startingPrice": 420,
       "placeholder": "assets/placeholders/appliance.svg",
       "variants": [
         { "id": "app-fridge-freezer", "label": "Fridge/Freezer", "price": 420 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm dimensions, brand and model details."
+      "specNotes": "Ask us to confirm the appliance type, brand, model and dimensions before ordering."
     },
     {
       "id": "fridge-freezer-undercounter",
       "name": "Under Counter Fridge/Freezer",
       "category": "appliances",
       "collection": "Appliances",
-      "description": "Under counter fridge/freezer unit listed under 'Applicances' on store price sheet.",
+      "description": "Enquire about under-counter refrigeration for your property.",
       "startingPrice": 290,
       "placeholder": "assets/placeholders/appliance.svg",
       "variants": [
         { "id": "app-undercounter", "label": "Under Counter Fridge/Freezer", "price": 290 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm dimensions, brand and model details."
+      "specNotes": "Ask us to confirm whether this option is a fridge, freezer or combined unit, along with the brand, model and dimensions."
     },
     {
       "id": "washing-machine",
       "name": "Washing Machine",
       "category": "appliances",
       "collection": "Appliances",
-      "description": "Washing machine unit listed under 'Applicances' on store price sheet.",
+      "description": "Enquire about a washing machine for your property.",
       "startingPrice": 360,
       "placeholder": "assets/placeholders/appliance.svg",
       "variants": [
         { "id": "app-washer", "label": "Washing Machine", "price": 360 }
       ],
       "addons": [],
-      "specNotes": "Prices from supplied store price list. Contact store to confirm brand, load capacity and model details."
+      "specNotes": "Ask us to confirm the brand, model, load capacity and dimensions before ordering."
     },
     {
       "id": "furniture-removal-service",
-      "name": "Removal Charges",
+      "name": "Furniture Removal",
       "category": "removals",
-      "collection": "Removal Charges",
-      "description": "Item removal charges listed on the supplied store price sheet.",
+      "collection": "Removal Services",
+      "description": "Removal options for chests of drawers, single and double divan beds, sofas and wardrobes.",
       "startingPrice": 20,
       "placeholder": "assets/placeholders/van.svg",
       "variants": [
         { "id": "rem-chest", "label": "Chest of Drawers", "price": 20 },
-        { "id": "rem-bed-single", "label": "Any Bed (Single) (Divan Only)", "price": 25 },
-        { "id": "rem-bed-double", "label": "Any Bed (Double) (Divan Only)", "price": 30 },
-        { "id": "rem-sofa", "label": "Any Sofa (1 piece)", "price": 30 },
+        { "id": "rem-bed-single", "label": "Single Divan Bed", "price": 25 },
+        { "id": "rem-bed-double", "label": "Double Divan Bed", "price": 30 },
+        { "id": "rem-sofa", "label": "Sofa — Per Piece", "price": 30 },
         { "id": "rem-wardrobe", "label": "Wardrobe", "price": 30 }
       ],
       "addons": [],
-      "specNotes": "Charges from supplied price sheet. Bed removal note: '(Divan Only)'. Contact store to confirm removal arrangements and conditions."
+      "specNotes": "Bed removal is for divan beds only. Contact us to discuss your items and arrange collection."
     }
   ]
 }
