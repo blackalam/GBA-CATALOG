@@ -226,9 +226,20 @@ TARBALL_HASH="$(awk '{print $1}' "${TARBALL_SHA_FILE}")"
 [ -f "${TARBALL_SHA_FILE}" ] || { echo "  ✗ FAIL: Tarball SHA256 companion file was not created!" >&2; exit 1; }
 
 TAR_CONTENTS="$(tar -tzf "${TARBALL}")"
-for req in "index.html" "styles.css" "script.js" "data/products.json" "assets/gba-logo-official-transparent.png" "assets/gba-logo-web.png" "checksums.sha256" "release-metadata.json"; do
+for req in "index.html" "styles.css" "script.js" "data/products.json" "assets/current-banner.jpg" "assets/gba-logo-official-transparent.png" "assets/gba-logo-web.png" "checksums.sha256" "release-metadata.json"; do
   grep -F -q "${req}" <<< "${TAR_CONTENTS}" || { echo "Missing ${req} in tarball"; exit 1; }
 done
+
+EXPECTED_HERO_SHA256="1677a163a5cad2b7741a21877c059a7952faa6473f0ee7da92ade9878f831614"
+ACTUAL_HERO_SHA256="$(python3 -c 'import hashlib, sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())' "${REPO_ROOT}/assets/current-banner.jpg")"
+[ "${ACTUAL_HERO_SHA256}" = "${EXPECTED_HERO_SHA256}" ] || {
+  echo "  ✗ FAIL: assets/current-banner.jpg SHA256 mismatch (expected ${EXPECTED_HERO_SHA256}, got ${ACTUAL_HERO_SHA256})!" >&2
+  exit 1
+}
+grep -F -q -- 'src="assets/current-banner.jpg?v=hero-20261020-1677a163a5ca"' "${REPO_ROOT}/index.html" || {
+  echo "  ✗ FAIL: index.html missing cache-busted hero reference assets/current-banner.jpg?v=hero-20261020-1677a163a5ca!" >&2
+  exit 1
+}
 
 FORBIDDEN=("serve.js" "test-site.js" "README.md" "RELEASE.md" "reference" "screenshot" "gba-logo-official-transparent-original.png" "gba-logo-official-cropped.jpg" "gba-logo-replacement-original.jpg" "._")
 for f in "${FORBIDDEN[@]}"; do
@@ -777,7 +788,12 @@ class SmokeFixtureHandler(http.server.BaseHTTPRequestHandler):
         elif mode == "jpg_html_fallback" and req_target == "/assets/current-banner.jpg":
             content_type = "text/html; charset=utf-8"
             raw_bytes = b"<!DOCTYPE html><html><body>Banner HTML Fallback</body></html>"
+        elif mode == "versioned_jpg_html_fallback" and req_target == "/assets/current-banner.jpg?v=hero-20261020-1677a163a5ca":
+            content_type = "text/html; charset=utf-8"
+            raw_bytes = b"<!DOCTYPE html><html><body>Versioned Banner HTML Fallback</body></html>"
         elif mode == "jpg_wrong_mime" and req_target == "/assets/current-banner.jpg":
+            content_type = "image/png"
+        elif mode == "versioned_jpg_wrong_mime" and req_target == "/assets/current-banner.jpg?v=hero-20261020-1677a163a5ca":
             content_type = "image/png"
         elif mode == "jpg_fake_body" and req_target == "/assets/current-banner.jpg":
             content_type = "image/jpeg"
@@ -791,6 +807,12 @@ class SmokeFixtureHandler(http.server.BaseHTTPRequestHandler):
         elif mode == "jpg_missing_sos" and req_target == "/assets/current-banner.jpg":
             content_type = "image/jpeg"
             raw_bytes = bytes.fromhex("ffd8ffc0000b080010001001011100ffd9")
+        elif mode == "jpg_mutated_valid" and req_target == "/assets/current-banner.jpg":
+            content_type = "image/jpeg"
+            raw_bytes = raw_bytes[:2] + b"\xff\xfe\x00\x06test" + raw_bytes[2:]
+        elif mode == "versioned_jpg_mutated_valid" and req_target == "/assets/current-banner.jpg?v=hero-20261020-1677a163a5ca":
+            content_type = "image/jpeg"
+            raw_bytes = raw_bytes[:2] + b"\xff\xfe\x00\x06test" + raw_bytes[2:]
         elif mode == "css_html_fallback" and req_target == "/styles.css?v=public-audit-20261020":
             content_type = "text/html; charset=utf-8"
             raw_bytes = b"<!DOCTYPE html><html><head><style>:root { --color-petrol: #014660; }</style></head><body>Fallback</body></html>"
@@ -2002,7 +2024,9 @@ NEGATIVE_SMOKE_FIXTURES=(
   "png_bad_crc:Invalid PNG chunk CRC"
   "png_zero_dimensions:Invalid PNG IHDR dimensions"
   "jpg_html_fallback:Expected Content-Type 'image/jpeg'"
+  "versioned_jpg_html_fallback:Expected Content-Type 'image/jpeg'"
   "jpg_wrong_mime:Expected Content-Type 'image/jpeg'"
+  "versioned_jpg_wrong_mime:Expected Content-Type 'image/jpeg'"
   "jpg_fake_body:Invalid JPEG SOI binary signature"
   "jpg_ffd8ff00_prefix:Invalid JPEG marker 0xff00"
   "jpg_truncated_stream:Truncated JPEG"
@@ -2037,6 +2061,8 @@ NEGATIVE_SMOKE_FIXTURES=(
   "versioned_js_mutated_valid:Trusted byte verification failed for 'script.js'"
   "versioned_svg_mutated_valid:Trusted byte verification failed for 'assets/placeholders/wardrobe.svg'"
   "png_mutated_valid:Trusted byte verification failed for 'assets/gba-logo-official-transparent.png'"
+  "jpg_mutated_valid:Trusted byte verification failed for 'assets/current-banner.jpg'"
+  "versioned_jpg_mutated_valid:Trusted byte verification failed for 'assets/current-banner.jpg'"
 )
 
 for fixture_spec in "${NEGATIVE_SMOKE_FIXTURES[@]}"; do
@@ -2068,6 +2094,7 @@ for cutover_abort_mode in \
   "versioned_css_mutated_valid" \
   "versioned_js_mutated_valid" \
   "versioned_svg_mutated_valid" \
+  "versioned_jpg_mutated_valid" \
   "incomplete_transfer_css_with_charset"; do
   printf '%s\n' "${cutover_abort_mode}" > "${SMOKE_FIXTURE_MODE_FILE}"
   populate_mock_wordpress
@@ -2086,7 +2113,7 @@ for cutover_abort_mode in \
   reset_test_release_state "${TEST_REL}"
 done
 printf 'valid_app_js\n' > "${SMOKE_FIXTURE_MODE_FILE}"
-echo "  ✓ Mandatory trusted binding (both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT, alias-parent/trusted symlink ancestor & recursive preflight symlink rejection before first HTTP fetch), valid exact-trusted CSS fixtures, and 43 negative HTTP endpoint fixtures verified."
+echo "  ✓ Mandatory trusted binding (both EXPECTED_METADATA_FILE and EXPECTED_ASSET_ROOT, alias-parent/trusted symlink ancestor & recursive preflight symlink rejection before first HTTP fetch), valid exact-trusted CSS fixtures, and 47 negative HTTP endpoint fixtures verified."
 
 # 8e. Independent Reproduction: Final Manifest Atomic Write Failure After DB Deletion
 #     Proves pre-cutover manifest is NEVER truncated in place and both files + DB are restored!
