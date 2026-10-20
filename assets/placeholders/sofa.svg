@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 560" width="800" height="560">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBF9F5"/>
+      <stop offset="100%" stop-color="#EFEAE1"/>
+    </linearGradient>
+    <pattern id="archGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E6E0D5" stroke-width="0.8"/>
+    </pattern>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="800" height="560" fill="url(#bgGrad)"/>
+  <rect width="800" height="560" fill="url(#archGrid)" opacity="0.75"/>
+
+  <!-- Elegant Inner Border -->
+  <rect x="24" y="24" width="752" height="512" fill="none" stroke="#DCD6CA" stroke-width="1.5"/>
+  <rect x="32" y="32" width="736" height="496" fill="none" stroke="#ECE7DE" stroke-width="1"/>
+
+  <!-- Corner Brass Accents -->
+  <path d="M 24 44 L 24 24 L 44 24" fill="none" stroke="#C29B38" stroke-width="2.5"/>
+  <path d="M 776 44 L 776 24 L 756 24" fill="none" stroke="#C29B38" stroke-width="2.5"/>
+  <path d="M 24 516 L 24 536 L 44 536" fill="none" stroke="#C29B38" stroke-width="2.5"/>
+  <path d="M 776 516 L 776 536 L 756 536" fill="none" stroke="#C29B38" stroke-width="2.5"/>
+
+  <!-- Top Brand Watermark -->
+  <text x="50" y="68" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="3" fill="#014660">GBA FURNITURE</text>
+  <text x="750" y="68" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" letter-spacing="1" fill="#8C7A58">401 LORDSHIP LANE, N17 6AE</text>
+
+  <!-- Central Illustrated Silhouette -->
+  <g id="illustration">
+
+      <path d="M170 240 c0 -30 20 -50 50 -50 h360 c30 0 50 20 50 50 v110 h-460 z" fill="#E3DFD5" stroke="#014660" stroke-width="4"/>
+      <rect x="150" y="250" width="70" height="110" rx="10" fill="#014660" opacity="0.9"/>
+      <rect x="580" y="250" width="70" height="110" rx="10" fill="#014660" opacity="0.9"/>
+      <rect x="220" y="290" width="360" height="70" rx="6" fill="#FAF8F5" stroke="#014660" stroke-width="3"/>
+      <line x1="340" y1="290" x2="340" y2="360" stroke="#014660" stroke-width="2"/>
+      <line x1="460" y1="290" x2="460" y2="360" stroke="#014660" stroke-width="2"/>
+      <line x1="200" y1="360" x2="190" y2="390" stroke="#C29B38" stroke-width="5"/>
+      <line x1="600" y1="360" x2="610" y2="390" stroke="#C29B38" stroke-width="5"/>
+
+  </g>
+
+  <!-- Bottom Editorial Caption Badge -->
+  <rect x="160" y="440" width="480" height="56" rx="4" fill="#FFFFFF" fill-opacity="0.94" stroke="#DCD6CA" stroke-width="1.5"/>
+  <text x="400" y="463" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#014660">SOFAS &amp; LIVING</text>
+  <text x="400" y="482" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500" fill="#7A746B">Temporary Placeholder · Real Photography Coming Soon</text>
+</svg>
