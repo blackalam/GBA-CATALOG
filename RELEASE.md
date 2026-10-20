@@ -54,7 +54,7 @@ All remote deployment and rollback workflows (`deploy-sandbox.yml`, `deploy-prod
 
 ## 3. GitHub Secrets & Strict SSH Authentication
 
-Dynamic host-key trust (`ssh-keyscan` during workflow execution and `StrictHostKeyChecking=accept-new`) is **strictly forbidden** to prevent Man-in-the-Middle (MITM) attacks. All SSH sessions require a pre-pinned, cryptographic `SSH_KNOWN_HOSTS` secret and `StrictHostKeyChecking=yes`.
+Dynamic host-key trust (`ssh-keyscan` during workflow execution and `StrictHostKeyChecking=accept-new`) is **strictly forbidden** to prevent Man-in-the-Middle (MITM) attacks. All SSH sessions require a pre-pinned, cryptographic `SSH_KNOWN_HOSTS` secret and `StrictHostKeyChecking=yes`. Every `SSH_OPTS` and `SCP_OPTS` array across `deploy-production.yml`, `rollback.yml`, and `deploy-sandbox.yml` also enforces explicit keepalive options (`-o ServerAliveInterval=30 -o ServerAliveCountMax=60 -o TCPKeepAlive=yes`) alongside `-o BatchMode=yes -o StrictHostKeyChecking=yes` so long-running remote validation, backup, and cutover operations do not drop on idle NAT/firewall state timeouts (`client_loop: send disconnect: Broken pipe`).
 
 Configure the following secrets in **GitHub Repository Settings → Environments** (or repository-level secrets):
 
@@ -147,6 +147,20 @@ The production deployment (`.github/workflows/deploy-production.yml`) executes a
    - In `remote-deploy-production.sh`, transaction recovery remains active until **all** database cleanup and final manifest writes succeed (`CUTOVER_VERIFIED` is not set until finalization completes). If database deletion has begun and any later step fails, the trap restores both the original WordPress docroot files and the original WordPress database from verified backups; if `CREATE DATABASE IF NOT EXISTS` is denied, recovery positively queries `INFORMATION_SCHEMA.SCHEMATA` and imports the backup only if `SCHEMA_COUNT == 1` (failing recovery and preserving evidence if `0`, query error, or unexpected count).
    - All manifests are written via a same-directory temporary file, `fsync`ed, validated as strict JSON, and atomically renamed into place — never truncating the only valid manifest in place.
 6. **Unsuppressed MySQL Verification:** MySQL cleanup and post-cleanup queries (`INFORMATION_SCHEMA.SCHEMATA`, `INFORMATION_SCHEMA.TABLES`, and `SHOW TABLES`) never suppress errors and positively prove that either `SCHEMA_COUNT == 0` or `TABLE_COUNT == 0`.
+7. **SSH & SCP Keepalive Transport Hardening:** Every remote workflow (`deploy-production.yml`, `rollback.yml`, and `deploy-sandbox.yml`) configures `-o ServerAliveInterval=30 -o ServerAliveCountMax=60 -o TCPKeepAlive=yes` on both `SSH_OPTS` and `SCP_OPTS` arrays without weakening `BatchMode=yes` or `StrictHostKeyChecking=yes`.
+
+### Release ID Retry Guidance After an Interrupted Deployment
+Because both `deploy-production.yml` and `scripts/remote-deploy-production.sh` enforce strict duplicate-ID rejection before any writes, **the same `release_id` can only be retried after remote read-back verification positively proves that no release, backup, staging, or manifest paths exist** on the remote host:
+- `/home/alibhatt/releases/gbafurniture/<release_id>`
+- `/home/alibhatt/backups/gbafurniture/<release_id>_files.tar.gz`
+- `/home/alibhatt/backups/gbafurniture/<release_id>_db.sql.gz`
+- `/home/alibhatt/backups/gbafurniture/<release_id>_manifest.json`
+- `/home/alibhatt/backups/gbafurniture/<release_id>_rollback_manifest.json`
+- `/home/alibhatt/.gba-deploy-staging/<release_id>`
+- `/home/alibhatt/web/gbafurniture.com/release-metadata.json` (confirming cutover did not occur)
+
+If any of these paths exist on the server, do **not** delete backup or manifest evidence to force a retry; follow the rollback/recovery procedure or dispatch with a new unique `release_id`.
+- **Verified Pre-Cutover Disconnect (GitHub Actions Run `39387862918`):** During run `39387862918`, the remote deployment validated the artifact and then the SSH connection broke after approximately 4.5 minutes with `client_loop: send disconnect: Broken pipe`. Remote read-back inspection proved that no backups, release directory, staging directory, or docroot `release-metadata.json` remain (cutover did not occur); this failed attempt has been verified clean and can safely be retried after the SSH keepalive fix.
 
 ---
 
